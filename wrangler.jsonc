@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "callyourmom-web",
+  "main": "workers/router.ts",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // The worker fronts every request: it 301s getcym.com → getcym.app and
+    // injects OG tags on /c/*; everything else falls through to the assets.
+    "run_worker_first": true
+  },
+  "vars": {
+    "SHARE_CARD_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/share-card"
+  },
+  "routes": [
+    { "pattern": "getcym.app", "custom_domain": true },
+    // The .com just 301s to the canonical .app (handled in workers/router.ts).
+    { "pattern": "getcym.com", "custom_domain": true }
+  ]
+}

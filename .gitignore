@@ -41,3 +41,15 @@ example
 # generated native folders
 /ios
 /android
+dist/
+
+.env
+
+# local tooling
+CLAUDE.md
+AGENTS.md
+.claude/
+
+# local tool state
+.wrangler/
+supabase/.temp/

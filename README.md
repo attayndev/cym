@@ -1,56 +1,53 @@
-# Welcome to your Expo app 👋
+# Call Your Mom
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A personal relationship manager that keeps the relationships you care about from going cold. Full product rationale in [PRODUCT_BRIEF.md](./PRODUCT_BRIEF.md).
 
-## Get started
+## Stack
 
-1. Install dependencies
+- **Expo SDK 56 / React Native** with expo-router (iOS-first, runs on web for quick iteration)
+- **Local-first storage** — all entities persist on-device via AsyncStorage behind a repository layer (`src/lib/store.ts`); designed to swap to a hosted backend without touching screens
+- **Design system** — cream background, dark card accents, Playfair Display + DM Sans (`src/constants/theme.ts`)
 
-   ```bash
-   npm install
-   ```
+## Run it
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+npm install
+npm run ios      # or: npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The app seeds itself with demo contacts on first launch so the nudge engine has something to chew on. The paywall's "Go Pro" button flips the subscription flag locally (real billing arrives with the backend).
 
-### Other setup steps
+### Follow-up drafts
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Drafts fall back to context-aware templates by default. To enable generated drafts in development, set:
 
-## Learn more
+```sh
+EXPO_PUBLIC_ANTHROPIC_API_KEY=sk-ant-... npm run ios
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Production will route drafts through a backend proxy — the key never ships in the app.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Architecture
 
-## Join the community
+| Layer | Where | Notes |
+|---|---|---|
+| Types / data model | `src/lib/types.ts` | User, Persona, Contact, Context, Interaction, Hook, Nudge, ConnectedAccount — multi-persona-ready from day one; UI ships single-persona |
+| Persistence | `src/lib/store.ts` | AsyncStorage JSON document |
+| Seed data | `src/lib/seed.ts` | Demo relationships at varied decay stages |
+| Nudge engine | `src/lib/nudges.ts` | Decay scoring vs. cadence + hook generation (birthday, commitment-due, reconnect-anniversary). Hook-led nudges lead; bare decay nudges are capped at 3 so the feed never becomes a guilt list |
+| Drafts | `src/lib/drafts.ts` | Template generator + API-backed generator behind one interface |
+| App state | `src/state/app-context.tsx` | Provider exposing the db + actions; engine re-runs on every mutation and app open |
+| Screens | `src/app/` | Today (nudge feed), People, Health dashboard, My Card (QR vCard), capture wizard, contact detail, nudge composer, paywall |
 
-Join our community of developers creating universal apps.
+## Tier gating
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Free: capture with context prompts, address-book import, sharing card + QR.
+Pro ($100/yr): nudge engine, follow-up drafts, aging dashboard — gated on `profile.isPro`.
+
+## Next milestones
+
+- Backend (accounts, subscription, hosted db) — schema maps 1:1 to `src/lib/types.ts`
+- Gmail sync via OAuth (`ConnectedAccount` is already modeled) + daily decay-recompute job
+- Real billing (StoreKit / RevenueCat)
+- QR landing page with reciprocal exchange
+- Two-way native contacts sync (import-only today)

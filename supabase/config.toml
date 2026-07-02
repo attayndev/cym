@@ -1,0 +1,27 @@
+# If you already have a config.toml from `supabase link`, merge the [functions.*]
+# sections below into it rather than replacing the file. Set project_id to your ref.
+project_id = "jvuvuukvgunhpemrhqxl"
+
+# The OAuth start/callback are opened in a browser (no Supabase JWT header is
+# possible on a top-level navigation), so JWT verification is disabled and the
+# functions authenticate manually (start verifies the token query param; callback
+# trusts the signed state it issued).
+[functions.gmail-auth-start]
+verify_jwt = false
+
+[functions.gmail-oauth-callback]
+verify_jwt = false
+
+# gmail-sync authenticates manually so it can accept either a user JWT (manual
+# "Sync now") or the service role (scheduled batch sync).
+[functions.gmail-sync]
+verify_jwt = false
+
+# daily-nudges: same dual auth (user JWT to test yourself, service role for the cron).
+[functions.daily-nudges]
+verify_jwt = false
+
+# share-card serves the public QR landing page (card lookup + reciprocal
+# exchange submission). The share token is the capability; validated manually.
+[functions.share-card]
+verify_jwt = false
