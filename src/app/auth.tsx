@@ -1,19 +1,26 @@
 import { Feather } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
+import { AppleSignInButton } from '@/components/apple-sign-in-button';
 import { Field } from '@/components/field';
 import { Body, Button, Display, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { createSessionFromUrl } from '@/lib/oauth';
 import { useAuth } from '@/state/auth-context';
+
+// Closes the auth popup/tab when the OAuth redirect returns (no-op on native).
+WebBrowser.maybeCompleteAuthSession();
 
 // Accounts are created in the mobile apps only; the web app is login-only.
 const WEB_LOGIN_ONLY = Platform.OS === 'web';
 
 export default function AuthScreen() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -24,6 +31,32 @@ export default function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // A session appearing (email, native OAuth, or the web OAuth callback landing
+  // back on /auth with tokens) means we're done here.
+  useEffect(() => {
+    if (user) router.replace('/');
+  }, [user, router]);
+
+  // Android can return from the browser via a cold-start deep link instead of
+  // the openAuthSessionAsync result — catch the tokens here as a fallback.
+  const linkingUrl = Linking.useURL();
+  useEffect(() => {
+    if (Platform.OS !== 'web' && linkingUrl?.includes('access_token')) {
+      void createSessionFromUrl(linkingUrl);
+    }
+  }, [linkingUrl]);
+
+  const runOAuth = async (provider: 'apple' | 'google') => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    const result = provider === 'apple' ? await signInWithApple() : await signInWithGoogle();
+    setBusy(false);
+    if (!result.ok && result.error !== 'cancelled') {
+      setError(t('auth.error'));
+    }
+  };
+
   const submit = async () => {
     setBusy(true);
     setError(null);
@@ -33,9 +66,8 @@ export default function AuthScreen() {
     if (result.ok) {
       if (mode === 'signUp') {
         setNotice(t('auth.checkEmail'));
-      } else {
-        router.back();
       }
+      // Signed-in sessions navigate away via the user effect above.
     } else {
       setError(result.error ?? t('auth.error'));
     }
@@ -50,6 +82,22 @@ export default function AuthScreen() {
         </Pressable>
       </View>
       <Body muted>{t('auth.subtitle')}</Body>
+
+      <View style={styles.providers}>
+        {Platform.OS !== 'android' && <AppleSignInButton onPress={() => void runOAuth('apple')} />}
+        <Pressable
+          onPress={() => void runOAuth('google')}
+          disabled={busy}
+          style={({ pressed }) => [styles.googleBtn, (pressed || busy) && { opacity: 0.7 }]}>
+          <Text style={styles.googleText}>{t('auth.continueWithGoogle')}</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>{t('auth.or')}</Text>
+        <View style={styles.dividerLine} />
+      </View>
 
       {WEB_LOGIN_ONLY ? (
         <Body muted>{t('auth.webOnlyNote')}</Body>
@@ -101,6 +149,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  providers: {
+    gap: 10,
+  },
+  googleBtn: {
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    borderRadius: 999,
+    paddingVertical: 13,
+  },
+  googleText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 15,
+    color: colors.espresso,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: colors.blush,
+  },
+  dividerText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: colors.muted,
   },
   toggle: {
     flexDirection: 'row',

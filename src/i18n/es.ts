@@ -358,6 +358,9 @@ export const es: Partial<Dict> = {
   'auth.subtitle':
     'Crea una cuenta para respaldar tus relaciones y usar Call Your Mom en todos tus dispositivos.',
   'auth.signIn': 'Iniciar sesión',
+  'auth.or': 'o',
+  'auth.continueWithApple': 'Continuar con Apple',
+  'auth.continueWithGoogle': 'Continuar con Google',
   'auth.webOnlyNote': 'Las cuentas se crean en la app. Inicia sesión con el correo que usaste allí.',
   'auth.signUp': 'Crear cuenta',
   'auth.password': 'Contraseña',

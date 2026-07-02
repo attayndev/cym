@@ -9,6 +9,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "app.getcym.cym",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSContactsUsageDescription": "Call Your Mom syncs with your address book so your relationships stay in one place."
       }
@@ -32,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {

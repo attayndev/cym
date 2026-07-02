@@ -7,7 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Platform } from 'react-native';
 
+import { signInWithAppleNative, signInWithProviderOAuth } from '@/lib/oauth';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface AuthResult {
@@ -24,6 +26,8 @@ interface AuthState {
   user: User | null;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
+  signInWithApple: () => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
 
@@ -68,6 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signUp({ email, password });
         return error ? { ok: false, error: error.message } : { ok: true };
       },
+      // Apple: native sheet on iOS, browser OAuth on web, unavailable on Android.
+      signInWithApple: async () => {
+        if (Platform.OS === 'ios') return signInWithAppleNative();
+        if (Platform.OS === 'web') return signInWithProviderOAuth('apple');
+        return { ok: false, error: 'unavailable' };
+      },
+      signInWithGoogle: async () => signInWithProviderOAuth('google'),
       signOut: async () => {
         const supabase = getSupabase();
         await supabase?.auth.signOut();
