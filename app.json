@@ -8,13 +8,13 @@
     "scheme": "callyourmom",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "com.attayn.cym",
+      "bundleIdentifier": "com.getcym.cym",
       "infoPlist": {
         "NSContactsUsageDescription": "Call Your Mom syncs with your address book so your relationships stay in one place."
       }
     },
     "android": {
-      "package": "com.attayn.cym",
+      "package": "com.getcym.cym",
       "adaptiveIcon": {
         "backgroundColor": "#FFD466",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
