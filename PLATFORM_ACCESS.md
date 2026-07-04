@@ -65,7 +65,21 @@ device address book — no Google People API, no CardDAV, no extra OAuth.
 | Bundle id / package `app.getcym.cym` | ✅ | Locks permanently at first store submission |
 | App icon 1024 + adaptive/monochrome + splash | ✅ | `scripts/generate-brand-assets.mjs` |
 | Sign in with Apple offered alongside Google | ✅ (code) | App Store guideline 4.8 |
-| **Privacy Policy URL** | ✅ (2026-07-04) | https://getcym.app/privacy — includes the Google Limited Use disclosure (needed for CASA + brand verification). Contact address is support@getcym.app — needs Cloudflare Email Routing set up |
+| **Privacy Policy URL** | ✅ (2026-07-04) | https://getcym.app/privacy — includes the Google Limited Use disclosure (needed for CASA + brand verification). Contact address is support@getcym.app (confirmed) — routing setup pending, see §6 |
 | Terms of Service page | ✅ (2026-07-04) | https://getcym.app/terms — governing law New York (confirm with counsel), entity Attayn Group LLC DBA Call Your Mom |
 | Store badge URLs on getcym.app | ⬜ | Placeholder bare store roots until listings exist |
 | CASA (for public Gmail sync) | ⬜ | See §1 |
+
+## 6. Deferred setup instructions
+
+**support@getcym.app email routing (do before store submission — the address is in the live Privacy Policy and Terms):**
+1. Cloudflare dashboard → select the **getcym.app** zone → **Email** → **Email Routing** → Enable
+2. Accept the DNS records it wants to add (MX + TXT — one click, it adds them itself)
+3. Destination addresses → add your real inbox → confirm via the verification email it sends
+4. Routing rules → Create: `support@getcym.app` → forward to that verified inbox
+5. Send a test email to support@getcym.app and confirm it lands
+
+**Google brand verification (makes the consent screen say "Call Your Mom"):**
+1. Verify getcym.app ownership in Google Search Console (TXT record in Cloudflare DNS)
+2. Google Cloud console → "CYM Sign-In" project → Auth Platform → Branding: homepage `https://getcym.app`, privacy `https://getcym.app/privacy`, terms `https://getcym.app/terms`, authorized domain `getcym.app`
+3. Submit for verification (a few days for non-sensitive scopes)
