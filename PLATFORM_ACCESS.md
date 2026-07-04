@@ -65,7 +65,7 @@ device address book — no Google People API, no CardDAV, no extra OAuth.
 | Bundle id / package `app.getcym.cym` | ✅ | Locks permanently at first store submission |
 | App icon 1024 + adaptive/monochrome + splash | ✅ | `scripts/generate-brand-assets.mjs` |
 | Sign in with Apple offered alongside Google | ✅ (code) | App Store guideline 4.8 |
-| **Privacy Policy URL** | ⬜ | Required by BOTH stores; site footer still links `#` |
-| Terms of Service page | ⬜ | Site footer links `#` |
+| **Privacy Policy URL** | ✅ (2026-07-04) | https://getcym.app/privacy — includes the Google Limited Use disclosure (needed for CASA + brand verification). Contact address is support@getcym.app — needs Cloudflare Email Routing set up |
+| Terms of Service page | ✅ (2026-07-04) | https://getcym.app/terms — governing law New York (confirm with counsel), entity Attayn Group LLC DBA Call Your Mom |
 | Store badge URLs on getcym.app | ⬜ | Placeholder bare store roots until listings exist |
 | CASA (for public Gmail sync) | ⬜ | See §1 |
