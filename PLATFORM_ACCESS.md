@@ -4,7 +4,7 @@ Every surface where Call Your Mom touches Apple or Google infrastructure, and it
 configuration state. Legend: ✅ verified by command · 👀 needs a human to confirm in a
 dashboard · ⬜ not done yet. Re-verify the ✅ items with the commands shown.
 
-_Last audited: 2026-07-02_
+_Last audited: 2026-07-04_
 
 ## 1. Gmail email sync (Google Cloud project #1 — stays in Testing until CASA)
 
@@ -26,13 +26,13 @@ _Last audited: 2026-07-02_
 | App code (native Apple id-token, browser OAuth Google, web parity) | ✅ | Shipped 2026-07-02; `npx tsc --noEmit` + exports clean |
 | `usesAppleSignIn` + expo-apple-authentication plugin in app.json | ✅ | `grep usesAppleSignIn app.json` |
 | Profile-name trigger handles OAuth metadata | ✅ | Migration 0005 applied (`supabase migration list`) |
-| Google Cloud project #2 ("CYM Sign-In"), consent **published to Production**, non-sensitive scopes only | ⬜👀 | User creates; Production so consents don't expire; do NOT add gmail scopes to this project |
-| Google Web-application OAuth client, redirect `https://jvuvuukvgunhpemrhqxl.supabase.co/auth/v1/callback` | ⬜👀 | User creates → hand Client ID + Secret over |
-| Apple App ID `app.getcym.cym` with Sign In with Apple capability | ⬜👀 | developer.apple.com → Identifiers (register BEFORE first EAS build) |
-| Apple Services ID `app.getcym.cym.web` (domain `jvuvuukvgunhpemrhqxl.supabase.co`, return URL `…/auth/v1/callback`) | ⬜👀 | Needed for web Apple login |
-| Apple SIWA key (.p8 + Key ID + Team ID) | ⬜👀 | One-time download; used to mint the Supabase client secret |
-| Supabase: providers enabled, site_url, uri_allow_list | ⬜ | Currently `external_apple_enabled:false, external_google_enabled:false, site_url:localhost` — automated PATCH pending the credentials above |
-| **Apple client-secret expiry** | ⬜ | The ES256 JWT expires ≤ 6 months after minting. Record date here when minted: `____-__-__`. Expiry breaks WEB Apple login only (native id-token path unaffected). Rotation = regenerate JWT + PATCH |
+| Google Cloud project #2 ("CYM Sign-In"), consent **published to Production**, non-sensitive scopes only | ✅ (2026-07-04) | Created + published by user; gmail scopes deliberately absent |
+| Google Web-application OAuth client, redirect `https://jvuvuukvgunhpemrhqxl.supabase.co/auth/v1/callback` | ✅ | Client 988781153038-…; authorize endpoint 302s to accounts.google.com (verified by curl) |
+| Apple App ID `app.getcym.cym` with Sign In with Apple capability | ✅ (2026-07-04) | Registered before first EAS build, as required |
+| Apple Services ID `app.getcym.cym.web` (domain `jvuvuukvgunhpemrhqxl.supabase.co`, return URL `…/auth/v1/callback`) | ✅ | authorize endpoint 302s to appleid.apple.com with this client id (verified by curl) |
+| Apple SIWA key (.p8, Key ID 5PJ39Q8D9C, Team 6W5G6FZQSX) | ✅ | .p8 kept OUTSIDE the repo (user's Downloads — move somewhere durable, e.g. a password manager; needed again at rotation) |
+| Supabase: providers enabled, site_url, uri_allow_list | ✅ | `external_google_enabled:true`, `external_apple_enabled:true`, site_url app.getcym.app, allow-list app.getcym.app/** + callyourmom://** + localhost dev |
+| **Apple client-secret expiry: 2027-01-02** | ⚠️ | Regenerate the ES256 JWT + PATCH `external_apple_secret` BEFORE this date or web Apple login breaks (native id-token unaffected). ~2-minute task; needs the .p8 + Key ID + Team ID above |
 
 ## 3. Contacts access (device address book)
 
