@@ -1,4 +1,6 @@
-import * as Contacts from 'expo-contacts';
+// SDK 56 moved the functional API to the legacy entry point; migrating to the
+// new class-based API is on the roadmap (see FEATURES.md).
+import * as Contacts from 'expo-contacts/legacy';
 import { Platform } from 'react-native';
 
 import { id } from '@/lib/ids';
@@ -59,7 +61,19 @@ export async function syncDeviceContacts(
   const linkedCymIds = new Set(Object.keys(links));
   const existingByName = new Map(existing.map((c) => [normName(c.firstName, c.lastName), c]));
 
-  const { data: deviceContacts } = await Contacts.getContactsAsync({ fields: READ_FIELDS });
+  // Page through the address book — 10k+ contact books are real.
+  type DeviceContact = Awaited<ReturnType<typeof Contacts.getContactsAsync>>['data'][number];
+  const deviceContacts: DeviceContact[] = [];
+  const pageSize = 500;
+  for (let pageOffset = 0; ; pageOffset += pageSize) {
+    const { data } = await Contacts.getContactsAsync({
+      fields: READ_FIELDS,
+      pageSize,
+      pageOffset,
+    });
+    deviceContacts.push(...data);
+    if (data.length < pageSize) break;
+  }
 
   // --- import: device -> app ---
   const newContacts: Contact[] = [];

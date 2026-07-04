@@ -14,11 +14,26 @@ import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
 
 export default function SettingsScreen() {
-  const { db, setNotificationsEnabled, exportData, resetAll, loadSampleData, pullNow } = useApp();
+  const { db, setNotificationsEnabled, exportData, resetAll, loadSampleData, pullNow, syncContacts } = useApp();
   const router = useRouter();
   const { t, locale, setLocale } = useTranslation();
   const { configured, user, signOut } = useAuth();
   const [gmailBusy, setGmailBusy] = useState(false);
+  const [contactsBusy, setContactsBusy] = useState(false);
+
+  const handleSyncContacts = async () => {
+    setContactsBusy(true);
+    try {
+      const { imported, exported } = await syncContacts();
+      Alert.alert(
+        imported + exported > 0
+          ? t('people.sync.result', { imported, exported })
+          : t('people.sync.upToDate'),
+      );
+    } finally {
+      setContactsBusy(false);
+    }
+  };
 
   if (!db) return <Screen scroll={false}>{null}</Screen>;
 
@@ -260,6 +275,14 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Eyebrow>{t('settings.section.data')}</Eyebrow>
         <Card style={{ gap: 0, paddingVertical: 6 }}>
+          {Platform.OS !== 'web' && (
+            <Pressable onPress={handleSyncContacts} disabled={contactsBusy} style={styles.dataRow}>
+              <Feather name="refresh-cw" size={16} color={colors.inkSoft} />
+              <Text style={styles.dataLabel}>
+                {contactsBusy ? t('people.syncing') : t('people.sync')}
+              </Text>
+            </Pressable>
+          )}
           <Pressable onPress={handleExport} style={styles.dataRow}>
             <Feather name="download" size={16} color={colors.inkSoft} />
             <Text style={styles.dataLabel}>{t('settings.data.export')}</Text>

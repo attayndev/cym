@@ -136,6 +136,8 @@ export const en = {
     'Scanning opens your card page — they can save you and share their details right back.',
   'card.share.rotate': 'New link',
   'card.share.rotateConfirm': 'Tap again — the old QR stops working',
+  'card.mode.link': 'Scans open your card page',
+  'card.mode.vcard': 'Scans save your contact directly — sign in to get your card page',
   'card.edit': 'Edit details',
   'card.editHeading': 'Edit card',
   'card.save': 'Save card',

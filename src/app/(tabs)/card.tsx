@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { Field } from '@/components/field';
 import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Button, Display, Eyebrow, Screen } from '@/components/ui';
+import { MARK_SVG } from '@/constants/mark-svg';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { personaCardFields } from '@/lib/personas';
@@ -32,23 +34,30 @@ export default function CardScreen() {
   // Signed in with a share host configured → the QR carries a token URL to the
   // landing page. Until the token arrives (or offline) it stays the vCard QR.
   const userId = session?.user?.id;
-  useEffect(() => {
-    let cancelled = false;
-    setShareUrl(null);
-    setConfirmRotate(false);
-    if (!userId || !shareBaseUrl() || !activePersonaId) return;
-    (async () => {
-      try {
-        const token = await getOrCreateShareToken(activePersonaId);
-        if (!cancelled && token) setShareUrl(buildShareUrl(token));
-      } catch {
-        // Offline: the vCard QR still works.
+  // Focus-driven (not just mount): signing in elsewhere and coming back must
+  // upgrade the QR from the vCard fallback to the share link.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      setConfirmRotate(false);
+      if (!userId || !shareBaseUrl() || !activePersonaId) {
+        setShareUrl(null);
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, activePersonaId]);
+      (async () => {
+        try {
+          const token = await getOrCreateShareToken(activePersonaId);
+          if (!cancelled) setShareUrl(token ? buildShareUrl(token) : null);
+        } catch (e) {
+          // Offline: the vCard QR still works — but say why in dev logs.
+          console.warn('share token fetch failed', e);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [userId, activePersonaId]),
+  );
 
   const rotate = async () => {
     if (!confirmRotate) {
@@ -127,8 +136,21 @@ export default function CardScreen() {
             size={168}
             backgroundColor={colors.white}
             color={colors.ink}
+            {...(shareUrl
+              ? {
+                  ecl: 'H' as const,
+                  logoSVG: MARK_SVG,
+                  logoSize: 38,
+                  logoBackgroundColor: colors.cream,
+                  logoMargin: 4,
+                  logoBorderRadius: 21,
+                }
+              : {})}
           />
         </View>
+        <Text style={styles.modeHint}>
+          {shareUrl ? t('card.mode.link') : t('card.mode.vcard')}
+        </Text>
         {card.email && <Text style={styles.cardMeta}>{card.email}</Text>}
         {card.phone && <Text style={styles.cardMeta}>{card.phone}</Text>}
       </View>
@@ -223,6 +245,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.cardMuted,
     textAlign: 'center',
+  },
+  modeHint: {
+    fontFamily: fonts.sans,
+    fontSize: 12,
+    color: colors.cardMuted,
+    textAlign: 'center',
+    marginTop: 2,
   },
   qrWrap: {
     backgroundColor: colors.white,

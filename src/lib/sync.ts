@@ -243,19 +243,61 @@ export async function pullGraph(
 
 // --- push ("replace my graph": upsert all, delete the rest) ----------------
 
+// Address books run 10k+ contacts, so pushes must be chunked: upserts in
+// batches (request-body size) and delete-missing via select→diff→delete-by-id
+// (a `not in (…10k ids)` filter would blow the request URL).
+const CHUNK = 500;
+const SELECT_PAGE = 1000;
+
+async function upsertChunked(
+  client: SupabaseClient,
+  table: string,
+  rows: { id: string }[],
+): Promise<void> {
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    await client.from(table).upsert(rows.slice(i, i + CHUNK));
+  }
+}
+
+async function selectAllIds(
+  client: SupabaseClient,
+  table: string,
+  userId: string,
+  clientOwnedOnly = false,
+): Promise<string[]> {
+  const ids: string[] = [];
+  for (let from = 0; ; from += SELECT_PAGE) {
+    let query = client.from(table).select('id').eq('user_id', userId);
+    if (clientOwnedOnly) query = query.neq('source', 'email-sync');
+    const { data } = await query.range(from, from + SELECT_PAGE - 1);
+    if (!data || data.length === 0) break;
+    ids.push(...data.map((r: { id: string }) => r.id));
+    if (data.length < SELECT_PAGE) break;
+  }
+  return ids;
+}
+
+async function deleteByIds(
+  client: SupabaseClient,
+  table: string,
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    await client.from(table).delete().eq('user_id', userId).in('id', ids.slice(i, i + CHUNK));
+  }
+}
+
 async function replaceTable(
   client: SupabaseClient,
   table: string,
   userId: string,
   rows: { id: string }[],
 ): Promise<void> {
-  if (rows.length > 0) {
-    await client.from(table).upsert(rows);
-    const ids = rows.map((r) => r.id);
-    await client.from(table).delete().eq('user_id', userId).not('id', 'in', `(${ids.join(',')})`);
-  } else {
-    await client.from(table).delete().eq('user_id', userId);
-  }
+  await upsertChunked(client, table, rows);
+  const keep = new Set(rows.map((r) => r.id));
+  const stale = (await selectAllIds(client, table, userId)).filter((id) => !keep.has(id));
+  await deleteByIds(client, table, userId, stale);
 }
 
 /**
@@ -268,18 +310,12 @@ async function replaceClientInteractions(
   userId: string,
   rows: { id: string }[],
 ): Promise<void> {
-  if (rows.length > 0) {
-    await client.from('interactions').upsert(rows);
-    const ids = rows.map((r) => r.id);
-    await client
-      .from('interactions')
-      .delete()
-      .eq('user_id', userId)
-      .neq('source', 'email-sync')
-      .not('id', 'in', `(${ids.join(',')})`);
-  } else {
-    await client.from('interactions').delete().eq('user_id', userId).neq('source', 'email-sync');
-  }
+  await upsertChunked(client, 'interactions', rows);
+  const keep = new Set(rows.map((r) => r.id));
+  const stale = (await selectAllIds(client, 'interactions', userId, true)).filter(
+    (id) => !keep.has(id),
+  );
+  await deleteByIds(client, 'interactions', userId, stale);
 }
 
 export async function pushGraph(

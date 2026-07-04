@@ -140,6 +140,8 @@ export const es: Partial<Dict> = {
     'Al escanear se abre tu tarjeta: pueden guardarte y compartir sus datos contigo al momento.',
   'card.share.rotate': 'Nuevo enlace',
   'card.share.rotateConfirm': 'Toca de nuevo: el QR anterior dejará de funcionar',
+  'card.mode.link': 'Al escanear se abre tu página de tarjeta',
+  'card.mode.vcard': 'Al escanear se guarda tu contacto directamente; inicia sesión para tener tu página de tarjeta',
   'card.edit': 'Editar datos',
   'card.editHeading': 'Editar tarjeta',
   'card.save': 'Guardar tarjeta',
