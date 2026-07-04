@@ -230,7 +230,7 @@ footer nav a:hover{opacity:1;text-decoration:underline}
       <svg class="dial-ornament" viewBox="0 0 240 240" aria-hidden="true"><g fill="none" stroke="#3B241C" stroke-width="3" opacity=".35"><circle cx="120" cy="120" r="112"/><circle cx="199.4" cy="144.3" r="16.5"/><circle cx="196.1" cy="86.8" r="16.5"/><circle cx="156.3" cy="45.3" r="16.5"/><circle cx="98.9" cy="39.7" r="16.5"/><circle cx="51.8" cy="72.7" r="16.5"/><circle cx="37.4" cy="128.5" r="16.5"/><circle cx="62.8" cy="180.1" r="16.5"/><circle cx="115.7" cy="202.9" r="16.5"/></g></svg>
       <div class="phone" role="img" aria-label="Preview of the Call Your Mom app showing today's suggested calls">
         <div class="screen">
-          <div class="s-date">Sunday, June 28</div>
+          <div class="s-date" id="s-date">Sunday, June 28</div>
           <div class="s-title">Three people to reach today</div>
           <div class="nudge">
             <div class="who"><span class="avatar" style="background:#D9331F">M</span><b>Mom</b></div>
@@ -406,6 +406,7 @@ const io = new IntersectionObserver((entries)=>{
   entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
 },{threshold:.15});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+document.getElementById('s-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 </script>
 </body>
 </html>
