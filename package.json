@@ -48,9 +48,7 @@
     "jest": "^29.7.0",
     "jest-expo": "^56.0.5",
     "playwright": "^1.60.0",
-    "sharp": "^0.35.3",
-    "typescript": "~6.0.3",
-    "wrangler": "^4.106.0"
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
@@ -58,8 +56,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "site:deploy": "wrangler deploy",
-    "app:deploy": "expo export --platform web && wrangler deploy -c wrangler.app.jsonc",
+    "site:deploy": "npx --yes wrangler@4 deploy",
+    "app:deploy": "expo export --platform web && npx --yes wrangler@4 deploy -c wrangler.app.jsonc",
     "lint": "expo lint",
     "test": "jest",
     "typecheck": "tsc --noEmit"

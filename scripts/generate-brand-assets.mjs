@@ -1,5 +1,7 @@
 // Regenerates the app icon set from the brand art in site/assets/.
-// Run after any brand-mark change: node scripts/generate-brand-assets.mjs
+// Run after any brand-mark change:
+//   npm i --no-save sharp && node scripts/generate-brand-assets.mjs
+// (sharp is deliberately NOT a devDependency — its native build breaks EAS iOS builds)
 import sharp from 'sharp';
 import { readFileSync } from 'node:fs';
 
