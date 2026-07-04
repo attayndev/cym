@@ -316,6 +316,14 @@ export const en = {
 
   // Settings
   'settings.title': 'Settings',
+  'settings.account.delete': 'Delete account',
+  'settings.account.delete.body':
+    'Permanently deletes your account and everything synced to our servers — contacts, history, share links, connected email. This cannot be undone.',
+  'settings.account.delete.word': 'DELETE',
+  'settings.account.delete.placeholder': 'Type DELETE to confirm',
+  'settings.account.delete.cta': 'Permanently delete account',
+  'settings.account.delete.error': "Couldn't delete your account. Check your connection and try again.",
+  'settings.account.deleting': 'Deleting…',
   'settings.personas': 'Manage personas',
   'settings.section.profile': 'Your profile',
   'settings.section.notifications': 'Notifications',

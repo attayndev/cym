@@ -25,3 +25,8 @@ verify_jwt = false
 # exchange submission). The share token is the capability; validated manually.
 [functions.share-card]
 verify_jwt = false
+
+# delete-account authenticates manually: user JWT only (service key and
+# anonymous calls are rejected). JWT possession + typed confirmation is the auth.
+[functions.delete-account]
+verify_jwt = false

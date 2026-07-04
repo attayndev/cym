@@ -321,6 +321,14 @@ export const es: Partial<Dict> = {
 
   // Settings
   'settings.title': 'Ajustes',
+  'settings.account.delete': 'Eliminar cuenta',
+  'settings.account.delete.body':
+    'Elimina permanentemente tu cuenta y todo lo sincronizado con nuestros servidores: contactos, historial, enlaces de tarjeta, correo conectado. No se puede deshacer.',
+  'settings.account.delete.word': 'ELIMINAR',
+  'settings.account.delete.placeholder': 'Escribe ELIMINAR para confirmar',
+  'settings.account.delete.cta': 'Eliminar cuenta permanentemente',
+  'settings.account.delete.error': 'No se pudo eliminar tu cuenta. Revisa tu conexión e inténtalo de nuevo.',
+  'settings.account.deleting': 'Eliminando…',
   'settings.personas': 'Gestionar personas',
   'settings.section.profile': 'Tu perfil',
   'settings.section.notifications': 'Notificaciones',

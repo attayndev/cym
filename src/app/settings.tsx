@@ -4,9 +4,11 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
+import { Field } from '@/components/field';
+import { Body, Button, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { LOCALES, useTranslation, type Locale } from '@/i18n';
+import { deleteAccount } from '@/lib/account';
 import { connectGmail, disconnectGmail, syncGmailNow } from '@/lib/gmail';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { getSupabase } from '@/lib/supabase';
@@ -20,6 +22,28 @@ export default function SettingsScreen() {
   const { configured, user, signOut } = useAuth();
   const [gmailBusy, setGmailBusy] = useState(false);
   const [contactsBusy, setContactsBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteWord, setDeleteWord] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(false);
+    // Order matters: the server deletion needs the JWT, so it goes first;
+    // a pending push debounce firing mid-flight fails harmlessly (FK to the
+    // deleted auth user) and after signOut the sync ref is nulled, so the
+    // local reset below can't push anything back up.
+    const ok = await deleteAccount();
+    if (!ok) {
+      setDeleteError(true);
+      setDeleting(false);
+      return;
+    }
+    await signOut();
+    await resetAll();
+    router.replace('/onboarding');
+  };
 
   const handleSyncContacts = async () => {
     setContactsBusy(true);
@@ -297,7 +321,44 @@ export default function SettingsScreen() {
               {t('settings.data.reset')}
             </Text>
           </Pressable>
+          {configured && user && (
+            <Pressable
+              onPress={() => {
+                setDeleteOpen((open) => !open);
+                setDeleteWord('');
+                setDeleteError(false);
+              }}
+              style={styles.dataRow}>
+              <Feather name="user-x" size={16} color={colors.atRisk} />
+              <Text style={[styles.dataLabel, { color: colors.atRisk }]}>
+                {t('settings.account.delete')}
+              </Text>
+            </Pressable>
+          )}
         </Card>
+        {deleteOpen && configured && user && (
+          <Card style={{ gap: 10, borderColor: colors.cherryDeep }}>
+            <Body>{t('settings.account.delete.body')}</Body>
+            <Field
+              label={t('settings.account.delete.placeholder')}
+              value={deleteWord}
+              onChangeText={setDeleteWord}
+              autoCapitalize="none"
+            />
+            {deleteError && (
+              <Body style={{ color: colors.danger }}>{t('settings.account.delete.error')}</Body>
+            )}
+            <Button
+              title={deleting ? t('settings.account.deleting') : t('settings.account.delete.cta')}
+              variant="accent"
+              disabled={
+                deleting ||
+                deleteWord.trim().toUpperCase() !== t('settings.account.delete.word')
+              }
+              onPress={() => void handleDeleteAccount()}
+            />
+          </Card>
+        )}
       </View>
     </Screen>
   );
