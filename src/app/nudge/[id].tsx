@@ -15,7 +15,7 @@ import {
 import { Body, Button, Eyebrow, Heading, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { tx, useTranslation } from '@/i18n';
-import { generateDraft } from '@/lib/drafts';
+import { draftSubject, generateDraft } from '@/lib/drafts';
 import type { Channel } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -29,6 +29,9 @@ export default function NudgeScreen() {
   const [draft, setDraft] = useState('');
   const [source, setSource] = useState<'ai' | 'template' | null>(null);
   const [loading, setLoading] = useState(false);
+  const [noteContext, setNoteContext] = useState('');
+  const [draftLimited, setDraftLimited] = useState(false);
+  const [regen, setRegen] = useState(0);
 
   const nudge = db?.nudges.find((n) => n.id === id);
   const contact = db?.contacts.find((c) => c.id === nudge?.contactId);
@@ -38,11 +41,20 @@ export default function NudgeScreen() {
     if (!db || !nudge || !contact) return;
     let cancelled = false;
     setLoading(true);
-    generateDraft({ contact, context, nudge, channel, profile: db.profile }).then(
+    generateDraft({
+      contact,
+      context,
+      nudge,
+      channel,
+      profile: db.profile,
+      userContext: noteContext,
+      variant: regen,
+    }).then(
       (result) => {
         if (!cancelled) {
           setDraft(result.text);
           setSource(result.source);
+          setDraftLimited(Boolean(result.limitReached));
           setLoading(false);
         }
       },
@@ -50,9 +62,10 @@ export default function NudgeScreen() {
     return () => {
       cancelled = true;
     };
-    // Regenerate when the channel or language flips; nudge/contact are stable here.
+    // Regenerate when the channel/language flips or the user asks for a
+    // rewrite (regen bumps after adding context); nudge/contact are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel, id, locale, db === null]);
+  }, [channel, id, locale, db === null, regen]);
 
   if (!db || !nudge || !contact) {
     return (
@@ -68,10 +81,14 @@ export default function NudgeScreen() {
   const openInApp = () => {
     const encoded = encodeURIComponent(draft);
     if (channel === 'email' && contact.email) {
-      Linking.openURL(`mailto:${contact.email}?body=${encoded}`);
+      const subject = encodeURIComponent(
+        draftSubject({ contact, context, nudge, channel, profile: db.profile }),
+      );
+      Linking.openURL(`mailto:${contact.email}?subject=${subject}&body=${encoded}`);
     } else if (contact.phone) {
-      const sep = Platform.OS === 'ios' ? '&' : '?';
-      Linking.openURL(`sms:${contact.phone}${sep}body=${encoded}`);
+      // iOS's sms: handler stopped percent-decoding the legacy `&body=` form;
+      // the query form decodes correctly on current iOS and Android alike.
+      Linking.openURL(`sms:${contact.phone}?body=${encoded}`);
     }
   };
 
@@ -106,6 +123,17 @@ export default function NudgeScreen() {
         </Pressable>
       </View>
 
+      <TextInput
+        style={styles.contextInput}
+        value={noteContext}
+        onChangeText={setNoteContext}
+        placeholder={t('compose.context.placeholder')}
+        placeholderTextColor={colors.muted}
+        returnKeyType="done"
+        onSubmitEditing={() => setRegen((n) => n + 1)}
+        editable={!loading}
+      />
+
       <View style={{ gap: 8 }}>
         <View style={styles.draftHeader}>
           <Eyebrow>{t('compose.yourDraft')}</Eyebrow>
@@ -130,6 +158,11 @@ export default function NudgeScreen() {
         )}
       </View>
 
+      {draftLimited && (
+        <Pressable onPress={() => router.push('/paywall')} hitSlop={6}>
+          <Text style={styles.limitHint}>{t('compose.draftLimit')}</Text>
+        </Pressable>
+      )}
       <Button
         title={channel === 'email' ? t('compose.openMail') : t('compose.openMessages')}
         onPress={openInApp}
@@ -182,6 +215,23 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center',
     paddingVertical: 32,
+  },
+  contextInput: {
+    fontFamily: fonts.sans,
+    fontSize: 14,
+    color: colors.ink,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+  },
+  limitHint: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 13,
+    color: colors.cherryDeep,
+    textAlign: 'center',
   },
   draftInput: {
     fontFamily: fonts.sans,

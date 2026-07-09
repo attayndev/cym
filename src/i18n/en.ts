@@ -7,6 +7,7 @@ export const en = {
   'tab.settings': 'Settings',
 
   // Health labels
+  'health.new': 'New',
   'health.warm': 'Warm',
   'health.cooling': 'Cooling',
   'health.atRisk': 'At risk',
@@ -35,8 +36,10 @@ export const en = {
   'common.back': 'Back',
   'common.save': 'Save',
   'common.cancel': 'Cancel',
+  'common.close': 'Close',
   'common.delete': 'Delete',
   'common.lastTouch': 'last touch {when}',
+  'common.noTouchYet': 'no touch logged yet',
 
   // Today
   'today.title': 'The right moment,\nthe right move.',
@@ -52,6 +55,7 @@ export const en = {
     'No one to reconnect with yet. Add the people you care about and the right moments will show up here.',
   'today.section.worthActingOn': 'Worth acting on',
   'today.section.whenMinute': 'When you have a minute',
+  'today.locked': '{n} more moments waiting — Plus keeps everyone warm',
   'today.capture': 'Capture someone you just met',
 
   // People
@@ -61,6 +65,19 @@ export const en = {
   'people.importing': 'Importing…',
   'people.section.needsAttention': 'Needs attention',
   'people.section.doingFine': 'Doing fine',
+  'people.section.new': 'Not yet in touch',
+  'people.sweepBanner': '{count} look like businesses — review',
+  // Noise sweep (bulk-archive suspected businesses; device book never touched)
+  'sweep.title': 'Clean up your contacts',
+  'sweep.body':
+    "{count} contacts look like businesses or services, not people. Archive them to keep your lists focused — your phone's address book is never changed.",
+  'sweep.archiveAll': 'Archive all {count}',
+  'sweep.keep': 'Keep',
+  'sweep.clean': 'Nothing to clean up — your contacts look like people.',
+  'sweep.ai.cta': '{count} are ambiguous — let AI sort them',
+  'sweep.ai.progress': 'Sorting… {done} of {total}',
+  'sweep.ai.error': "Sorting didn't finish — check your connection and try again.",
+  'sweep.done': '{count} archived. Your phone contacts are untouched.',
   'people.empty.title': 'No people yet',
   'people.empty.body':
     'Capture someone you just met, or import your address book to get started.',
@@ -69,9 +86,63 @@ export const en = {
     'They came in without context — add why each one matters when you get a chance.',
   'people.import.nothing': 'Nothing new to import',
   'people.sync': 'Sync contacts',
+  'gmail.addInbox': 'Add another inbox',
+  'settings.updateDevice': 'Update phone contacts',
+  'settings.updateDevice.result': 'Filled in details on {count} phone contacts',
+  'settings.updateDevice.none': 'Your phone contacts already have everything',
+  'people.sync.device': 'Phone book: {n} readable contacts · access: {access}',
   'people.syncing': 'Syncing…',
   'people.sync.result': '{imported} in, {exported} out',
   'people.sync.upToDate': 'Contacts up to date',
+
+  // Getting-started checklist (Today; items self-complete from real data)
+  'checklist.title': 'Getting started',
+  'checklist.progress': '{done} of {total}',
+  'checklist.hide': 'Hide this',
+  'checklist.person.title': 'Add your first person',
+  'checklist.person.body': 'Capture someone with the context that matters — where you met, what you promised.',
+  'checklist.sweep.title': 'Clean up your imports',
+  'checklist.sweep.body': 'Archive the businesses so only real people remain.',
+  'checklist.touch.title': 'Log a touchpoint',
+  'checklist.touch.body': 'Open someone in People and log your last call or text.',
+  'checklist.nudge.title': 'Act on a nudge',
+  'checklist.nudge.body': 'When a moment appears below, write it and mark it sent.',
+  'checklist.card.title': 'Finish your card',
+  'checklist.card.body': 'Add your details so your QR card is ready to share.',
+
+  // Daily decks (Today)
+  'deck.keepWarm.title': 'Keep warm',
+  'deck.evaluate.title': 'Worth tracking?',
+  'deck.evaluate.sub': 'A few people from your address book each day — decide who belongs.',
+  'deck.signal.emails': '{count} emails · last {when}',
+  'deck.signal.imported': 'no touches yet · imported {when}',
+  'deck.track': 'Track',
+  'deck.skip': 'Skip',
+  'deck.never': 'Never',
+  'deck.track.confirm': 'Start tracking',
+  'contact.card.link': 'Link their card',
+  'contact.card.placeholder': 'Paste their card link — getcym.app/c/…',
+  'contact.card.linked': '● Living card',
+  'contact.card.error': "That card link didn't work — check it and try again.",
+  'contact.enrich': 'Fill in details',
+  'contact.enriching': 'Looking up…',
+  'contact.enrich.filled': 'Filled in: {fields}',
+  'contact.enrich.nothing': 'Nothing new found for this contact',
+  'merge.title': 'Possible duplicates',
+  'merge.sub': 'Same person twice? You decide — merging keeps everything from both.',
+  'merge.merge': 'Merge',
+  'merge.keep': 'Keep separate',
+  'deck.updates.filledQuietly': '✓ Enrichment filled in details on {n} contacts today.',
+  'deck.updates.title': 'Newer details found',
+  'deck.updates.sub': 'Public sources say these changed — you decide.',
+  'deck.updates.apply': 'Update',
+  'deck.updates.keep': 'Keep current',
+  'deck.inbox.title': 'In your inbox, not in your contacts',
+  'deck.add': 'Add',
+  'deck.dismiss': 'Dismiss',
+  'deck.cadence.30': 'Monthly',
+  'deck.cadence.90': 'Quarterly',
+  'deck.cadence.180': 'Twice a year',
 
   // Nudge card
   'nudge.kind.moment': 'The moment',
@@ -82,6 +153,11 @@ export const en = {
 
   // Nudge content (generated by the engine, resolved at render time)
   'nudgec.birthday.headline': "It's {name}'s birthday 🎂",
+  'nudgec.birthday.headline.tomorrow': "{name}'s birthday is tomorrow 🎂",
+  'nudgec.birthday.headline.upcoming': "{name}'s birthday is in {n} days 🎂",
+  'nudgec.birthday.reason.today': "Today's the day.",
+  'nudgec.birthday.action.plan.family': 'Plan a birthday call for {name} — a call on the day beats a belated text',
+  'nudgec.birthday.action.plan.pro': 'Get a birthday note ready for {name}',
   'nudgec.birthday.reason': 'Their birthday is right around the corner.',
   'nudgec.birthday.action.family': 'Call {name} to wish them a happy birthday',
   'nudgec.birthday.action.pro': 'Send {name} a birthday note and suggest catching up',
@@ -119,6 +195,12 @@ export const en = {
   'draft.tpl.checkin.pro':
     'Hi {name} — it has been a while and I wanted to check in. How have things been on your end? Would be great to catch up soon.',
 
+  // Email subject lines (deterministic; mirror the template branches)
+  'draft.subj.birthday': 'Happy birthday, {name}!',
+  'draft.subj.commitment': 'Following up on my promise',
+  'draft.subj.checkin.casual': 'Thinking of you',
+  'draft.subj.checkin.pro': 'Catching up',
+
   // Dashboard
   'dashboard.title': 'Relationship health',
   'dashboard.gate.headline': 'See which relationships are quietly going cold',
@@ -126,10 +208,13 @@ export const en = {
     'The aging dashboard sorts everyone you know into warm, cooling, at-risk, and cold — so nothing dies of neglect.',
   'dashboard.gate.cta': 'Unlock with Pro',
   'dashboard.bringBack': 'Bring these back to warm',
+  'dashboard.bucketEmpty': 'No one here right now.',
+  'dashboard.more': '+ {n} more — find them in People',
   'dashboard.empty': "Everyone is warm or cooling. That's the whole game — keep it up.",
   'dashboard.emptyNoContacts': 'Add people and their health will show up here.',
 
   // Card
+  'card.brand': 'Call Your Mom',
   'card.title': 'My card',
   'card.subtitle': 'Let them scan it — any camera app adds you straight to their contacts.',
   'card.share.subtitle':
@@ -226,6 +311,17 @@ export const en = {
   // Contact detail
   'contact.notFound': 'Contact not found.',
   'contact.logTouchpoint': 'Log a touchpoint',
+  'contact.reachOut': 'Reach out',
+  'contact.sendText': 'Send a text',
+  'contact.sendEmail': 'Send an email',
+  // Draft tone cycle (regenerate rotates through these)
+  'tone.sincere': 'Sincere',
+  'tone.funny': 'Funny',
+  'tone.professional': 'Professional',
+  // Ad-hoc keep-in-touch draft (contact screen composer, no nudge occasion)
+  'compose.idea.headline': 'Keep in touch with {name}',
+  'compose.idea.reason': 'No special occasion — just staying close.',
+  'compose.idea.action': 'Send {name} a short, thoughtful note to keep in touch',
   'log.call': 'Call',
   'log.text': 'Text',
   'log.email': 'Email',
@@ -243,10 +339,11 @@ export const en = {
   'contact.history': 'History',
   'contact.noHistory': 'No interactions logged yet.',
   'contact.edit': 'Edit',
-  'contact.delete': 'Delete contact',
-  'contact.delete.confirm': 'Delete {name}?',
-  'contact.delete.confirmBody':
-    'This removes them and all their context and history. This cannot be undone.',
+  'contact.remove': 'Remove from Call Your Mom',
+  'contact.remove.confirm': 'Remove {name} from Call Your Mom?',
+  'contact.remove.confirmBody':
+    "Their notes, reminders, and history are deleted from Call Your Mom, and they won't come back on the next contacts sync. Your phone's address book is not affected.",
+  'common.remove': 'Remove',
   'contact.cadenceEvery': 'every {n} days',
 
   // Edit contact
@@ -260,6 +357,15 @@ export const en = {
   'compose.channel.text.disabled': 'Text (no number)',
   'compose.channel.email': 'Email',
   'compose.channel.email.disabled': 'Email (no address)',
+  'compose.channel.whatsapp': 'WhatsApp',
+  'compose.channel.telegram': 'Telegram',
+  'compose.channel.signal': 'Signal',
+  'compose.openWhatsApp': 'Open WhatsApp',
+  'compose.openTelegram': 'Open Telegram',
+  'compose.openSignal': 'Open Signal',
+  'compose.draftLimit': 'Your 3 free AI drafts this month are used — this one\'s from a template. Plus writes unlimited.',
+  'compose.copiedHint': 'Your draft is copied — paste it into the chat',
+  'compose.context.placeholder': 'Just for this message: anything to work in? e.g. "congrats on the new role"',
   'compose.yourDraft': 'Your draft',
   'compose.source.ai': 'Drafted from your notes',
   'compose.source.template': 'Drafted from your notes',
@@ -274,10 +380,10 @@ export const en = {
     'Capturing contacts is free, forever. Pro is the intelligence layer: it watches for the right moment and hands you the move.',
   'paywall.feature.nudges.title': 'Occasion-aware nudges',
   'paywall.feature.nudges.body':
-    'Birthdays, promises coming due, relationships drifting — surfaced at the right moment, with the right move.',
+    'Free keeps 10 relationships warm. Plus watches everyone — birthdays, promises, job changes, and drift.',
   'paywall.feature.drafts.title': 'Messages, half-written',
   'paywall.feature.drafts.body':
-    'Every nudge comes with a draft built from the context you captured — edit and send.',
+    'Unlimited notes in your voice, context worked in. Free includes 3 a month.',
   'paywall.feature.dashboard.title': 'The aging dashboard',
   'paywall.feature.dashboard.body':
     'See exactly which relationships are warm, cooling, at risk, or cold.',
@@ -287,10 +393,22 @@ export const en = {
   'paywall.feature.email.title': 'Email sync (coming first to Gmail)',
   'paywall.feature.email.body':
     'Last-contact dates stay accurate without logging anything by hand.',
-  'paywall.price': '$99 / year',
+  'paywall.feature.enrich.title': 'Contact enrichment',
+  'paywall.feature.enrich.body':
+    'Titles and companies filled in from your correspondence and public sources — and refreshed when people change jobs.',
+  'paywall.plan.annual': 'Annual',
+  'paywall.plan.monthly': 'Monthly',
+  'paywall.price.annual': '$120 / year',
+  'paywall.price.monthly': '$15 / month',
+  'paywall.bestValue': 'Best value',
   'paywall.priceSub': 'One rekindled relationship pays for a decade of this.',
-  'paywall.cta': 'Go Pro',
+  'paywall.cta': 'Start 7-day free trial',
+  'paywall.trialFine': 'Free for 7 days, then {price}. Auto-renews — cancel anytime.',
   'paywall.fine': "No ads. Ever. Your relationships aren't for sale.",
+  'paywall.processing': 'Processing…',
+  'paywall.restore': 'Restore purchases',
+  'paywall.restoreNone': 'No previous purchase found for this account.',
+  'paywall.error': "The purchase didn't go through. You have not been charged — try again.",
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Welcome to Call Your Mom',
@@ -298,9 +416,13 @@ export const en = {
   'onboarding.welcome.body':
     'Capture the people you meet with the context of why they matter — and we tell you the right moment and the right move to reconnect.',
   'onboarding.welcome.cta': 'Get started',
-  'onboarding.card.title': 'Set up your card',
+  'onboarding.restoring': 'Signing you in and restoring your data…',
+  'onboarding.account.title': 'Create your account',
+  'onboarding.account.body':
+    'Your people and notes are backed up and follow you to any device.',
+  'onboarding.card.title': 'Enter your contact information',
   'onboarding.card.body':
-    'This is what you share when you meet someone. You can change it anytime.',
+    'This becomes your shareable card — name, email, phone, and what you do. Trade it by QR when you meet someone.',
   'onboarding.card.cta': 'Continue',
   'onboarding.card.skip': 'Skip for now',
   'onboarding.notify.title': 'Never miss the moment',

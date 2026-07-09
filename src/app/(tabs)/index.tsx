@@ -3,12 +3,17 @@ import { Redirect, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DialMark } from '@/components/dial-mark';
+import { EvaluateDeck } from '@/components/evaluate-deck';
+import { MergeReview } from '@/components/merge-review';
+import { UpdatesDeck } from '@/components/updates-deck';
+import { GettingStarted } from '@/components/getting-started';
 import { NudgeCard } from '@/components/nudge-card';
 import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
 import { formatDateline, useTranslation } from '@/i18n';
 import { pendingNudges } from '@/lib/nudges';
+import { visibleNudgeContactIds } from '@/lib/tier';
 import { useApp } from '@/state/app-context';
 
 export default function TodayScreen() {
@@ -21,11 +26,17 @@ export default function TodayScreen() {
 
   const contactsById = new Map(db.contacts.map((c) => [c.id, c]));
   // The engine stays persona-global; Today just presents the active persona's slice.
-  const nudges = pendingNudges(db).filter(
+  const allNudges = pendingNudges(db).filter(
     (n) => contactsById.get(n.contactId)?.personaId === activePersonaId,
   );
+  // Free keeps FREE_TRACK_LIMIT relationships warm with real nudges; the
+  // rest of the engine's output stays behind the upgrade row below.
+  const visibleIds = visibleNudgeContactIds(db);
+  const nudges = visibleIds ? allNudges.filter((n) => visibleIds.has(n.contactId)) : allNudges;
+  const lockedCount = allNudges.length - nudges.length;
   const hookNudges = nudges.filter((n) => n.kind === 'hook');
-  const decayNudges = nudges.filter((n) => n.kind === 'decay').slice(0, 2);
+  // The keep-warm deck: every live decay nudge (the engine caps them at 10).
+  const decayNudges = nudges.filter((n) => n.kind === 'decay');
   const hasContacts = db.contacts.some((c) => c.personaId === activePersonaId);
 
   return (
@@ -43,12 +54,14 @@ export default function TodayScreen() {
         <Display>{t('today.title')}</Display>
       </View>
 
-      {!db.profile.isPro ? (
+      <GettingStarted />
+
+      {!db.profile.isPro && nudges.length === 0 && lockedCount > 0 ? (
         <Card dark style={styles.teaser}>
           <View style={styles.teaserBadge}>
             <Feather name="lock" size={12} color={colors.butter} />
             <Text style={styles.teaserBadgeText}>
-              {t('today.teaser.badge', { count: Math.max(nudges.length, hasContacts ? 1 : 0) })}
+              {t('today.teaser.badge', { count: Math.max(lockedCount, hasContacts ? 1 : 0) })}
             </Text>
           </View>
           <Text style={styles.teaserHeadline}>{t('today.teaser.headline')}</Text>
@@ -88,7 +101,7 @@ export default function TodayScreen() {
           )}
           {decayNudges.length > 0 && (
             <View style={styles.section}>
-              <Eyebrow>{t('today.section.whenMinute')}</Eyebrow>
+              <Eyebrow>{t('deck.keepWarm.title')}</Eyebrow>
               {decayNudges.map((nudge) => {
                 const contact = contactsById.get(nudge.contactId);
                 if (!contact) return null;
@@ -106,6 +119,21 @@ export default function TodayScreen() {
           )}
         </>
       )}
+
+      {!db.profile.isPro && lockedCount > 0 && nudges.length > 0 && (
+        <Pressable
+          onPress={() => router.push('/paywall')}
+          style={({ pressed }) => [styles.lockedRow, pressed && { opacity: 0.8 }]}>
+          <Feather name="lock" size={13} color={colors.cherryDeep} />
+          <Text style={styles.lockedRowText}>{t('today.locked', { n: lockedCount })}</Text>
+        </Pressable>
+      )}
+
+      <MergeReview />
+
+      <UpdatesDeck />
+
+      <EvaluateDeck />
 
       <Pressable
         onPress={() => router.push('/capture')}
@@ -134,6 +162,22 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
+  },
+  lockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    backgroundColor: colors.butter,
+  },
+  lockedRowText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13.5,
+    color: colors.espresso,
   },
   teaser: {
     gap: 10,

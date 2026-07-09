@@ -5,7 +5,7 @@ import { HealthBadge } from '@/components/health-badge';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { relativeTime, t } from '@/i18n';
 import { contactHealth, lastContactAt } from '@/lib/nudges';
-import type { Contact, Interaction } from '@/lib/types';
+import type { Contact, Health, Interaction } from '@/lib/types';
 
 // Site avatars: solid brand circles with contrasting initials, picked
 // deterministically per contact so the same person keeps their color.
@@ -25,12 +25,16 @@ function avatarPalette(id: string) {
 export function ContactRow({
   contact,
   interactions,
+  health: healthProp,
 }: {
   contact: Contact;
   interactions: Interaction[];
+  /** Precomputed health (from buildHealthIndex) to skip the per-row scan in long lists. */
+  health?: Health;
 }) {
   const router = useRouter();
   const now = new Date();
+  const health = healthProp ?? contactHealth(contact, interactions, now);
   const last = lastContactAt(contact, interactions);
   const subtitle = [contact.role, contact.company].filter(Boolean).join(' · ');
   const palette = avatarPalette(contact.id);
@@ -51,10 +55,12 @@ export function ContactRow({
         </Text>
         <Text style={styles.meta}>
           {subtitle ? `${subtitle} · ` : ''}
-          {t('common.lastTouch', { when: relativeTime(last, now) })}
+          {health === 'new'
+            ? t('common.noTouchYet')
+            : t('common.lastTouch', { when: relativeTime(last, now) })}
         </Text>
       </View>
-      <HealthBadge health={contactHealth(contact, interactions, now)} />
+      <HealthBadge health={health} />
     </Pressable>
   );
 }

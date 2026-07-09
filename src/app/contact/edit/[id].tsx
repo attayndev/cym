@@ -79,7 +79,8 @@ export default function EditContactScreen() {
       personaId: personaId || undefined,
     });
     updateContext(contact.id, { whereMet, discussed, whyMatters });
-    router.back();
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/people');
   };
 
   return (

@@ -62,6 +62,7 @@ export default function RootLayout() {
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
         <Stack.Screen name="personas" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="sweep" options={{ presentation: 'modal' }} />
         <Stack.Screen name="auth" options={{ presentation: 'modal' }} />
         <Stack.Screen name="contact/edit/[id]" options={{ presentation: 'modal' }} />
       </Stack>

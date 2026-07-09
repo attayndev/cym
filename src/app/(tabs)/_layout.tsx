@@ -1,11 +1,21 @@
 import { Feather } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { useApp } from '@/state/app-context';
+import { useAuth } from '@/state/auth-context';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const { db } = useApp();
+  const { configured, user } = useAuth();
+
+  // Accounts are required: new installs onboard (which creates the account),
+  // and a signed-out app locks to the sign-in screen until a session returns.
+  if (db && !db.onboarded) return <Redirect href="/onboarding" />;
+  if (db?.onboarded && configured && !user) return <Redirect href="/auth" />;
+
   return (
     <Tabs
       screenOptions={{
@@ -37,20 +47,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: t('tab.health'),
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="pie-chart" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="card"
         options={{
           title: t('tab.card'),
           tabBarIcon: ({ color, size }) => (
             <Feather name="credit-card" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: t('tab.health'),
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="pie-chart" size={size} color={color} />
           ),
         }}
       />

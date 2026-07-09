@@ -2,8 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { confirmAction, notify } from '@/lib/alert';
 import { Field } from '@/components/field';
 import { Body, Button, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
@@ -16,7 +17,7 @@ import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
 
 export default function SettingsScreen() {
-  const { db, setNotificationsEnabled, exportData, resetAll, loadSampleData, pullNow, syncContacts } = useApp();
+  const { db, setNotificationsEnabled, exportData, resetAll, loadSampleData, pullNow, syncContacts, pushContactsToDevice } = useApp();
   const router = useRouter();
   const { t, locale, setLocale } = useTranslation();
   const { configured, user, signOut } = useAuth();
@@ -48,11 +49,26 @@ export default function SettingsScreen() {
   const handleSyncContacts = async () => {
     setContactsBusy(true);
     try {
-      const { imported, exported } = await syncContacts();
-      Alert.alert(
+      const { imported, exported, deviceTotal, access } = await syncContacts();
+      notify(
         imported + exported > 0
           ? t('people.sync.result', { imported, exported })
           : t('people.sync.upToDate'),
+        t('people.sync.device', { n: deviceTotal, access: access ?? '—' }),
+      );
+    } finally {
+      setContactsBusy(false);
+    }
+  };
+
+  const handleUpdateDeviceContacts = async () => {
+    setContactsBusy(true);
+    try {
+      const updated = await pushContactsToDevice();
+      notify(
+        updated > 0
+          ? t('settings.updateDevice.result', { count: updated })
+          : t('settings.updateDevice.none'),
       );
     } finally {
       setContactsBusy(false);
@@ -68,7 +84,7 @@ export default function SettingsScreen() {
       const granted = await requestNotificationPermission();
       setNotificationsEnabled(granted);
       if (!granted) {
-        Alert.alert(t('settings.notifications.label'), t('settings.notifications.web'));
+        notify(t('settings.notifications.label'), t('settings.notifications.web'));
       }
     } else {
       setNotificationsEnabled(false);
@@ -78,24 +94,28 @@ export default function SettingsScreen() {
   const handleExport = async () => {
     const json = exportData();
     await Clipboard.setStringAsync(json);
-    Alert.alert(t('settings.data.exported'), undefined);
+    notify(t('settings.data.exported'));
   };
 
   const confirmReset = () => {
-    Alert.alert(t('settings.data.reset.confirm'), t('settings.data.reset.confirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
+    confirmAction(
       {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => {
-          void resetAll();
-          router.replace('/onboarding');
-        },
+        title: t('settings.data.reset.confirm'),
+        body: t('settings.data.reset.confirmBody'),
+        confirmText: t('common.delete'),
+        cancelText: t('common.cancel'),
+        destructive: true,
       },
-    ]);
+      () => {
+        void resetAll();
+        router.replace('/onboarding');
+      },
+    );
   };
 
-  const gmailAccount = db.accounts.find((a) => a.provider === 'gmail' && a.status === 'connected');
+  const gmailAccounts = db.accounts.filter(
+    (a) => a.provider === 'gmail' && a.status === 'connected',
+  );
 
   const handleConnectGmail = async () => {
     setGmailBusy(true);
@@ -105,7 +125,7 @@ export default function SettingsScreen() {
         await syncGmailNow().catch(() => 0);
         await pullNow();
       } else if (result === 'error') {
-        Alert.alert(t('gmail.error'));
+        notify(t('gmail.error'));
       }
     } finally {
       setGmailBusy(false);
@@ -117,22 +137,32 @@ export default function SettingsScreen() {
     try {
       const count = await syncGmailNow();
       await pullNow();
-      Alert.alert(count > 0 ? t('gmail.synced', { count }) : t('gmail.syncedNone'));
+      notify(count > 0 ? t('gmail.synced', { count }) : t('gmail.syncedNone'));
     } catch {
-      Alert.alert(t('gmail.error'));
+      notify(t('gmail.error'));
     } finally {
       setGmailBusy(false);
     }
   };
 
-  const handleDisconnectGmail = async () => {
+  const handleDisconnectGmail = async (email: string) => {
     setGmailBusy(true);
     try {
-      await disconnectGmail();
+      await disconnectGmail(email);
       await pullNow();
     } finally {
       setGmailBusy(false);
     }
+  };
+
+  // Multi-inbox is a Plus feature: the first inbox is free, adding a second
+  // routes through the paywall.
+  const handleAddInbox = () => {
+    if (!db.profile.isPro) {
+      router.push('/paywall');
+      return;
+    }
+    void handleConnectGmail();
   };
 
   return (
@@ -172,7 +202,13 @@ export default function SettingsScreen() {
                   {t('settings.account.signedInAs', { email: user.email ?? '' })}
                 </Text>
                 <Body muted>{t('settings.account.syncBody')}</Body>
-                <Pressable onPress={() => void signOut()} hitSlop={6}>
+                <Pressable
+                  onPress={async () => {
+                    await signOut();
+                    // Signed-out usage is locked — land on the sign-in screen.
+                    router.replace('/auth');
+                  }}
+                  hitSlop={6}>
                   <Text style={styles.link}>{t('settings.account.signOut')}</Text>
                 </Pressable>
               </>
@@ -195,11 +231,21 @@ export default function SettingsScreen() {
           <Card>
             {Platform.OS === 'web' ? (
               <Body muted>{t('gmail.mobileOnly')}</Body>
-            ) : gmailAccount ? (
+            ) : gmailAccounts.length > 0 ? (
               <>
-                <Text style={styles.profileName}>
-                  {t('gmail.connected', { email: gmailAccount.email })}
-                </Text>
+                {gmailAccounts.map((account) => (
+                  <View key={account.id} style={styles.gmailAccountRow}>
+                    <Text style={styles.gmailEmail} numberOfLines={1}>
+                      {account.email}
+                    </Text>
+                    <Pressable
+                      onPress={() => handleDisconnectGmail(account.email)}
+                      disabled={gmailBusy}
+                      hitSlop={6}>
+                      <Text style={styles.linkMuted}>{t('gmail.disconnect')}</Text>
+                    </Pressable>
+                  </View>
+                ))}
                 <Body muted>{t('gmail.body')}</Body>
                 <View style={styles.gmailRow}>
                   <Pressable onPress={handleSyncGmail} disabled={gmailBusy} hitSlop={6}>
@@ -207,8 +253,10 @@ export default function SettingsScreen() {
                       {gmailBusy ? t('gmail.syncing') : t('gmail.syncNow')}
                     </Text>
                   </Pressable>
-                  <Pressable onPress={handleDisconnectGmail} disabled={gmailBusy} hitSlop={6}>
-                    <Text style={styles.linkMuted}>{t('gmail.disconnect')}</Text>
+                  <Pressable onPress={handleAddInbox} disabled={gmailBusy} hitSlop={6}>
+                    <Text style={styles.link}>
+                      {gmailBusy ? t('gmail.connecting') : t('gmail.addInbox')}
+                    </Text>
                   </Pressable>
                 </View>
               </>
@@ -307,6 +355,15 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
           )}
+          {Platform.OS !== 'web' && (
+            <Pressable
+              onPress={handleUpdateDeviceContacts}
+              disabled={contactsBusy}
+              style={styles.dataRow}>
+              <Feather name="upload" size={16} color={colors.inkSoft} />
+              <Text style={styles.dataLabel}>{t('settings.updateDevice')}</Text>
+            </Pressable>
+          )}
           <Pressable onPress={handleExport} style={styles.dataRow}>
             <Feather name="download" size={16} color={colors.inkSoft} />
             <Text style={styles.dataLabel}>{t('settings.data.export')}</Text>
@@ -389,6 +446,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
     marginTop: 4,
+  },
+  gmailAccountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  gmailEmail: {
+    flex: 1,
+    fontFamily: fonts.sansBold,
+    fontSize: 14,
+    color: colors.ink,
   },
   gmailRow: {
     flexDirection: 'row',

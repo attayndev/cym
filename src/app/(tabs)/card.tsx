@@ -131,23 +131,22 @@ export default function CardScreen() {
         )}
         {card.tagline && <Text style={styles.cardTagline}>{card.tagline}</Text>}
         <View style={styles.qrWrap}>
+          {/* Always CYM-branded, whatever the persona or QR mode — high error
+              correction leaves room for the mark even on dense vCard codes. */}
           <QRCode
             value={shareUrl ?? buildVCard(card)}
             size={168}
             backgroundColor={colors.white}
             color={colors.ink}
-            {...(shareUrl
-              ? {
-                  ecl: 'H' as const,
-                  logoSVG: MARK_SVG,
-                  logoSize: 38,
-                  logoBackgroundColor: colors.cream,
-                  logoMargin: 4,
-                  logoBorderRadius: 21,
-                }
-              : {})}
+            ecl="H"
+            logoSVG={MARK_SVG}
+            logoSize={38}
+            logoBackgroundColor={colors.cream}
+            logoMargin={4}
+            logoBorderRadius={21}
           />
         </View>
+        <Text style={styles.cardBrand}>{t('card.brand')}</Text>
         <Text style={styles.modeHint}>
           {shareUrl ? t('card.mode.link') : t('card.mode.vcard')}
         </Text>
@@ -245,6 +244,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.cardMuted,
     textAlign: 'center',
+  },
+  cardBrand: {
+    fontFamily: fonts.sansBold,
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: colors.cardMuted,
+    textAlign: 'center',
+    marginTop: 8,
   },
   modeHint: {
     fontFamily: fonts.sans,

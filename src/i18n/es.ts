@@ -9,6 +9,7 @@ export const es: Partial<Dict> = {
   'tab.settings': 'Ajustes',
 
   // Health labels
+  'health.new': 'Nueva',
   'health.warm': 'Cercana',
   'health.cooling': 'Enfriándose',
   'health.atRisk': 'En riesgo',
@@ -37,8 +38,10 @@ export const es: Partial<Dict> = {
   'common.back': 'Atrás',
   'common.save': 'Guardar',
   'common.cancel': 'Cancelar',
+  'common.close': 'Cerrar',
   'common.delete': 'Eliminar',
   'common.lastTouch': 'último contacto {when}',
+  'common.noTouchYet': 'sin contacto registrado aún',
 
   // Today
   'today.title': 'El momento justo,\nel gesto justo.',
@@ -54,6 +57,7 @@ export const es: Partial<Dict> = {
     'Aún no hay nadie con quien reconectar. Agrega a las personas que te importan y los momentos justos aparecerán aquí.',
   'today.section.worthActingOn': 'Vale la pena actuar',
   'today.section.whenMinute': 'Cuando tengas un minuto',
+  'today.locked': '{n} momentos más esperando — Plus mantiene a todos cerca',
   'today.capture': 'Captura a alguien que acabas de conocer',
 
   // People
@@ -63,6 +67,19 @@ export const es: Partial<Dict> = {
   'people.importing': 'Importando…',
   'people.section.needsAttention': 'Necesitan atención',
   'people.section.doingFine': 'Van bien',
+  'people.section.new': 'Aún sin contacto',
+  'people.sweepBanner': '{count} parecen negocios — revisar',
+  // Limpieza (archivar negocios en bloque; la agenda del teléfono no se toca)
+  'sweep.title': 'Limpia tus contactos',
+  'sweep.body':
+    '{count} contactos parecen negocios o servicios, no personas. Archívalos para mantener tus listas enfocadas — la agenda de tu teléfono nunca se modifica.',
+  'sweep.archiveAll': 'Archivar los {count}',
+  'sweep.keep': 'Conservar',
+  'sweep.clean': 'Nada que limpiar — tus contactos parecen personas.',
+  'sweep.ai.cta': '{count} son ambiguos — deja que la IA los ordene',
+  'sweep.ai.progress': 'Ordenando… {done} de {total}',
+  'sweep.ai.error': 'La clasificación no terminó — revisa tu conexión e inténtalo de nuevo.',
+  'sweep.done': '{count} archivados. Los contactos de tu teléfono siguen intactos.',
   'people.empty.title': 'Aún no hay personas',
   'people.empty.body':
     'Captura a alguien que acabas de conocer o importa tu agenda para empezar.',
@@ -71,9 +88,63 @@ export const es: Partial<Dict> = {
     'Llegaron sin contexto — agrega por qué importa cada uno cuando puedas.',
   'people.import.nothing': 'Nada nuevo para importar',
   'people.sync': 'Sincronizar contactos',
+  'gmail.addInbox': 'Agregar otra bandeja',
+  'settings.updateDevice': 'Actualizar contactos del teléfono',
+  'settings.updateDevice.result': 'Se completaron datos en {count} contactos del teléfono',
+  'settings.updateDevice.none': 'Tus contactos del teléfono ya tienen todo',
+  'people.sync.device': 'Agenda: {n} contactos legibles · acceso: {access}',
   'people.syncing': 'Sincronizando…',
   'people.sync.result': '{imported} entran, {exported} salen',
   'people.sync.upToDate': 'Contactos al día',
+
+  // Lista de primeros pasos (Hoy; se completa sola con datos reales)
+  'checklist.title': 'Primeros pasos',
+  'checklist.progress': '{done} de {total}',
+  'checklist.hide': 'Ocultar',
+  'checklist.person.title': 'Agrega a tu primera persona',
+  'checklist.person.body': 'Captura a alguien con el contexto que importa — dónde se conocieron, qué prometiste.',
+  'checklist.sweep.title': 'Limpia tus importados',
+  'checklist.sweep.body': 'Archiva los negocios para que solo queden personas.',
+  'checklist.touch.title': 'Registra un contacto',
+  'checklist.touch.body': 'Abre a alguien en Personas y registra tu última llamada o mensaje.',
+  'checklist.nudge.title': 'Actúa sobre un recordatorio',
+  'checklist.nudge.body': 'Cuando aparezca un momento abajo, escríbelo y márcalo como enviado.',
+  'checklist.card.title': 'Completa tu tarjeta',
+  'checklist.card.body': 'Agrega tus datos para que tu tarjeta QR esté lista para compartir.',
+
+  // Mazos diarios (Hoy)
+  'deck.keepWarm.title': 'Mantener cerca',
+  'deck.evaluate.title': '¿Vale la pena seguir?',
+  'deck.evaluate.sub': 'Unas cuantas personas de tu agenda cada día — decide quién pertenece.',
+  'deck.signal.emails': '{count} correos · último {when}',
+  'deck.signal.imported': 'sin contacto aún · importado {when}',
+  'deck.track': 'Seguir',
+  'deck.skip': 'Saltar',
+  'deck.never': 'Nunca',
+  'deck.track.confirm': 'Empezar a seguir',
+  'contact.card.link': 'Vincular su tarjeta',
+  'contact.card.placeholder': 'Pega el enlace de su tarjeta — getcym.app/c/…',
+  'contact.card.linked': '● Tarjeta viva',
+  'contact.card.error': 'Ese enlace no funcionó — revísalo e inténtalo de nuevo.',
+  'contact.enrich': 'Completar datos',
+  'contact.enriching': 'Buscando…',
+  'contact.enrich.filled': 'Se completó: {fields}',
+  'contact.enrich.nothing': 'No se encontró nada nuevo para este contacto',
+  'merge.title': 'Posibles duplicados',
+  'merge.sub': '¿La misma persona dos veces? Tú decides — al combinar se conserva todo de ambos.',
+  'merge.merge': 'Combinar',
+  'merge.keep': 'Mantener separados',
+  'deck.updates.filledQuietly': '✓ El enriquecimiento completó datos de {n} contactos hoy.',
+  'deck.updates.title': 'Datos más recientes',
+  'deck.updates.sub': 'Fuentes públicas dicen que esto cambió — tú decides.',
+  'deck.updates.apply': 'Actualizar',
+  'deck.updates.keep': 'Mantener actual',
+  'deck.inbox.title': 'En tu correo, no en tus contactos',
+  'deck.add': 'Agregar',
+  'deck.dismiss': 'Descartar',
+  'deck.cadence.30': 'Mensual',
+  'deck.cadence.90': 'Trimestral',
+  'deck.cadence.180': 'Dos veces al año',
 
   // Nudge card
   'nudge.kind.moment': 'El momento',
@@ -84,6 +155,11 @@ export const es: Partial<Dict> = {
 
   // Nudge content
   'nudgec.birthday.headline': 'Es el cumpleaños de {name} 🎂',
+  'nudgec.birthday.headline.tomorrow': 'Mañana es el cumpleaños de {name} 🎂',
+  'nudgec.birthday.headline.upcoming': 'El cumpleaños de {name} es en {n} días 🎂',
+  'nudgec.birthday.reason.today': 'Hoy es el día.',
+  'nudgec.birthday.action.plan.family': 'Planea una llamada de cumpleaños para {name} — llamar el día vale más que un texto tardío',
+  'nudgec.birthday.action.plan.pro': 'Prepara una nota de cumpleaños para {name}',
   'nudgec.birthday.reason': 'Su cumpleaños está a la vuelta de la esquina.',
   'nudgec.birthday.action.family': 'Llama a {name} para desearle feliz cumpleaños',
   'nudgec.birthday.action.pro': 'Envía a {name} una nota de cumpleaños y propón verse',
@@ -122,6 +198,12 @@ export const es: Partial<Dict> = {
   'draft.tpl.checkin.pro':
     'Hola {name} — ha pasado un tiempo y quería saludarte. ¿Cómo va todo por tu lado? Sería genial ponernos al día pronto.',
 
+  // Asuntos de correo (deterministas; reflejan las ramas de plantillas)
+  'draft.subj.birthday': '¡Feliz cumpleaños, {name}!',
+  'draft.subj.commitment': 'Sobre lo que te prometí',
+  'draft.subj.checkin.casual': 'Pensando en ti',
+  'draft.subj.checkin.pro': 'Para ponernos al día',
+
   // Dashboard
   'dashboard.title': 'Salud de relaciones',
   'dashboard.gate.headline': 'Mira qué relaciones se están enfriando en silencio',
@@ -129,10 +211,13 @@ export const es: Partial<Dict> = {
     'El panel de seguimiento clasifica a todos tus conocidos en cercana, enfriándose, en riesgo y fría — para que nada muera por descuido.',
   'dashboard.gate.cta': 'Desbloquear con Pro',
   'dashboard.bringBack': 'Devuélvelas a cercanas',
+  'dashboard.bucketEmpty': 'Nadie por aquí ahora mismo.',
+  'dashboard.more': '+ {n} más — encuéntralos en Personas',
   'dashboard.empty': 'Todos están cercanos o enfriándose. De eso se trata — sigue así.',
   'dashboard.emptyNoContacts': 'Agrega personas y su salud aparecerá aquí.',
 
   // Card
+  'card.brand': 'Call Your Mom',
   'card.title': 'Mi tarjeta',
   'card.subtitle':
     'Deja que la escaneen — cualquier cámara te agrega directo a sus contactos.',
@@ -230,6 +315,17 @@ export const es: Partial<Dict> = {
   // Contact detail
   'contact.notFound': 'Contacto no encontrado.',
   'contact.logTouchpoint': 'Registrar un contacto',
+  'contact.reachOut': 'Escríbele',
+  'contact.sendText': 'Enviar un mensaje',
+  'contact.sendEmail': 'Enviar un correo',
+  // Tonos del borrador (regenerar rota entre ellos)
+  'tone.sincere': 'Sincero',
+  'tone.funny': 'Divertido',
+  'tone.professional': 'Profesional',
+  // Borrador espontáneo para mantener el contacto (sin ocasión especial)
+  'compose.idea.headline': 'Mantén el contacto con {name}',
+  'compose.idea.reason': 'Sin ocasión especial — solo para no perder el contacto.',
+  'compose.idea.action': 'Envía a {name} una nota breve y cercana para mantener el contacto',
   'log.call': 'Llamada',
   'log.text': 'Mensaje',
   'log.email': 'Correo',
@@ -247,10 +343,11 @@ export const es: Partial<Dict> = {
   'contact.history': 'Historial',
   'contact.noHistory': 'Aún no hay interacciones registradas.',
   'contact.edit': 'Editar',
-  'contact.delete': 'Eliminar contacto',
-  'contact.delete.confirm': '¿Eliminar a {name}?',
-  'contact.delete.confirmBody':
-    'Esto elimina a la persona y todo su contexto e historial. No se puede deshacer.',
+  'contact.remove': 'Quitar de Call Your Mom',
+  'contact.remove.confirm': '¿Quitar a {name} de Call Your Mom?',
+  'contact.remove.confirmBody':
+    'Sus notas, recordatorios e historial se eliminan de Call Your Mom y no volverá en la próxima sincronización de contactos. La agenda de tu teléfono no se modifica.',
+  'common.remove': 'Quitar',
   'contact.cadenceEvery': 'cada {n} días',
 
   // Edit contact
@@ -264,6 +361,15 @@ export const es: Partial<Dict> = {
   'compose.channel.text.disabled': 'Mensaje (sin número)',
   'compose.channel.email': 'Correo',
   'compose.channel.email.disabled': 'Correo (sin dirección)',
+  'compose.channel.whatsapp': 'WhatsApp',
+  'compose.channel.telegram': 'Telegram',
+  'compose.channel.signal': 'Signal',
+  'compose.openWhatsApp': 'Abrir WhatsApp',
+  'compose.openTelegram': 'Abrir Telegram',
+  'compose.openSignal': 'Abrir Signal',
+  'compose.draftLimit': 'Usaste tus 3 borradores de IA gratis del mes — este es de plantilla. Plus escribe sin límite.',
+  'compose.copiedHint': 'Tu borrador está copiado — pégalo en el chat',
+  'compose.context.placeholder': 'Solo para este mensaje: ¿algo que incluir? p. ej. "felicidades por el nuevo puesto"',
   'compose.yourDraft': 'Tu borrador',
   'compose.source.ai': 'Redactado a partir de tus notas',
   'compose.source.template': 'Redactado a partir de tus notas',
@@ -278,10 +384,10 @@ export const es: Partial<Dict> = {
     'Capturar contactos es gratis, para siempre. Pro es la capa de inteligencia: detecta el momento justo y te da el gesto.',
   'paywall.feature.nudges.title': 'Recordatorios según la ocasión',
   'paywall.feature.nudges.body':
-    'Cumpleaños, promesas por cumplir, relaciones que se distancian — en el momento justo, con el gesto justo.',
+    'Gratis mantiene 10 relaciones cerca. Plus cuida a todos — cumpleaños, promesas, cambios de trabajo y distancia.',
   'paywall.feature.drafts.title': 'Mensajes, ya empezados',
   'paywall.feature.drafts.body':
-    'Cada recordatorio trae un borrador hecho con el contexto que capturaste — edítalo y envíalo.',
+    'Notas ilimitadas con tu voz y tu contexto. Gratis incluye 3 al mes.',
   'paywall.feature.dashboard.title': 'El panel de seguimiento',
   'paywall.feature.dashboard.body':
     'Mira exactamente qué relaciones están cercanas, enfriándose, en riesgo o frías.',
@@ -291,10 +397,22 @@ export const es: Partial<Dict> = {
   'paywall.feature.email.title': 'Sincronización de correo (primero Gmail)',
   'paywall.feature.email.body':
     'Las fechas de último contacto se mantienen exactas sin registrar nada a mano.',
-  'paywall.price': '$99 / año',
+  'paywall.feature.enrich.title': 'Enriquecimiento de contactos',
+  'paywall.feature.enrich.body':
+    'Cargos y empresas completados desde tu correspondencia y fuentes públicas — y actualizados cuando alguien cambia de trabajo.',
+  'paywall.plan.annual': 'Anual',
+  'paywall.plan.monthly': 'Mensual',
+  'paywall.price.annual': '$120 / año',
+  'paywall.price.monthly': '$15 / mes',
+  'paywall.bestValue': 'Mejor precio',
   'paywall.priceSub': 'Una relación reavivada paga una década de esto.',
-  'paywall.cta': 'Hazte Pro',
+  'paywall.cta': 'Prueba 7 días gratis',
+  'paywall.trialFine': 'Gratis 7 días, luego {price}. Se renueva automáticamente — cancela cuando quieras.',
   'paywall.fine': 'Sin anuncios. Nunca. Tus relaciones no están en venta.',
+  'paywall.processing': 'Procesando…',
+  'paywall.restore': 'Restaurar compras',
+  'paywall.restoreNone': 'No se encontró ninguna compra previa para esta cuenta.',
+  'paywall.error': 'La compra no se completó. No se te cobró — inténtalo de nuevo.',
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Bienvenido a Call Your Mom',
@@ -302,9 +420,13 @@ export const es: Partial<Dict> = {
   'onboarding.welcome.body':
     'Captura a las personas que conoces con el contexto de por qué importan — y te decimos el momento justo y el gesto justo para reconectar.',
   'onboarding.welcome.cta': 'Empezar',
-  'onboarding.card.title': 'Configura tu tarjeta',
+  'onboarding.restoring': 'Iniciando sesión y restaurando tus datos…',
+  'onboarding.account.title': 'Crea tu cuenta',
+  'onboarding.account.body':
+    'Tus personas y notas se respaldan y te siguen a cualquier dispositivo.',
+  'onboarding.card.title': 'Ingresa tu información de contacto',
   'onboarding.card.body':
-    'Esto es lo que compartes cuando conoces a alguien. Puedes cambiarlo cuando quieras.',
+    'Esto se convierte en tu tarjeta para compartir — nombre, correo, teléfono y a qué te dedicas. Intercámbiala por QR cuando conozcas a alguien.',
   'onboarding.card.cta': 'Continuar',
   'onboarding.card.skip': 'Omitir por ahora',
   'onboarding.notify.title': 'No te pierdas el momento',

@@ -1,15 +1,25 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
+import { notify } from '@/lib/alert';
 import { ContactRow } from '@/components/contact-row';
 import { ExchangeInbox } from '@/components/exchange-inbox';
 import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
-import { contactHealth, decayRatio } from '@/lib/nudges';
+import { isActiveContact } from '@/lib/classify';
+import { buildHealthIndex } from '@/lib/nudges';
 import { contactsForPersona } from '@/lib/personas';
 import { useApp } from '@/state/app-context';
 
@@ -23,7 +33,12 @@ export default function PeopleScreen() {
   if (!db) return <Screen scroll={false}>{null}</Screen>;
 
   const now = new Date();
-  const personaContacts = contactsForPersona(db.contacts, activePersonaId);
+  // Archived contacts (noise sweep) stay out of the list; a dedicated
+  // archived view arrives with the sweep UI.
+  const personaContacts = contactsForPersona(db.contacts, activePersonaId).filter(
+    isActiveContact,
+  );
+  const index = buildHealthIndex(personaContacts, db.interactions, now);
   const filtered = personaContacts
     .filter((c) =>
       `${c.firstName} ${c.lastName ?? ''} ${c.company ?? ''}`
@@ -31,25 +46,24 @@ export default function PeopleScreen() {
         .includes(query.toLowerCase()),
     )
     .sort(
-      (a, b) =>
-        decayRatio(b, db.interactions, now) * b.importance -
-        decayRatio(a, db.interactions, now) * a.importance,
+      (a, b) => index.get(b.id)!.ratio * b.importance - index.get(a.id)!.ratio * a.importance,
     );
 
   const needsAttention = filtered.filter((c) => {
-    const h = contactHealth(c, db.interactions, now);
+    const h = index.get(c.id)!.health;
     return h === 'at-risk' || h === 'cold';
   });
   const doingFine = filtered.filter((c) => {
-    const h = contactHealth(c, db.interactions, now);
+    const h = index.get(c.id)!.health;
     return h === 'warm' || h === 'cooling';
   });
+  const notYetInTouch = filtered.filter((c) => index.get(c.id)!.health === 'new');
 
   const handleSync = async () => {
     setSyncing(true);
     try {
       const { imported, exported } = await syncContacts();
-      Alert.alert(
+      notify(
         imported + exported > 0
           ? t('people.sync.result', { imported, exported })
           : t('people.sync.upToDate'),
@@ -60,8 +74,19 @@ export default function PeopleScreen() {
     }
   };
 
+  // Sweep suspects are counted across all personas — the sweep is global.
+  const sweepCount = db.contacts.filter(
+    (c) => c.kind === 'business' && isActiveContact(c),
+  ).length;
+
+  const sections = [
+    { key: 'attention', title: t('people.section.needsAttention'), data: needsAttention },
+    { key: 'fine', title: t('people.section.doingFine'), data: doingFine },
+    { key: 'new', title: t('people.section.new'), data: notYetInTouch },
+  ].filter((s) => s.data.length > 0);
+
   return (
-    <Screen>
+    <Screen scroll={false}>
       <View style={styles.headerRow}>
         <Display>{t('people.title')}</Display>
         <View style={styles.headerActions}>
@@ -75,6 +100,16 @@ export default function PeopleScreen() {
       </View>
 
       <ExchangeInbox />
+
+      {sweepCount > 0 && (
+        <Pressable
+          onPress={() => router.push('/sweep')}
+          style={({ pressed }) => [styles.sweepBanner, pressed && { opacity: 0.8 }]}>
+          <Feather name="archive" size={14} color={colors.espresso} />
+          <Text style={styles.sweepText}>{t('people.sweepBanner', { count: sweepCount })}</Text>
+          <Feather name="chevron-right" size={16} color={colors.espresso} />
+        </Pressable>
+      )}
 
       {personaContacts.length === 0 ? (
         <Card style={{ gap: 6 }}>
@@ -109,27 +144,39 @@ export default function PeopleScreen() {
             </Pressable>
           )}
 
-          {needsAttention.length > 0 && (
-            <View style={styles.section}>
-              <Eyebrow>{t('people.section.needsAttention')}</Eyebrow>
-              {needsAttention.map((c) => (
-                <ContactRow key={c.id} contact={c} interactions={db.interactions} />
-              ))}
-            </View>
-          )}
-
-          {doingFine.length > 0 && (
-            <View style={styles.section}>
-              <Eyebrow>{t('people.section.doingFine')}</Eyebrow>
-              {doingFine.map((c) => (
-                <ContactRow key={c.id} contact={c} interactions={db.interactions} />
-              ))}
-            </View>
-          )}
+          {/* Virtualized — address books run 10k+ contacts; only visible rows render. */}
+          <SectionList
+            sections={sections}
+            keyExtractor={(c) => c.id}
+            renderItem={({ item }) => (
+              <ContactRow
+                contact={item}
+                interactions={db.interactions}
+                health={index.get(item.id)!.health}
+              />
+            )}
+            renderSectionHeader={({ section }) => (
+              <View style={styles.sectionHeader}>
+                <Eyebrow>{section.title}</Eyebrow>
+              </View>
+            )}
+            ItemSeparatorComponent={ItemGap}
+            stickySectionHeadersEnabled={false}
+            showsVerticalScrollIndicator={false}
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            initialNumToRender={12}
+            windowSize={7}
+            keyboardShouldPersistTaps="handled"
+          />
         </>
       )}
     </Screen>
   );
+}
+
+function ItemGap() {
+  return <View style={{ height: 10 }} />;
 }
 
 const styles = StyleSheet.create({
@@ -181,7 +228,34 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: colors.inkSoft,
   },
-  section: {
-    gap: 10,
+  sweepBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.butter,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  sweepText: {
+    flex: 1,
+    fontFamily: fonts.sansBold,
+    fontSize: 13,
+    color: colors.espresso,
+  },
+  list: {
+    flex: 1,
+    alignSelf: 'stretch',
+  },
+  listContent: {
+    paddingBottom: 32,
+    // Rows carry 3px hard offset shadows; keep them from clipping at the edge.
+    paddingRight: 3,
+  },
+  sectionHeader: {
+    paddingTop: 8,
+    paddingBottom: 10,
   },
 });

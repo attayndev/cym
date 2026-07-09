@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ContactRow } from '@/components/contact-row';
@@ -7,13 +8,15 @@ import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow, healthColors } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
-import { contactHealth } from '@/lib/nudges';
+import { isActiveContact } from '@/lib/classify';
+import { buildHealthIndex } from '@/lib/nudges';
 import { contactsForPersona } from '@/lib/personas';
 import type { Health } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
-const BUCKETS: Health[] = ['warm', 'cooling', 'at-risk', 'cold'];
+const BUCKETS: Health[] = ['warm', 'cooling', 'at-risk', 'cold', 'new'];
 const BUCKET_LABEL = {
+  new: 'health.new',
   warm: 'health.warm',
   cooling: 'health.cooling',
   'at-risk': 'health.atRisk',
@@ -24,6 +27,9 @@ export default function DashboardScreen() {
   const { db, activePersonaId } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
+  // Tapping a bucket filters the list below to exactly that health state;
+  // tapping it again returns to the default "bring back" view.
+  const [selected, setSelected] = useState<Health | null>(null);
 
   if (!db) return <Screen scroll={false}>{null}</Screen>;
 
@@ -46,10 +52,13 @@ export default function DashboardScreen() {
   }
 
   const now = new Date();
-  const personaContacts = contactsForPersona(db.contacts, activePersonaId);
+  const personaContacts = contactsForPersona(db.contacts, activePersonaId).filter(
+    isActiveContact,
+  );
+  const index = buildHealthIndex(personaContacts, db.interactions, now);
   const byHealth = new Map<Health, typeof db.contacts>(BUCKETS.map((b) => [b, []]));
   for (const contact of personaContacts) {
-    byHealth.get(contactHealth(contact, db.interactions, now))!.push(contact);
+    byHealth.get(index.get(contact.id)!.health)!.push(contact);
   }
 
   const attention = [...byHealth.get('at-risk')!, ...byHealth.get('cold')!];
@@ -65,18 +74,58 @@ export default function DashboardScreen() {
         {BUCKETS.map((bucket) => {
           const palette = healthColors[bucket];
           const count = byHealth.get(bucket)!.length;
+          const isSelected = selected === bucket;
           return (
-            <View key={bucket} style={[styles.bucket, { backgroundColor: palette.bg }]}>
+            <Pressable
+              key={bucket}
+              onPress={() => setSelected(isSelected ? null : bucket)}
+              style={({ pressed }) => [
+                styles.bucket,
+                { backgroundColor: palette.bg },
+                isSelected && styles.bucketSelected,
+                pressed && { opacity: 0.85 },
+              ]}>
               <Text style={[styles.bucketCount, { color: palette.fg }]}>{count}</Text>
               <Text style={[styles.bucketLabel, { color: palette.fg }]}>
                 {t(BUCKET_LABEL[bucket])}
+                {isSelected ? ' ✕' : ''}
               </Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
 
-      {personaContacts.length === 0 ? (
+      {selected ? (
+        <View style={styles.section}>
+          <Eyebrow>
+            {t(BUCKET_LABEL[selected])} · {byHealth.get(selected)!.length}
+          </Eyebrow>
+          {byHealth.get(selected)!.length === 0 ? (
+            <Card>
+              <Body muted>{t('dashboard.bucketEmpty')}</Body>
+            </Card>
+          ) : (
+            <>
+              {[...byHealth.get(selected)!]
+                .sort((a, b) => (index.get(b.id)?.ratio ?? 0) - (index.get(a.id)?.ratio ?? 0))
+                .slice(0, 100)
+                .map((c) => (
+                  <ContactRow
+                    key={c.id}
+                    contact={c}
+                    interactions={db.interactions}
+                    health={selected}
+                  />
+                ))}
+              {byHealth.get(selected)!.length > 100 && (
+                <Body muted>
+                  {t('dashboard.more', { n: byHealth.get(selected)!.length - 100 })}
+                </Body>
+              )}
+            </>
+          )}
+        </View>
+      ) : personaContacts.length === 0 ? (
         <Card>
           <Body muted>{t('dashboard.emptyNoContacts')}</Body>
         </Card>
@@ -84,7 +133,12 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Eyebrow>{t('dashboard.bringBack')}</Eyebrow>
           {attention.map((c) => (
-            <ContactRow key={c.id} contact={c} interactions={db.interactions} />
+            <ContactRow
+              key={c.id}
+              contact={c}
+              interactions={db.interactions}
+              health={index.get(c.id)!.health}
+            />
           ))}
         </View>
       ) : (
@@ -126,6 +180,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
+  },
+  bucketSelected: {
+    ...hardShadow(5, 'rgba(59,36,28,0.3)'),
+    transform: [{ translateY: -2 }],
   },
   section: {
     gap: 10,

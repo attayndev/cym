@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import type { Health } from '@/lib/types';
 
 const LABEL_KEY = {
+  new: 'health.new',
   warm: 'health.warm',
   cooling: 'health.cooling',
   'at-risk': 'health.atRisk',

@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { canTrackMore } from '@/lib/tier';
 import { Field } from '@/components/field';
 import { Body, Button, Chip, Eyebrow, Heading, Row, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
@@ -54,7 +55,7 @@ type CaptureParams = Partial<
 >;
 
 export default function CaptureScreen() {
-  const { captureContact } = useApp();
+  const { db, captureContact } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
   // An accepted exchange submission arrives prefilled through route params.
@@ -93,6 +94,10 @@ export default function CaptureScreen() {
             : t('cadence.6months');
 
   const save = () => {
+    if (db && !canTrackMore(db)) {
+      router.push('/paywall');
+      return;
+    }
     const contactId = captureContact({
       firstName,
       lastName,

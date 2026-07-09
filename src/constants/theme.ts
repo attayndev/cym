@@ -64,6 +64,9 @@ export const shadows = {
 } as const;
 
 export const healthColors = {
+  // 'new' = no logged touch yet (fresh imports): deliberately neutral so it
+  // reads as "no data", not as a good or bad state.
+  new: { fg: colors.muted, bg: colors.white, label: 'New' },
   warm: { fg: colors.warm, bg: colors.warmSoft, label: 'Warm' },
   cooling: { fg: colors.cooling, bg: colors.coolingSoft, label: 'Cooling' },
   'at-risk': { fg: colors.atRisk, bg: colors.atRiskSoft, label: 'At risk' },
