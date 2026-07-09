@@ -10,7 +10,8 @@ import { Body, Button, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { LOCALES, useTranslation, type Locale } from '@/i18n';
 import { deleteAccount } from '@/lib/account';
-import { connectGmail, disconnectGmail, syncGmailNow } from '@/lib/gmail';
+import { connectImap, connectOutlook, disconnectEmail, IMAP_PRESETS, syncAllEmail } from '@/lib/email';
+import { connectGmail } from '@/lib/gmail';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { getSupabase } from '@/lib/supabase';
 import { useApp } from '@/state/app-context';
@@ -22,6 +23,11 @@ export default function SettingsScreen() {
   const { t, locale, setLocale } = useTranslation();
   const { configured, user, signOut } = useAuth();
   const [gmailBusy, setGmailBusy] = useState(false);
+  const [imapOpen, setImapOpen] = useState(false);
+  const [imapEmail, setImapEmail] = useState('');
+  const [imapPassword, setImapPassword] = useState('');
+  const [imapPreset, setImapPreset] = useState<'icloud' | 'yahoo' | 'custom'>('icloud');
+  const [imapHost, setImapHost] = useState('');
   const [contactsBusy, setContactsBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteWord, setDeleteWord] = useState('');
@@ -113,8 +119,8 @@ export default function SettingsScreen() {
     );
   };
 
-  const gmailAccounts = db.accounts.filter(
-    (a) => a.provider === 'gmail' && a.status === 'connected',
+  const emailAccounts = db.accounts.filter(
+    (a) => ['gmail', 'outlook', 'imap'].includes(a.provider) && a.status === 'connected',
   );
 
   const handleConnectGmail = async () => {
@@ -122,7 +128,7 @@ export default function SettingsScreen() {
     try {
       const result = await connectGmail();
       if (result === 'connected') {
-        await syncGmailNow().catch(() => 0);
+        await syncAllEmail().catch(() => 0);
         await pullNow();
       } else if (result === 'error') {
         notify(t('gmail.error'));
@@ -132,10 +138,10 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSyncGmail = async () => {
+  const handleSyncEmail = async () => {
     setGmailBusy(true);
     try {
-      const count = await syncGmailNow();
+      const count = await syncAllEmail();
       await pullNow();
       notify(count > 0 ? t('gmail.synced', { count }) : t('gmail.syncedNone'));
     } catch {
@@ -145,10 +151,10 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleDisconnectGmail = async (email: string) => {
+  const handleDisconnect = async (provider: string, email: string) => {
     setGmailBusy(true);
     try {
-      await disconnectGmail(email);
+      await disconnectEmail(provider, email);
       await pullNow();
     } finally {
       setGmailBusy(false);
@@ -157,12 +163,53 @@ export default function SettingsScreen() {
 
   // Multi-inbox is a Plus feature: the first inbox is free, adding a second
   // routes through the paywall.
-  const handleAddInbox = () => {
-    if (!db.profile.isPro) {
+  const gateInbox = (connect: () => void) => {
+    if (emailAccounts.length >= 1 && !db.profile.isPro) {
       router.push('/paywall');
       return;
     }
-    void handleConnectGmail();
+    connect();
+  };
+
+  const handleConnectOutlook = async () => {
+    setGmailBusy(true);
+    try {
+      const result = await connectOutlook();
+      if (result === 'connected') {
+        await syncAllEmail().catch(() => 0);
+        await pullNow();
+      } else if (result === 'error') {
+        notify(t('gmail.error'));
+      }
+    } finally {
+      setGmailBusy(false);
+    }
+  };
+
+  const handleConnectImap = async () => {
+    const preset = IMAP_PRESETS.find((p) => p.key === imapPreset)!;
+    const host = imapPreset === 'custom' ? imapHost.trim() : preset.host;
+    if (!imapEmail.trim() || !imapPassword || !host) return;
+    setGmailBusy(true);
+    try {
+      const result = await connectImap({
+        email: imapEmail.trim(),
+        password: imapPassword,
+        host,
+        port: preset.port,
+      });
+      if (result === 'connected') {
+        setImapOpen(false);
+        setImapEmail('');
+        setImapPassword('');
+        await syncAllEmail().catch(() => 0);
+        await pullNow();
+      } else {
+        notify(t('email.imap.failed'));
+      }
+    } finally {
+      setGmailBusy(false);
+    }
   };
 
   return (
@@ -231,43 +278,96 @@ export default function SettingsScreen() {
           <Card>
             {Platform.OS === 'web' ? (
               <Body muted>{t('gmail.mobileOnly')}</Body>
-            ) : gmailAccounts.length > 0 ? (
+            ) : (
               <>
-                {gmailAccounts.map((account) => (
+                {emailAccounts.map((account) => (
                   <View key={account.id} style={styles.gmailAccountRow}>
                     <Text style={styles.gmailEmail} numberOfLines={1}>
                       {account.email}
+                      <Text style={styles.providerTag}>
+                        {'  '}
+                        {account.provider === 'gmail'
+                          ? 'Gmail'
+                          : account.provider === 'outlook'
+                            ? 'Outlook'
+                            : 'IMAP'}
+                      </Text>
                     </Text>
                     <Pressable
-                      onPress={() => handleDisconnectGmail(account.email)}
+                      onPress={() => handleDisconnect(account.provider, account.email)}
                       disabled={gmailBusy}
                       hitSlop={6}>
                       <Text style={styles.linkMuted}>{t('gmail.disconnect')}</Text>
                     </Pressable>
                   </View>
                 ))}
-                <Body muted>{t('gmail.body')}</Body>
-                <View style={styles.gmailRow}>
-                  <Pressable onPress={handleSyncGmail} disabled={gmailBusy} hitSlop={6}>
+                <Body muted>{t('email.body')}</Body>
+                {emailAccounts.length > 0 && (
+                  <Pressable onPress={handleSyncEmail} disabled={gmailBusy} hitSlop={6}>
                     <Text style={styles.link}>
                       {gmailBusy ? t('gmail.syncing') : t('gmail.syncNow')}
                     </Text>
                   </Pressable>
-                  <Pressable onPress={handleAddInbox} disabled={gmailBusy} hitSlop={6}>
-                    <Text style={styles.link}>
-                      {gmailBusy ? t('gmail.connecting') : t('gmail.addInbox')}
-                    </Text>
+                )}
+                <View style={styles.gmailRow}>
+                  <Pressable
+                    onPress={() => gateInbox(() => void handleConnectGmail())}
+                    disabled={gmailBusy}
+                    hitSlop={6}>
+                    <Text style={styles.link}>{t('email.connect.gmail')}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => gateInbox(() => void handleConnectOutlook())}
+                    disabled={gmailBusy}
+                    hitSlop={6}>
+                    <Text style={styles.link}>{t('email.connect.outlook')}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => gateInbox(() => setImapOpen((v) => !v))}
+                    disabled={gmailBusy}
+                    hitSlop={6}>
+                    <Text style={styles.link}>{t('email.connect.imap')}</Text>
                   </Pressable>
                 </View>
-              </>
-            ) : (
-              <>
-                <Body muted>{t('gmail.body')}</Body>
-                <Pressable onPress={handleConnectGmail} disabled={gmailBusy} hitSlop={6}>
-                  <Text style={styles.link}>
-                    {gmailBusy ? t('gmail.connecting') : t('gmail.connect')}
-                  </Text>
-                </Pressable>
+                {imapOpen && (
+                  <View style={{ gap: 8, marginTop: 6 }}>
+                    <View style={styles.gmailRow}>
+                      {(['icloud', 'yahoo', 'custom'] as const).map((k) => (
+                        <Pressable key={k} onPress={() => setImapPreset(k)} hitSlop={6}>
+                          <Text style={imapPreset === k ? styles.link : styles.linkMuted}>
+                            {k === 'icloud' ? 'iCloud' : k === 'yahoo' ? 'Yahoo' : t('email.imap.custom')}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                    <Field
+                      label={t('field.email')}
+                      value={imapEmail}
+                      onChangeText={setImapEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+                    <Field
+                      label={t('email.imap.password')}
+                      value={imapPassword}
+                      onChangeText={setImapPassword}
+                      secureTextEntry
+                    />
+                    {imapPreset === 'custom' && (
+                      <Field
+                        label={t('email.imap.host')}
+                        value={imapHost}
+                        onChangeText={setImapHost}
+                        autoCapitalize="none"
+                      />
+                    )}
+                    <Body muted>{t('email.imap.hint')}</Body>
+                    <Button
+                      title={gmailBusy ? t('gmail.connecting') : t('email.imap.cta')}
+                      onPress={() => void handleConnectImap()}
+                    />
+                  </View>
+                )}
               </>
             )}
           </Card>
@@ -452,6 +552,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
+  },
+  providerTag: {
+    fontFamily: fonts.sans,
+    fontSize: 11.5,
+    color: colors.muted,
   },
   gmailEmail: {
     flex: 1,

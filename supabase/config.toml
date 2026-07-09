@@ -53,3 +53,15 @@ verify_jwt = false
 
 [functions.card-refresh]
 verify_jwt = false
+
+[functions.outlook-auth-start]
+verify_jwt = false
+
+[functions.outlook-oauth-callback]
+verify_jwt = false
+
+[functions.outlook-sync]
+verify_jwt = false
+
+[functions.imap-sync]
+verify_jwt = false

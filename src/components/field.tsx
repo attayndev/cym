@@ -10,6 +10,7 @@ export function Field({
   multiline = false,
   autoCapitalize = 'sentences',
   keyboardType = 'default',
+  secureTextEntry = false,
 }: {
   label: string;
   value: string;
@@ -18,6 +19,7 @@ export function Field({
   multiline?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words';
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  secureTextEntry?: boolean;
 }) {
   return (
     <View style={styles.wrap}>
@@ -31,6 +33,7 @@ export function Field({
         multiline={multiline}
         autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
+      secureTextEntry={secureTextEntry}
       />
     </View>
   );
