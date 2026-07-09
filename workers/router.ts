@@ -8,6 +8,7 @@
 interface Env {
   ASSETS: Fetcher;
   SHARE_CARD_URL: string;
+  WAITLIST_URL: string;
 }
 
 interface SharedCard {
@@ -45,6 +46,19 @@ export default {
     if (url.hostname.endsWith('getcym.com')) {
       url.hostname = 'getcym.app';
       return Response.redirect(url.toString(), 301);
+    }
+
+    // Same-origin waitlist capture, proxied to the rate-limited edge function
+    // (the client IP travels along so the per-IP limit sees real addresses).
+    if (url.pathname === '/api/waitlist' && request.method === 'POST') {
+      return fetch(env.WAITLIST_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-real-ip': request.headers.get('cf-connecting-ip') ?? '',
+        },
+        body: await request.text(),
+      });
     }
 
     const match = url.pathname.match(/^\/c\/([A-Za-z0-9_-]+)\/?$/);

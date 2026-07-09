@@ -81,7 +81,7 @@ footer nav a:hover{opacity:1;text-decoration:underline}
       <li><strong>Account details.</strong> Your email address, and your name if you sign in with Apple or Google or add it yourself.</li>
       <li><strong>Relationship data you create.</strong> The people you add, the context you write about them (where you met, what you discussed, commitments), interaction history, birthdays, and how often you want to stay in touch. This is the heart of the app, and it is private to your account.</li>
       <li><strong>Device contacts — only if you turn on contacts sync.</strong> Names and contact details from your device address book are imported into your account, and contacts you create in the app can be written back to your device. We never touch your address book without you starting a sync.</li>
-      <li><strong>Email metadata — only if you connect an email account.</strong> When you connect Gmail, we read message <em>headers only</em>: who a message was from and to, and when it was sent. We request a Google permission that cannot read message bodies or subject lines even if we wanted to. This is used for exactly one thing: keeping "last contact" accurate so we don't nag you about people you already talked to.</li>
+      <li><strong>Email metadata — only if you connect an email account.</strong> When you connect Gmail, we read message <em>headers only</em>: who a message was from and to, and when it was sent. We request a Google permission that cannot read message bodies or subject lines even if we wanted to. This is used for two things: keeping "last contact" accurate so we don't nag you about people you already talked to, and filling in gaps for people you already correspond with — a message header carries a display name and a work-email domain, which can complete a contact's name or company without us reading a single message body.</li>
       <li><strong>Notifications and language.</strong> A push token if you enable reminders, and your language preference so notifications arrive in it.</li>
     </ul>
 
@@ -103,8 +103,14 @@ footer nav a:hover{opacity:1;text-decoration:underline}
     <h2>Google user data</h2>
     <p>Call Your Mom's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Google email metadata is used only to provide the "last contact" feature you see in the app, is never used for advertising, and is never sold. You can disconnect Gmail at any time in Settings, which deletes our stored credentials.</p>
 
+    <h2>Contact enrichment (Plus)</h2>
+    <p>The Plus tier can enrich the contacts you choose to track with professional details — a job title, a company, a public profile. Two sources, in order of preference: first, your own correspondence (the header metadata described above — nothing leaves our systems); second, an optional lookup through our enrichment providers — Hunter, and NinjaPear for work addresses Hunter doesn't know — each of which receives <em>only the contact's email address</em> and returns publicly available business information. We never send your notes, your relationship context, or your interaction history to an enrichment provider. Enrichment results arrive as suggestions that fill empty fields — they never overwrite what you wrote, and you can edit or remove them like anything else.</p>
+
+    <h2>Your rights (GDPR &amp; CCPA)</h2>
+    <p>Wherever you live, you get the same controls: access and export your data (Settings → Your data, in JSON), correct anything in the app directly, and delete your account and all server-side data immediately (Settings → Your data → Delete account, or email us). For users in the EU/UK: we process your data to provide the service you signed up for (contract), and connected features like email sync and enrichment run only after you turn them on (consent) — you can withdraw that consent in Settings at any time, and you may lodge a complaint with your local supervisory authority. For California residents: we do not sell your personal information and we do not share it for cross-context behavioral advertising, so there is nothing to opt out of; we will never treat you differently for exercising your rights. Rights requests: <a href="mailto:support@getcym.app">support@getcym.app</a> — completed within 30 days.</p>
+
     <h2>Who processes data for us</h2>
-    <p>We use a small set of service providers to run Call Your Mom, each bound to use data only to provide their service to us: Supabase (database hosting), Cloudflare (website hosting), Expo (push notification delivery), Anthropic (message draft generation), Google (sign-in, and email sync if you connect it), and Apple (sign-in).</p>
+    <p>We use a small set of service providers to run Call Your Mom, each bound to use data only to provide their service to us: Supabase (database hosting), Cloudflare (website hosting), Expo (push notification delivery), Anthropic (message drafts and contact classification), Google (sign-in, and email sync if you connect it), Apple (sign-in), and Hunter and NinjaPear (business-contact enrichment on the Plus tier — each receives only the email address being looked up).</p>
 
     <h2>Your controls</h2>
     <ul>
@@ -129,6 +135,7 @@ footer nav a:hover{opacity:1;text-decoration:underline}
   <div class="wrap">
     <nav aria-label="Footer">
       <a href="/">Home</a>
+      <a href="/articles">Articles</a>
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
       <a href="https://app.getcym.app/login">Log in</a>

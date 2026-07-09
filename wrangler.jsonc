@@ -12,7 +12,8 @@
     "run_worker_first": true
   },
   "vars": {
-    "SHARE_CARD_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/share-card"
+    "SHARE_CARD_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/share-card",
+    "WAITLIST_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/waitlist"
   },
   "routes": [
     { "pattern": "getcym.app", "custom_domain": true },
