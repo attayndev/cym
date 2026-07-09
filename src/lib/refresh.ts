@@ -29,7 +29,7 @@ export function pruneProposals(state: RefreshState, db: DB): UpdateProposal[] {
   const byId = new Map(db.contacts.map((c) => [c.id, c]));
   return state.proposals.filter((p) => {
     const c = byId.get(p.contactId);
-    return c && isActiveContact(c) && (c[p.field] ?? '') === p.current;
+    return c && isActiveContact(c) && String(c[p.field] ?? '') === p.current;
   });
 }
 

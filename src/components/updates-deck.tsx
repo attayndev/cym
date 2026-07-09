@@ -5,21 +5,25 @@ import { Body, Eyebrow } from '@/components/ui';
 import { colors, fonts, shadows } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import {
+  addProposals,
   dailyRefreshSweep,
   pruneProposals,
   resolveProposals,
   UPDATES_DECK_SIZE,
 } from '@/lib/refresh';
+import { rhythmProposals } from '@/lib/rhythm';
 import type { RefreshState, UpdateProposal } from '@/lib/store';
 import { useApp } from '@/state/app-context';
 
 /**
- * The updates deck on Today (Plus): up to 10 contacts a day where public
- * sources disagree with stored details. Each card shows the diff; Update
- * overwrites on your tap, Keep dismisses that proposal for good.
+ * The updates deck on Today: up to 10 contacts a day where a signal disagrees
+ * with stored details. Two sources feed it — the enrichment sweep (Plus),
+ * and rhythm learning (everyone): when the cadence someone actually keeps
+ * disagrees with the one set, the deck proposes matching it. Each card shows
+ * the diff; Update overwrites on your tap, Keep dismisses for good.
  */
 export function UpdatesDeck() {
-  const { db, updateContact } = useApp();
+  const { db, updateContact, celebrateRoleChange } = useApp();
   const { t } = useTranslation();
   const [state, setState] = useState<RefreshState | null>(null);
   const [filledToday, setFilledToday] = useState(0);
@@ -27,22 +31,30 @@ export function UpdatesDeck() {
   const isPro = db?.profile.isPro ?? false;
 
   useEffect(() => {
-    if (!db || !isPro || sweepStarted.current) return;
+    if (!db || sweepStarted.current) return;
     sweepStarted.current = true;
     let cancelled = false;
-    void dailyRefreshSweep(db).then(({ state: next, fills }) => {
-      for (const f of fills) updateContact(f.contactId, f.patch);
+    const run = async () => {
+      let fills: Awaited<ReturnType<typeof dailyRefreshSweep>>['fills'] = [];
+      if (isPro) {
+        const sweep = await dailyRefreshSweep(db);
+        fills = sweep.fills;
+        for (const f of fills) updateContact(f.contactId, f.patch);
+      }
+      // Rhythm learning is free-tier too — it's local math, not a lookup.
+      const next = await addProposals(rhythmProposals(db, new Date()));
       if (!cancelled) {
         setState(next);
         setFilledToday(fills.length);
       }
-    });
+    };
+    void run();
     return () => {
       cancelled = true;
     };
   }, [db, isPro, updateContact]);
 
-  if (!db || !isPro || !state) return null;
+  if (!db || !state) return null;
 
   const byContact = new Map<string, UpdateProposal[]>();
   for (const p of pruneProposals(state, db)) {
@@ -64,10 +76,23 @@ export function UpdatesDeck() {
 
   const resolve = (proposals: UpdateProposal[], action: 'update' | 'keep') => {
     if (action === 'update') {
-      for (const p of proposals) updateContact(p.contactId, { [p.field]: p.proposed });
+      for (const p of proposals) {
+        updateContact(
+          p.contactId,
+          p.field === 'cadenceDays' ? { cadenceDays: Number(p.proposed) } : { [p.field]: p.proposed },
+        );
+      }
+      // Accepting a role/company update = a confirmed job change; queue the
+      // congrats nudge after the patch so its copy carries the new details.
+      if (proposals.some((p) => p.field === 'role' || p.field === 'company')) {
+        celebrateRoleChange(proposals[0].contactId);
+      }
     }
     void resolveProposals(proposals, action).then(setState);
   };
+
+  const valueLabel = (p: UpdateProposal, v: string) =>
+    p.field === 'cadenceDays' ? t('contact.cadenceEvery', { n: Number(v) }) : v;
 
   return (
     <View style={styles.section}>
@@ -82,11 +107,16 @@ export function UpdatesDeck() {
               {contact.firstName} {contact.lastName ?? ''}
             </Text>
             {proposals.map((p) => (
-              <Text key={p.field} style={styles.diff}>
-                {t(`field.${p.field}`)}: <Text style={styles.old}>{p.current}</Text>
-                {'  →  '}
-                <Text style={styles.new}>{p.proposed}</Text>
-              </Text>
+              <View key={p.field}>
+                <Text style={styles.diff}>
+                  {t(`field.${p.field}`)}: <Text style={styles.old}>{valueLabel(p, p.current)}</Text>
+                  {'  →  '}
+                  <Text style={styles.new}>{valueLabel(p, p.proposed)}</Text>
+                </Text>
+                {p.field === 'cadenceDays' && p.observed != null && (
+                  <Text style={styles.note}>{t('deck.updates.rhythmNote', { n: p.observed })}</Text>
+                )}
+              </View>
             ))}
             <View style={styles.buttons}>
               <Pressable
@@ -154,6 +184,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansBold,
     fontSize: 13,
     color: colors.cream,
+  },
+  note: {
+    fontFamily: fonts.sans,
+    fontSize: 12.5,
+    color: colors.muted,
+    marginTop: 2,
   },
   quietBtn: {
     fontFamily: fonts.sansMedium,

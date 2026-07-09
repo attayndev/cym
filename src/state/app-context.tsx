@@ -19,7 +19,7 @@ import { dedupeImports, mergePair } from '@/lib/dedupe';
 import { applyEnrichment, fetchNameHints } from '@/lib/enrich';
 import { diag } from '@/lib/log';
 import { refreshLivingCards } from '@/lib/living-cards';
-import { refreshEngine } from '@/lib/nudges';
+import { refreshEngine, roleChangeHook } from '@/lib/nudges';
 import { reassignContacts, resolveActivePersonaId } from '@/lib/personas';
 import { emptyDB, sampleEntities } from '@/lib/seed';
 import {
@@ -134,6 +134,7 @@ interface AppState {
   logInteraction: (contactId: string, type: InteractionType, note?: string) => void;
   markNudgeActed: (nudgeId: string, channel: Channel) => void;
   dismissNudge: (nudgeId: string) => void;
+  celebrateRoleChange: (contactId: string) => void;
   snoozeNudge: (nudgeId: string, days?: number) => void;
   setPro: (isPro: boolean) => void;
   updateProfile: (patch: Partial<UserProfile>) => void;
@@ -353,6 +354,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!current) return;
       let next = applyEnrichment(current, hints);
       next = await refreshLivingCards(next);
+      // A linked card overwriting an existing role/company is a confirmed job
+      // change — celebrate it. Blank-to-filled is enrichment, not news.
+      const before = new Map(current.contacts.map((c) => [c.id, c]));
+      let hooks = next.hooks;
+      for (const c of next.contacts) {
+        const prev = before.get(c.id);
+        if (!prev) continue;
+        const changed =
+          (prev.role && c.role && prev.role !== c.role) ||
+          (prev.company && c.company && prev.company !== c.company);
+        if (!changed) continue;
+        const hook = roleChangeHook({ ...next, hooks }, c.id, new Date());
+        if (hook) hooks = [...hooks, hook];
+      }
+      if (hooks !== next.hooks) next = refreshEngine({ ...next, hooks }, new Date());
       if (next !== current) {
         // Stamp like any other mutation so merges treat these as fresh edits.
         next = stampUpdatedRows(current, next);
@@ -800,6 +816,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  // The user just confirmed someone's job change (accepted an enrichment
+  // proposal) — hook it so the engine surfaces a congrats nudge. Runs after
+  // the contact patch, so nudge copy derives from the NEW role.
+  const celebrateRoleChange = useCallback(
+    (contactId: string) => {
+      update((current) => {
+        const hook = roleChangeHook(current, contactId, new Date());
+        return hook
+          ? refreshEngine({ ...current, hooks: [...current.hooks, hook] }, new Date())
+          : current;
+      });
+    },
+    [update],
+  );
+
   const dismissNudge = useCallback(
     (nudgeId: string) => {
       update((current) => ({
@@ -992,6 +1023,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logInteraction,
       markNudgeActed,
       dismissNudge,
+      celebrateRoleChange,
       snoozeNudge,
       setPro,
       updateProfile,
@@ -1027,6 +1059,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logInteraction,
       markNudgeActed,
       dismissNudge,
+      celebrateRoleChange,
       snoozeNudge,
       setPro,
       updateProfile,

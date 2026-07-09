@@ -7,6 +7,7 @@ import {
   lastContactAt,
   pendingNudges,
   refreshEngine,
+  roleChangeHook,
 } from '@/lib/nudges';
 import type { Contact, ContextEntry, DB, Interaction } from '@/lib/types';
 
@@ -207,5 +208,31 @@ describe('flagged interactions and warmth (the Jill Wynn rules)', () => {
       { id: 'f', contactId: 'jill', type: 'call', occurredAt: addDays(NOW, -1).toISOString(), source: 'manual' },
     ];
     expect(contactHealth(c, withFlag, NOW)).toBe('warm');
+  });
+});
+
+describe('role-change hooks', () => {
+  test('confirmed job change yields a congrats nudge with the new details', () => {
+    const c = makeContact({ id: 'c1', firstName: 'Dana', role: 'VP Design', company: 'Meridian' });
+    const db = makeDB([c]);
+    const hook = roleChangeHook(db, 'c1', NOW);
+    expect(hook).toMatchObject({ contactId: 'c1', type: 'role-change' });
+    const refreshed = refreshEngine({ ...db, hooks: [hook!] }, NOW);
+    const nudge = refreshed.nudges.find((n) => n.hookId === hook!.id);
+    expect(nudge?.state).toBe('pending');
+    expect(nudge?.headline).toEqual({ key: 'nudgec.role.headline', params: { name: 'Dana' } });
+    expect(nudge?.reason).toEqual({
+      key: 'nudgec.role.reason',
+      params: { detail: 'VP Design · Meridian' },
+    });
+  });
+
+  test('deduped per contact per day; archived contacts never celebrated', () => {
+    const c = makeContact({ id: 'c1' });
+    const db = makeDB([c]);
+    const first = roleChangeHook(db, 'c1', NOW)!;
+    expect(roleChangeHook({ ...db, hooks: [first] }, 'c1', NOW)).toBeNull();
+    const archived = makeContact({ id: 'c2', status: 'archived' });
+    expect(roleChangeHook(makeDB([archived]), 'c2', NOW)).toBeNull();
   });
 });

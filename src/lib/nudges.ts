@@ -161,6 +161,22 @@ function computeHooks(db: DB, now: Date): Hook[] {
   return created;
 }
 
+/** Event-driven hook: the user just confirmed a job change (accepted an
+ *  enrichment proposal, or a linked card updated) — the one moment a congrats
+ *  lands perfectly. Deduped by day like every other hook. */
+export function roleChangeHook(db: DB, contactId: string, now: Date): Hook | null {
+  const contact = db.contacts.find((c) => c.id === contactId);
+  if (!contact || !isActiveContact(contact)) return null;
+  const candidate = {
+    contactId,
+    type: 'role-change' as const,
+    triggerAt: isoDate(now),
+    label: `New role for ${fullName(contact)}`,
+  };
+  if (db.hooks.some((h) => hookKey(h) === hookKey(candidate))) return null;
+  return { ...candidate, id: id('hook') };
+}
+
 function monthsSinceMet(contact: Contact, now: Date): number {
   const met = new Date(contact.createdAt);
   return (now.getFullYear() - met.getFullYear()) * 12 + (now.getMonth() - met.getMonth());
@@ -213,6 +229,16 @@ function hookNudgeContent(
           params: { commitment: ctx?.commitment ?? '' },
         },
       };
+    case 'role-change': {
+      const detail = [contact.role, contact.company].filter(Boolean).join(' · ');
+      return {
+        headline: { key: 'nudgec.role.headline', params: { name } },
+        reason: detail
+          ? { key: 'nudgec.role.reason', params: { detail } }
+          : { key: 'nudgec.role.reason.generic' },
+        suggestedAction: { key: 'nudgec.role.action', params: { name } },
+      };
+    }
     case 'reconnect-anniversary':
       return {
         headline: {

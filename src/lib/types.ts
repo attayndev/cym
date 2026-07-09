@@ -18,7 +18,7 @@ export type InteractionType =
 
 export type InteractionSource = 'manual' | 'capture' | 'email-sync';
 
-export type HookType = 'birthday' | 'commitment-due' | 'reconnect-anniversary';
+export type HookType = 'birthday' | 'commitment-due' | 'reconnect-anniversary' | 'role-change';
 
 export type NudgeKind = 'hook' | 'decay';
 

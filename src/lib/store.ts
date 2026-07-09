@@ -125,9 +125,11 @@ const REFRESH_KEY = 'cym.refresh.v1';
 
 export interface UpdateProposal {
   contactId: string;
-  field: 'role' | 'company';
+  field: 'role' | 'company' | 'cadenceDays';
   current: string;
   proposed: string;
+  /** For rhythm proposals: the measured median gap in days. */
+  observed?: number;
   foundAt: string;
 }
 
