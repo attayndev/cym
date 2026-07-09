@@ -26,7 +26,7 @@ export type NudgeState = 'pending' | 'acted' | 'dismissed' | 'snoozed';
 
 export type Channel = 'email' | 'text';
 
-export type Health = 'warm' | 'cooling' | 'at-risk' | 'cold';
+export type Health = 'new' | 'warm' | 'cooling' | 'at-risk' | 'cold';
 
 export interface UserProfile {
   name: string;
@@ -38,6 +38,8 @@ export interface UserProfile {
   isPro: boolean;
   notificationsEnabled: boolean;
   defaultPersonaId: string;
+  /** IANA timezone, auto-reported — drives server-side notification timing. */
+  timezone?: string;
 }
 
 export interface Persona {
@@ -48,7 +50,12 @@ export interface Persona {
   role?: string;
   company?: string;
   isDefault: boolean;
+  updatedAt?: string;
 }
+
+/** person = a human relationship; business = noise from the address book
+ *  (restaurants, services); unclear = needs classification (AI or user). */
+export type ContactKind = 'person' | 'business' | 'unclear';
 
 export interface Contact {
   id: string;
@@ -62,11 +69,29 @@ export interface Contact {
   city?: string;
   /** MM-DD */
   birthday?: string;
+  /** Additional addresses/numbers from the device card — matching a person by
+   *  their second email is the difference between "New" and a real history. */
+  altEmails?: string[];
+  altPhones?: string[];
+  /** LinkedIn handle (not URL), e.g. "steliefti". */
+  linkedin?: string;
+  /** Living-card subscription: the subject's share token — their own card
+   *  updates flow into this contact until they rotate it. */
+  cardToken?: string;
+  /** Set by the store on every mutation — sync merges keep the newest row. */
+  updatedAt?: string;
   category: Category;
   importance: Importance;
   cadenceDays: number;
   source: 'manual' | 'qr' | 'import';
   createdAt: string;
+  /** Undefined on legacy rows — normalized to a value by ensureClassified(). */
+  kind?: ContactKind;
+  /** 'archived' removes the contact from decks/health/nudges — CYM-only,
+   *  never touches the device address book. Undefined = active. */
+  status?: 'active' | 'archived';
+  /** Set when the user gives an evaluate-deck verdict (Stage 4). */
+  evaluatedAt?: string;
 }
 
 export interface ContextEntry {
@@ -78,6 +103,7 @@ export interface ContextEntry {
   commitment?: string;
   commitmentDueAt?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Interaction {

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { t, tx } from '@/i18n';
 import { nextOccurrence } from '@/lib/dates';
 import { pendingNudges } from '@/lib/nudges';
+import { visibleNudgeContactIds } from '@/lib/tier';
 import type { DB } from '@/lib/types';
 
 const isSupported = Platform.OS !== 'web';
@@ -41,10 +42,14 @@ export async function syncScheduledNotifications(db: DB): Promise<void> {
   if (!isSupported) return;
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
-    if (!db.profile.notificationsEnabled || !db.profile.isPro) return;
+    if (!db.profile.notificationsEnabled) return;
+    // Free tier: notifications cover the tracked-N warm list only.
+    const visibleIds = visibleNudgeContactIds(db);
 
     const now = new Date();
-    const hookNudges = pendingNudges(db).filter((n) => n.kind === 'hook');
+    const hookNudges = pendingNudges(db).filter(
+      (n) => n.kind === 'hook' && (!visibleIds || visibleIds.has(n.contactId)),
+    );
 
     // Morning digest tomorrow if there are moments worth acting on.
     if (hookNudges.length > 0) {
@@ -69,7 +74,8 @@ export async function syncScheduledNotifications(db: DB): Promise<void> {
 
     // A nudge the morning of each upcoming birthday (next 30 days).
     for (const contact of db.contacts) {
-      if (!contact.birthday) continue;
+      if (!contact.birthday || contact.status === 'archived' || contact.kind === 'business') continue;
+      if (visibleIds && !visibleIds.has(contact.id)) continue;
       const next = nextOccurrence(contact.birthday, now);
       const daysAway = Math.round((next.getTime() - now.getTime()) / 86_400_000);
       if (daysAway < 0 || daysAway > 30) continue;

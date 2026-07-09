@@ -1,6 +1,26 @@
 import { getLocale, LOCALES, t, tx } from '@/i18n';
 import { shortDate } from '@/lib/dates';
+import { getSupabase } from '@/lib/supabase';
 import type { Channel, Contact, ContextEntry, Nudge, UserProfile } from '@/lib/types';
+
+export type DraftTone = 'sincere' | 'funny' | 'professional';
+
+/** Regenerating cycles tones so each tap gives a genuinely different idea
+ *  (Sonnet has no temperature dial — variety comes from the prompt). */
+export function toneCycle(contact: Contact): DraftTone[] {
+  return contact.category === 'family' || contact.category === 'friend'
+    ? ['sincere', 'funny', 'professional']
+    : ['professional', 'sincere', 'funny'];
+}
+
+const TONE_PROMPT: Record<DraftTone, string> = {
+  sincere:
+    'Sincere and heartfelt — say something genuine about why this person matters. No jokes.',
+  funny:
+    'Playful and lightly funny — open with a warm joke, a wry observation, or a callback to our shared history. Never mean, never forced.',
+  professional:
+    'Polished and professional — friendly but businesslike, the kind of note you could send a valued colleague.',
+};
 
 export interface DraftInput {
   contact: Contact;
@@ -8,11 +28,21 @@ export interface DraftInput {
   nudge: Nudge;
   channel: Channel;
   profile: UserProfile;
+  tone?: DraftTone;
+  /** Regeneration counter within the same tone — nudges the model to take a
+   *  genuinely different angle (there's no temperature dial to turn). */
+  variant?: number;
+  /** One optional sentence from the user ("congrats on the new job") — when
+   *  present it becomes the note's anchor; when blank the AI works from
+   *  captured context alone. */
+  userContext?: string;
 }
 
 export interface DraftResult {
   text: string;
   source: 'ai' | 'template';
+  /** Free tier's monthly AI-draft allowance is spent — template served. */
+  limitReached?: boolean;
 }
 
 export function templateDraft({ contact, context, nudge, channel }: DraftInput): string {
@@ -39,9 +69,22 @@ export function templateDraft({ contact, context, nudge, channel }: DraftInput):
     : t('draft.tpl.checkin.pro', { name }) + signoff;
 }
 
+/** Deterministic, localized subject for the email channel; mirrors templateDraft's branches. */
+export function draftSubject({ contact, context, nudge }: DraftInput): string {
+  const name = contact.firstName;
+  const isBirthday = nudge.kind === 'hook' && nudge.headline.key.includes('birthday');
+
+  if (isBirthday) return t('draft.subj.birthday', { name });
+  if (nudge.kind === 'hook' && context?.commitment) return t('draft.subj.commitment');
+  return contact.category === 'family' || contact.category === 'friend'
+    ? t('draft.subj.checkin.casual')
+    : t('draft.subj.checkin.pro');
+}
+
 function buildPrompt(input: DraftInput): string {
   const { contact, context, nudge, channel, profile } = input;
   const language = LOCALES[getLocale()];
+  const tone = input.tone ?? toneCycle(contact)[0];
   const lines = [
     `Recipient: ${[contact.firstName, contact.lastName].filter(Boolean).join(' ')}`,
     `Relationship: ${contact.category}${contact.role ? `, their role: ${contact.role} at ${contact.company ?? 'their company'}` : ''}`,
@@ -51,8 +94,15 @@ function buildPrompt(input: DraftInput): string {
     context?.commitment
       ? `What I committed to: ${context.commitment}${context.commitmentDueAt ? ` (due ${shortDate(context.commitmentDueAt)})` : ''}`
       : null,
+    input.userContext?.trim()
+      ? `What I want this note to be about (make this the anchor): ${input.userContext.trim()}`
+      : null,
     `The occasion for reaching out: ${tx(nudge.reason)}`,
     `The move: ${tx(nudge.suggestedAction)}`,
+    `The tone: ${TONE_PROMPT[tone]}`,
+    input.variant
+      ? `Variation: this is take #${input.variant + 1} for the same request — the earlier takes didn't land. Choose a noticeably different angle, opener, and structure than an obvious first draft would use.`
+      : null,
   ].filter(Boolean);
 
   return `Draft a short ${channel === 'email' ? 'email (no subject line)' : 'text message'} from me (${profile.name}) to reconnect with someone.
@@ -89,14 +139,24 @@ export async function generateDraft(input: DraftInput): Promise<DraftResult> {
 
   try {
     if (endpoint) {
+      // The proxy (supabase/functions/drafts) requires the signed-in user's
+      // JWT; without a session we fall straight through to templates.
+      const session = (await getSupabase()?.auth.getSession())?.data.session;
+      if (!session) return { text: templateDraft(input), source: 'template' };
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ prompt, system, channel: input.channel }),
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ prompt }),
       });
       if (res.ok) {
         const data = (await res.json()) as { text?: string };
         if (data.text?.trim()) return { text: data.text.trim(), source: 'ai' };
+      } else if (res.status === 402) {
+        // Free allowance spent: serve the template and say so.
+        return { text: templateDraft(input), source: 'template', limitReached: true };
       }
       return { text: templateDraft(input), source: 'template' };
     }
@@ -111,7 +171,7 @@ export async function generateDraft(input: DraftInput): Promise<DraftResult> {
           'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-opus-4-8',
+          model: 'claude-sonnet-5',
           max_tokens: 1024,
           system,
           messages: [{ role: 'user', content: prompt }],

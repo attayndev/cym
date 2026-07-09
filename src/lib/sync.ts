@@ -19,9 +19,18 @@ import type {
  * A later milestone can move to per-row diffing / realtime.
  */
 
+export class GraphVersionConflict extends Error {
+  constructor() {
+    super('graph version conflict — another device pushed first');
+    this.name = 'GraphVersionConflict';
+  }
+}
+
 export interface GraphData {
   profile: Partial<UserProfile> | null;
   onboarded: boolean;
+  /** Concurrency token — pass back to pushGraph, which refuses stale pushes. */
+  graphVersion: number;
   personas: Persona[];
   contacts: Contact[];
   contexts: ContextEntry[];
@@ -41,6 +50,7 @@ const toPersonaRow = (p: Persona, userId: string) => ({
   role: p.role ?? null,
   company: p.company ?? null,
   is_default: p.isDefault,
+  updated_at: p.updatedAt ?? '1970-01-01T00:00:00.000Z',
 });
 const fromPersonaRow = (r: any): Persona => ({
   id: r.id,
@@ -49,6 +59,7 @@ const fromPersonaRow = (r: any): Persona => ({
   role: r.role ?? undefined,
   company: r.company ?? undefined,
   isDefault: r.is_default,
+  updatedAt: r.updated_at ?? undefined,
 });
 
 const toContactRow = (c: Contact, userId: string) => ({
@@ -68,6 +79,14 @@ const toContactRow = (c: Contact, userId: string) => ({
   cadence_days: c.cadenceDays,
   source: c.source,
   created_at: c.createdAt,
+  kind: c.kind ?? null,
+  status: c.status ?? null,
+  evaluated_at: c.evaluatedAt ?? null,
+  alt_emails: c.altEmails ?? null,
+  alt_phones: c.altPhones ?? null,
+  linkedin: c.linkedin ?? null,
+  card_token: c.cardToken ?? null,
+  updated_at: c.updatedAt ?? c.createdAt,
 });
 const fromContactRow = (r: any): Contact => ({
   id: r.id,
@@ -85,6 +104,14 @@ const fromContactRow = (r: any): Contact => ({
   cadenceDays: r.cadence_days,
   source: r.source,
   createdAt: r.created_at,
+  kind: r.kind ?? undefined,
+  status: r.status ?? undefined,
+  evaluatedAt: r.evaluated_at ?? undefined,
+  altEmails: r.alt_emails ?? undefined,
+  altPhones: r.alt_phones ?? undefined,
+  linkedin: r.linkedin ?? undefined,
+  cardToken: r.card_token ?? undefined,
+  updatedAt: r.updated_at ?? undefined,
 });
 
 const toContextRow = (c: ContextEntry, userId: string) => ({
@@ -97,6 +124,7 @@ const toContextRow = (c: ContextEntry, userId: string) => ({
   commitment: c.commitment ?? null,
   commitment_due_at: c.commitmentDueAt ?? null,
   created_at: c.createdAt,
+  updated_at: c.updatedAt ?? c.createdAt,
 });
 const fromContextRow = (r: any): ContextEntry => ({
   id: r.id,
@@ -107,6 +135,7 @@ const fromContextRow = (r: any): ContextEntry => ({
   commitment: r.commitment ?? undefined,
   commitmentDueAt: r.commitment_due_at ?? undefined,
   createdAt: r.created_at,
+  updatedAt: r.updated_at ?? undefined,
 });
 
 const toInteractionRow = (i: Interaction, userId: string) => ({
@@ -192,10 +221,97 @@ const toProfileRow = (p: UserProfile, userId: string) => ({
   phone: p.phone ?? null,
   city: p.city ?? null,
   is_pro: p.isPro,
+  timezone: p.timezone ?? null,
   notifications_enabled: p.notificationsEnabled,
   default_persona_id: p.defaultPersonaId,
   onboarded: false, // set by caller via pushGraph(db) below
 });
+
+// --- merge -------------------------------------------------------------------
+
+const rowTime = (x: { updatedAt?: string; createdAt?: string }): number =>
+  new Date(x.updatedAt ?? x.createdAt ?? 0).getTime();
+
+function newestById<T extends { id: string; updatedAt?: string; createdAt?: string }>(
+  remote: T[],
+  local: T[],
+): T[] {
+  const out = new Map<string, T>();
+  for (const r of remote) out.set(r.id, r);
+  for (const l of local) {
+    const r = out.get(l.id);
+    if (!r || rowTime(l) > rowTime(r)) out.set(l.id, l);
+  }
+  return [...out.values()];
+}
+
+/** How settled a nudge is — a verdict beats pending, whichever device saw it. */
+const NUDGE_RANK: Record<Nudge['state'], number> = {
+  pending: 0,
+  snoozed: 1,
+  dismissed: 2,
+  acted: 3,
+};
+
+/**
+ * True merge of the local and remote graphs — the fix for "the app keeps
+ * losing my interactions". Rules:
+ *  - contacts/contexts/personas: union by id, NEWEST updatedAt wins;
+ *  - manual interactions: UNION by id (append-only in practice — a logged
+ *    touchpoint can never be erased by a pull again);
+ *  - email-sync interactions + accounts: server-owned, remote wins;
+ *  - nudges: union; on collision the more-settled state wins (acted >
+ *    dismissed > snoozed > pending) so verdicts survive from any device;
+ *  - hooks: union, remote preferred (engine regenerates);
+ *  - profile: remote wins for server-written fields (isPro), local wins
+ *    otherwise (it is the device in the user's hand).
+ */
+export function mergeGraphs(local: DB, remote: GraphData): DB {
+  const remoteEmailInts = remote.interactions.filter((i) => i.source === 'email-sync');
+  const remoteManualInts = remote.interactions.filter((i) => i.source !== 'email-sync');
+  const localManualInts = local.interactions.filter((i) => i.source !== 'email-sync');
+  const manualById = new Map<string, Interaction>();
+  for (const i of remoteManualInts) manualById.set(i.id, i);
+  for (const i of localManualInts) manualById.set(i.id, i);
+
+  const nudgeById = new Map<string, Nudge>();
+  for (const n of remote.nudges) nudgeById.set(n.id, n);
+  for (const n of local.nudges) {
+    const r = nudgeById.get(n.id);
+    if (!r || NUDGE_RANK[n.state] > NUDGE_RANK[r.state]) nudgeById.set(n.id, n);
+  }
+
+  const hookById = new Map<string, Hook>();
+  for (const h of local.hooks) hookById.set(h.id, h);
+  for (const h of remote.hooks) {
+    const l = hookById.get(h.id);
+    // consumed beats unconsumed, whichever side saw it
+    if (!l || (h.consumedAt && !l.consumedAt)) hookById.set(h.id, h);
+  }
+
+  return {
+    ...local,
+    profile: {
+      ...local.profile,
+      ...(remote.profile ?? {}),
+      // Local wins for what the user just did on THIS device…
+      ...(local.onboarded ? { name: local.profile.name || remote.profile?.name || '' } : {}),
+      notificationsEnabled: local.profile.notificationsEnabled,
+      timezone: local.profile.timezone ?? remote.profile?.timezone,
+      defaultPersonaId: local.profile.defaultPersonaId || remote.profile?.defaultPersonaId || '',
+      // …but the server owns billing state (RevenueCat webhook writes it).
+      isPro: remote.profile?.isPro ?? local.profile.isPro,
+    },
+    onboarded: remote.onboarded || local.onboarded,
+    personas: newestById(remote.personas, local.personas),
+    contacts: newestById(remote.contacts, local.contacts),
+    contexts: newestById(remote.contexts, local.contexts),
+    interactions: [...remoteEmailInts, ...manualById.values()],
+    hooks: [...hookById.values()],
+    nudges: [...nudgeById.values()],
+    accounts: remote.accounts,
+  };
+}
 
 // --- pull ------------------------------------------------------------------
 
@@ -218,6 +334,7 @@ export async function pullGraph(
   const p = profile.data;
   return {
     onboarded: Boolean(p?.onboarded),
+    graphVersion: Number(p?.graph_version ?? 0),
     profile: p
       ? {
           name: p.name ?? '',
@@ -227,6 +344,7 @@ export async function pullGraph(
           phone: p.phone ?? undefined,
           city: p.city ?? undefined,
           isPro: p.is_pro,
+          timezone: p.timezone ?? undefined,
           notificationsEnabled: p.notifications_enabled,
           defaultPersonaId: p.default_persona_id ?? '',
         }
@@ -255,7 +373,8 @@ async function upsertChunked(
   rows: { id: string }[],
 ): Promise<void> {
   for (let i = 0; i < rows.length; i += CHUNK) {
-    await client.from(table).upsert(rows.slice(i, i + CHUNK));
+    const { error } = await client.from(table).upsert(rows.slice(i, i + CHUNK));
+    if (error) throw new Error(`push ${table} (rows ${i}-${i + CHUNK}): ${error.message}`);
   }
 }
 
@@ -269,7 +388,8 @@ async function selectAllIds(
   for (let from = 0; ; from += SELECT_PAGE) {
     let query = client.from(table).select('id').eq('user_id', userId);
     if (clientOwnedOnly) query = query.neq('source', 'email-sync');
-    const { data } = await query.range(from, from + SELECT_PAGE - 1);
+    const { data, error } = await query.range(from, from + SELECT_PAGE - 1);
+    if (error) throw new Error(`select ${table} ids: ${error.message}`);
     if (!data || data.length === 0) break;
     ids.push(...data.map((r: { id: string }) => r.id));
     if (data.length < SELECT_PAGE) break;
@@ -284,7 +404,12 @@ async function deleteByIds(
   ids: string[],
 ): Promise<void> {
   for (let i = 0; i < ids.length; i += CHUNK) {
-    await client.from(table).delete().eq('user_id', userId).in('id', ids.slice(i, i + CHUNK));
+    const { error } = await client
+      .from(table)
+      .delete()
+      .eq('user_id', userId)
+      .in('id', ids.slice(i, i + CHUNK));
+    if (error) throw new Error(`delete stale ${table}: ${error.message}`);
   }
 }
 
@@ -318,14 +443,31 @@ async function replaceClientInteractions(
   await deleteByIds(client, 'interactions', userId, stale);
 }
 
+/**
+ * Replace the server graph — but ONLY when this device's view is current.
+ * The version claim (compare-and-bump) runs first; a stale device gets a
+ * GraphVersionConflict instead of silently deleting rows newer devices wrote.
+ * Returns the new version to carry into the next push.
+ */
 export async function pushGraph(
   client: SupabaseClient,
   userId: string,
   db: DB,
-): Promise<void> {
-  await client
+  expectedVersion: number,
+): Promise<number> {
+  const { error } = await client
     .from('profiles')
     .upsert({ ...toProfileRow(db.profile, userId), onboarded: db.onboarded });
+  if (error) throw new Error(`push profile: ${error.message}`);
+
+  const claim = await client
+    .from('profiles')
+    .update({ graph_version: expectedVersion + 1 })
+    .eq('user_id', userId)
+    .eq('graph_version', expectedVersion)
+    .select('graph_version');
+  if (claim.error) throw new Error(`claim graph version: ${claim.error.message}`);
+  if (!claim.data || claim.data.length === 0) throw new GraphVersionConflict();
 
   const manualInteractions = db.interactions
     .filter((i) => i.source !== 'email-sync')
@@ -341,4 +483,5 @@ export async function pushGraph(
     // connected_accounts is server-owned (written by the Gmail functions) — never
     // touched by a client push.
   ]);
+  return expectedVersion + 1;
 }

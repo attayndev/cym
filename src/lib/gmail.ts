@@ -41,8 +41,11 @@ export async function syncGmailNow(): Promise<number> {
   return (data as { newInteractions?: number } | null)?.newInteractions ?? 0;
 }
 
-export async function disconnectGmail(): Promise<void> {
+/** Disconnect one inbox (pass its email) or every connected inbox (omit). */
+export async function disconnectGmail(email?: string): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
-  await supabase.functions.invoke('gmail-sync', { body: { action: 'disconnect' } });
+  await supabase.functions.invoke('gmail-sync', {
+    body: email ? { action: 'disconnect', email } : { action: 'disconnect' },
+  });
 }

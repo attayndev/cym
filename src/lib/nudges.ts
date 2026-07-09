@@ -1,6 +1,8 @@
+import { isActiveContact } from '@/lib/classify';
 import { daysBetween, isoDate, nextOccurrence } from '@/lib/dates';
 import { id } from '@/lib/ids';
 import type {
+  LocalizedText,
   Contact,
   ContextEntry,
   DB,
@@ -14,7 +16,8 @@ const BIRTHDAY_LOOKAHEAD_DAYS = 7;
 const COMMITMENT_LOOKAHEAD_DAYS = 3;
 const ANNIVERSARY_WINDOW_DAYS = 3;
 const HOOK_NUDGE_WINDOW_PAST_DAYS = 14;
-const MAX_DECAY_NUDGES = 3;
+// The keep-warm deck: up to 10 live decay nudges (was 3 pre-deck).
+const MAX_DECAY_NUDGES = 10;
 const DECAY_COOLDOWN_DAYS = 14;
 
 export function lastContactAt(
@@ -51,7 +54,35 @@ export function contactHealth(
   interactions: Interaction[],
   now: Date,
 ): Health {
+  // No logged touch at all (typical for address-book imports): we can't claim
+  // any warmth, so the contact is 'new' until a first interaction lands.
+  if (!interactions.some((i) => i.contactId === contact.id)) return 'new';
   return healthOf(decayRatio(contact, interactions, now));
+}
+
+/**
+ * One-pass health/ratio index for large lists (People, Dashboard). Equivalent
+ * to calling contactHealth/decayRatio per contact, without rescanning the
+ * whole interaction log for every row.
+ */
+export function buildHealthIndex(
+  contacts: Contact[],
+  interactions: Interaction[],
+  now: Date,
+): Map<string, { health: Health; ratio: number }> {
+  const latest = new Map<string, string>();
+  for (const i of interactions) {
+    const cur = latest.get(i.contactId);
+    if (!cur || i.occurredAt > cur) latest.set(i.contactId, i.occurredAt);
+  }
+  const index = new Map<string, { health: Health; ratio: number }>();
+  for (const c of contacts) {
+    const touchedAt = latest.get(c.id);
+    const days = Math.max(0, daysBetween(new Date(touchedAt ?? c.createdAt), now));
+    const ratio = days / Math.max(1, c.cadenceDays);
+    index.set(c.id, { health: touchedAt ? healthOf(ratio) : 'new', ratio });
+  }
+  return index;
 }
 
 function fullName(c: Contact): string {
@@ -79,6 +110,7 @@ function computeHooks(db: DB, now: Date): Hook[] {
   };
 
   for (const contact of db.contacts) {
+    if (!isActiveContact(contact)) continue;
     if (contact.birthday) {
       const next = nextOccurrence(contact.birthday, now);
       if (daysBetween(now, next) <= BIRTHDAY_LOOKAHEAD_DAYS) {
@@ -110,9 +142,11 @@ function computeHooks(db: DB, now: Date): Hook[] {
       (now.getFullYear() - met.getFullYear()) * 12 + (now.getMonth() - met.getMonth());
     if (monthsSince >= 6 && monthsSince % 6 === 0) {
       const anniversary = new Date(now.getFullYear(), now.getMonth(), met.getDate());
+      const health = contactHealth(contact, db.interactions, now);
       if (
         Math.abs(daysBetween(anniversary, now)) <= ANNIVERSARY_WINDOW_DAYS &&
-        contactHealth(contact, db.interactions, now) !== 'warm'
+        health !== 'warm' &&
+        health !== 'new'
       ) {
         push({
           contactId: contact.id,
@@ -142,15 +176,34 @@ function hookNudgeContent(
   const ctx = findContext(db, contact.id);
   const isFamily = contact.category === 'family';
   switch (hook.type) {
-    case 'birthday':
+    case 'birthday': {
+      // Honest about timing: the heads-up window is a feature, but "It's
+      // their birthday" is only true ON the day. Content re-derives every
+      // refresh, so an "in 5 days" nudge counts itself down.
+      const daysAway = daysBetween(
+        new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        new Date(hook.triggerAt),
+      );
+      const headline: LocalizedText =
+        daysAway <= 0
+          ? { key: 'nudgec.birthday.headline', params: { name } }
+          : daysAway === 1
+            ? { key: 'nudgec.birthday.headline.tomorrow', params: { name } }
+            : { key: 'nudgec.birthday.headline.upcoming', params: { name, n: daysAway } };
+      const actionKey =
+        daysAway <= 0
+          ? isFamily
+            ? 'nudgec.birthday.action.family'
+            : 'nudgec.birthday.action.pro'
+          : isFamily
+            ? 'nudgec.birthday.action.plan.family'
+            : 'nudgec.birthday.action.plan.pro';
       return {
-        headline: { key: 'nudgec.birthday.headline', params: { name } },
-        reason: { key: 'nudgec.birthday.reason' },
-        suggestedAction: {
-          key: isFamily ? 'nudgec.birthday.action.family' : 'nudgec.birthday.action.pro',
-          params: { name },
-        },
+        headline,
+        reason: { key: daysAway <= 0 ? 'nudgec.birthday.reason.today' : 'nudgec.birthday.reason' },
+        suggestedAction: { key: actionKey, params: { name } },
       };
+    }
     case 'commitment-due':
       return {
         headline: { key: 'nudgec.commitment.headline', params: { name } },
@@ -214,7 +267,16 @@ export function refreshEngine(db: DB, now: Date): DB {
   const hooks = [...db.hooks, ...computeHooks(db, now)];
   const contactsById = new Map(db.contacts.map((c) => [c.id, c]));
 
-  // One nudge per live hook.
+  // One nudge per live hook — but content re-derives each run so time-aware
+  // copy (a birthday countdown) stays current instead of freezing at creation.
+  const hooksById = new Map(hooks.map((h) => [h.id, h]));
+  nudges = nudges.map((n) => {
+    if (!n.hookId || n.state !== 'pending') return n;
+    const hook = hooksById.get(n.hookId);
+    const contact = hook && contactsById.get(hook.contactId);
+    if (!hook || !contact) return n;
+    return { ...n, ...hookNudgeContent(db, contact, hook, now) };
+  });
   const nudgedHookIds = new Set(
     nudges.filter((n) => n.hookId && n.state !== 'dismissed').map((n) => n.hookId),
   );
@@ -259,8 +321,18 @@ export function refreshEngine(db: DB, now: Date): DB {
     (n) => n.kind === 'decay' && (n.state === 'pending' || n.state === 'snoozed'),
   ).length;
 
+  // You can't drift from someone you never contacted — decay only applies to
+  // contacts with at least one logged interaction (imports start with none).
+  const touched = new Set(db.interactions.map((i) => i.contactId));
+
   const candidates = db.contacts
-    .filter((c) => !activeNudgeContactIds.has(c.id) && !recentlyHandled.has(c.id))
+    .filter(
+      (c) =>
+        isActiveContact(c) &&
+        touched.has(c.id) &&
+        !activeNudgeContactIds.has(c.id) &&
+        !recentlyHandled.has(c.id),
+    )
     .map((c) => ({ contact: c, ratio: decayRatio(c, db.interactions, now) }))
     .filter(({ ratio }) => healthOf(ratio) === 'at-risk' || healthOf(ratio) === 'cold')
     .sort((a, b) => b.ratio * b.contact.importance - a.ratio * a.contact.importance)

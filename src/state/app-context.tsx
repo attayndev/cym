@@ -9,25 +9,36 @@ import {
   type ReactNode,
 } from 'react';
 
-import { syncDeviceContacts } from '@/lib/contacts';
+import { AppState as RNAppState } from 'react-native';
+
+import { syncDeviceContacts, updateDeviceContacts } from '@/lib/contacts';
 import { id } from '@/lib/ids';
 import { syncScheduledNotifications } from '@/lib/notifications';
+import { ensureClassified } from '@/lib/classify';
+import { dedupeImports, mergePair } from '@/lib/dedupe';
+import { applyEnrichment, fetchNameHints } from '@/lib/enrich';
+import { diag } from '@/lib/log';
+import { refreshLivingCards } from '@/lib/living-cards';
 import { refreshEngine } from '@/lib/nudges';
 import { reassignContacts, resolveActivePersonaId } from '@/lib/personas';
 import { emptyDB, sampleEntities } from '@/lib/seed';
 import {
+  addArchiveTombstones,
   clearDB,
   loadActivePersonaId,
   loadDB,
+  loadDeviceLinks,
   saveActivePersonaId,
   saveDB,
 } from '@/lib/store';
+import { configurePurchases } from '@/lib/purchases';
 import { registerPushToken } from '@/lib/push';
 import { getSupabase } from '@/lib/supabase';
-import { pullGraph, pushGraph } from '@/lib/sync';
+import { GraphVersionConflict, mergeGraphs, pullGraph, pushGraph } from '@/lib/sync';
 import { useAuth } from '@/state/auth-context';
 import type {
   Category,
+  ContactKind,
   Channel,
   Contact,
   ContextEntry,
@@ -51,6 +62,10 @@ export interface ContactPatch {
   importance?: Importance;
   cadenceDays?: number;
   personaId?: string;
+  linkedin?: string;
+  altEmails?: string[];
+  altPhones?: string[];
+  cardToken?: string;
 }
 
 export type PersonaPatch = Partial<Pick<Persona, 'name' | 'tagline' | 'role' | 'company'>>;
@@ -90,6 +105,8 @@ export interface CaptureInput {
 
 interface AppState {
   db: DB | null;
+  /** False while the first cloud pull for this session is still in flight. */
+  cloudReady: boolean;
   activePersonaId: string;
   setActivePersona: (personaId: string) => void;
   addPersona: (input: { name: string; tagline?: string; role?: string; company?: string }) => string;
@@ -99,6 +116,20 @@ interface AppState {
   captureContact: (input: CaptureInput) => string;
   updateContact: (contactId: string, patch: ContactPatch) => void;
   deleteContact: (contactId: string) => void;
+  /** Noise sweep: archive in CYM only — never touches the device address book. */
+  archiveContacts: (contactIds: string[]) => void;
+  /** Sweep "Keep": confirm a suspected business is actually a person. */
+  keepContact: (contactId: string) => void;
+  /** "Remove from Call Your Mom": archive + purge CYM-private data. Durable
+   *  (won't re-import) and never touches the device address book. */
+  removeContact: (contactId: string) => void;
+  /** Apply AI classifications — only to rows still 'unclear', so a user's
+   *  explicit Keep (person) is never overridden. */
+  applyContactKinds: (kinds: { id: string; kind: ContactKind }[]) => void;
+  /** Evaluate-deck "Track" verdict: adopt the contact into the warm pool. */
+  trackContact: (contactId: string, category: Category, cadenceDays: number) => void;
+  /** Human-approved merge from the possible-duplicates review. */
+  mergeContacts: (keeperId: string, dupeId: string) => void;
   updateContext: (contactId: string, patch: ContextPatch) => void;
   logInteraction: (contactId: string, type: InteractionType, note?: string) => void;
   markNudgeActed: (nudgeId: string, channel: Channel) => void;
@@ -112,8 +143,43 @@ interface AppState {
   exportData: () => string;
   resetAll: () => Promise<void>;
   importDeviceContacts: () => Promise<number>;
-  syncContacts: () => Promise<{ imported: number; exported: number }>;
+  syncContacts: () => Promise<{
+    imported: number;
+    exported: number;
+    deviceTotal: number;
+    access?: string;
+  }>;
+  /** Additive push of CYM directory facts into linked device contacts. */
+  pushContactsToDevice: () => Promise<number>;
   pullNow: () => Promise<void>;
+}
+
+function stampRows<T extends { id: string; updatedAt?: string }>(
+  prev: T[],
+  next: T[],
+  now: string,
+): T[] {
+  if (prev === next) return next;
+  const prevById = new Map(prev.map((r) => [r.id, r]));
+  let changed = false;
+  const out = next.map((r) => {
+    if (prevById.get(r.id) === r) return r; // untouched reference
+    changed = true;
+    return { ...r, updatedAt: now };
+  });
+  return changed ? out : next;
+}
+
+function stampUpdatedRows(prev: DB, next: DB): DB {
+  if (prev === next) return next;
+  const now = new Date().toISOString();
+  const contacts = stampRows(prev.contacts, next.contacts, now);
+  const contexts = stampRows(prev.contexts, next.contexts, now);
+  const personas = stampRows(prev.personas, next.personas, now);
+  if (contacts === next.contacts && contexts === next.contexts && personas === next.personas) {
+    return next;
+  }
+  return { ...next, contacts, contexts, personas };
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -126,6 +192,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // so we never push before the initial pull for a session has completed.
   const syncedUserIdRef = useRef<string | null>(null);
   const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Concurrency token from the last pull/push — pushGraph refuses to run
+  // with a stale one, which is what stops a lagging device from deleting
+  // rows that newer devices wrote (the Sean-Murphy-came-back bug).
+  const graphVersionRef = useRef(0);
+  const lastPullAtRef = useRef(0);
+  // False while the first cloud pull for the current session is in flight —
+  // onboarding waits on this so a returning user's data restores before we
+  // decide whether they're "new" (the bug: sign-in advanced onboarding while
+  // the restore was still downloading, so it looked like a fresh account).
+  const [cloudReady, setCloudReady] = useState(false);
   // Device-local view preference; resolved against db.personas below.
   const [storedPersonaId, setStoredPersonaId] = useState<string | null>(null);
 
@@ -134,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // New installs start empty and go through onboarding; we no longer
       // auto-seed demo data over a real user's account.
       const existing = await loadDB();
-      const base = existing ?? emptyDB();
+      const base = dedupeImports(ensureClassified(existing ?? emptyDB()));
       const refreshed = refreshEngine(base, new Date());
       dbRef.current = refreshed;
       setDb(refreshed);
@@ -165,13 +241,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!userId || !supabase || syncedUserIdRef.current !== userId) return;
       if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
       pushTimerRef.current = setTimeout(() => {
-        void pushGraph(supabase, userId, next).catch(() => {
-          // Local stays the source of truth; a failed push retries on next change.
-        });
+        pushGraph(supabase, userId, next, graphVersionRef.current)
+          .then((v) => {
+            graphVersionRef.current = v;
+            diag('push', { v, contacts: next.contacts.length, ints: next.interactions.length });
+          })
+          .catch((e) => {
+            if (e instanceof GraphVersionConflict) {
+              // Another device pushed first. The pull MERGES their work with
+              // ours (nothing sacrificed), then the merged graph re-pushes
+              // with the fresh version.
+              console.warn('sync: version conflict — merging and retrying');
+              void pullFromCloudRef.current?.(userId).then(() => {
+                const merged = dbRef.current;
+                if (merged) schedulePush(merged);
+              });
+              return;
+            }
+            // Local stays the source of truth; a failed push retries on next change.
+            console.warn('sync push failed:', e instanceof Error ? e.message : e);
+          });
       }, 1500);
     },
     [session],
   );
+  // pullFromCloud is declared below (it needs schedulePush's siblings); the
+  // ref breaks the cycle for the conflict-recovery path.
+  const pullFromCloudRef = useRef<((userId: string) => Promise<void>) | null>(null);
 
   // Reconcile local <-> remote: adopt the cloud graph when it has data
   // (returning user / new device), otherwise push the local graph up (first
@@ -181,23 +277,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
     if (!supabase) return;
     const remote = await pullGraph(supabase, userId);
+    graphVersionRef.current = remote.graphVersion;
+    lastPullAtRef.current = Date.now();
     const local = dbRef.current ?? emptyDB();
-    const remoteHasData = remote.contacts.length > 0 || remote.personas.length > 0;
+    // Contacts anchor the graph — contexts/interactions/nudges all hang off
+    // them. A bare profile + default persona is exactly what a fresh sign-in
+    // pushes up, so counting personas here would adopt an empty cloud graph
+    // over real local data.
+    const remoteHasData = remote.contacts.length > 0;
 
     let merged: DB;
     if (remoteHasData) {
-      merged = {
-        ...local,
-        profile: { ...local.profile, ...(remote.profile ?? {}) },
-        onboarded: remote.onboarded || local.onboarded,
-        personas: remote.personas,
-        contacts: remote.contacts,
-        contexts: remote.contexts,
-        interactions: remote.interactions,
-        hooks: remote.hooks,
-        nudges: remote.nudges,
-        accounts: remote.accounts,
-      };
+      // TRUE MERGE — never adopt wholesale. Unpushed local work (a logged
+      // touchpoint, an edit made seconds ago) survives every pull; the
+      // newest version of each row wins; manual interactions are unioned.
+      merged = mergeGraphs(local, remote);
     } else {
       // Keep the local graph, but adopt server-owned accounts + email interactions.
       const emailInts = remote.interactions.filter((i) => i.source === 'email-sync');
@@ -209,35 +303,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    const refreshed = refreshEngine(merged, new Date());
+    // Cloud rows can predate the lifecycle columns — normalize before use.
+    const refreshed = refreshEngine(dedupeImports(ensureClassified(merged)), new Date());
     dbRef.current = refreshed;
     setDb(refreshed);
     await saveDB(refreshed);
     syncedUserIdRef.current = userId;
+    diag('pull-merge', {
+      v: remote.graphVersion,
+      contacts: refreshed.contacts.length,
+      manualInts: refreshed.interactions.filter((i) => i.source !== 'email-sync').length,
+    });
     void syncScheduledNotifications(refreshed);
 
+    // If the merge kept local work the cloud lacks, push it up — otherwise
+    // other devices would never see it.
+    if (remoteHasData) {
+      const localHadNews =
+        local.interactions.some(
+          (i) => i.source !== 'email-sync' && !remote.interactions.some((r) => r.id === i.id),
+        ) ||
+        local.contacts.some((c) => {
+          const r = remote.contacts.find((x) => x.id === c.id);
+          return !r || new Date(c.updatedAt ?? 0) > new Date(r.updatedAt ?? 0);
+        });
+      if (localHadNews) schedulePush(refreshed);
+    }
+
     // First sign-in with an empty cloud: migrate the local graph up.
-    if (!remoteHasData) await pushGraph(supabase, userId, refreshed);
+    if (!remoteHasData) {
+      graphVersionRef.current = await pushGraph(
+        supabase,
+        userId,
+        refreshed,
+        graphVersionRef.current,
+      );
+    }
   }, []);
+  pullFromCloudRef.current = pullFromCloud;
+
+
+  // Tier-0 enrichment: read server-harvested name hints (contact_hints) and
+  // apply them + work-domain company inference additively. Runs after every
+  // cloud pull so fresh Gmail harvests land without user action.
+  const refreshEnrichment = useCallback(async () => {
+    try {
+      const hints = await fetchNameHints();
+      const current = dbRef.current;
+      if (!current) return;
+      let next = applyEnrichment(current, hints);
+      next = await refreshLivingCards(next);
+      if (next !== current) {
+        // Stamp like any other mutation so merges treat these as fresh edits.
+        next = stampUpdatedRows(current, next);
+        dbRef.current = next;
+        setDb(next);
+        await saveDB(next);
+        schedulePush(next);
+      }
+    } catch {
+      // Enrichment is best-effort; never block sync on it.
+    }
+  }, [schedulePush]);
 
   useEffect(() => {
     const userId = session?.user?.id;
     if (!userId || !getSupabase()) {
       syncedUserIdRef.current = null;
+      setCloudReady(true); // signed out or unconfigured: nothing to restore
       return;
     }
     let cancelled = false;
+    setCloudReady(false);
     (async () => {
       try {
         if (!cancelled) await pullFromCloud(userId);
-      } catch {
+        if (!cancelled) await refreshEnrichment();
+      } catch (e) {
         // Offline or misconfigured: stay local-only, don't block the app.
+        console.warn('cloud pull failed:', e instanceof Error ? e.message : e);
+      } finally {
+        if (!cancelled) setCloudReady(true);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [session, pullFromCloud]);
+
+  const pushContactsToDevice = useCallback(async (): Promise<number> => {
+    const current = dbRef.current;
+    if (!current) return 0;
+    return updateDeviceContacts(current.contacts);
+  }, []);
+
 
   const pullNow = useCallback(async () => {
     const userId = session?.user?.id;
@@ -247,7 +406,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {
       // best-effort
     }
-  }, [session, pullFromCloud]);
+  }, [session, pullFromCloud, refreshEnrichment]);
 
   // Register this device for push once per signed-in session, when reminders are on.
   const pushRegisteredForRef = useRef<string | null>(null);
@@ -264,11 +423,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [session, notificationsEnabled]);
 
+  // RevenueCat: configure once per signed-in session (keyed to the Supabase
+  // user id so webhooks map app_user_id → profiles). The entitlement stream
+  // is the client-side source of truth for isPro; the webhook keeps the
+  // server column honest for renewals that happen while the app is closed.
+  const purchasesConfiguredForRef = useRef<string | null>(null);
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || purchasesConfiguredForRef.current === userId) return;
+    purchasesConfiguredForRef.current = userId;
+    void configurePurchases(userId, (isPro) => {
+      const current = dbRef.current;
+      if (current && current.profile.isPro !== isPro) {
+        setDb((prev) => {
+          if (!prev || prev.profile.isPro === isPro) return prev;
+          const next = { ...prev, profile: { ...prev.profile, isPro } };
+          dbRef.current = next;
+          void saveDB(next);
+          schedulePush(next);
+          return next;
+        });
+      }
+    });
+  }, [session, schedulePush]);
+
   const update = useCallback(
     (fn: (current: DB) => DB) => {
       const current = dbRef.current;
       if (!current) return;
-      const next = fn(current);
+      let next = fn(current);
+      // Stamp updatedAt on every row whose reference changed — immutable
+      // updates mean ref-changed <=> modified. Sync merges keep the newest
+      // row, which is what makes pulls safe for unpushed local edits.
+      next = stampUpdatedRows(current, next);
       dbRef.current = next;
       setDb(next);
       void saveDB(next);
@@ -371,6 +558,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           cadenceDays: input.cadenceDays,
           source: input.source ?? 'manual',
           createdAt: nowIso,
+          // Deliberately-captured contacts are people by definition.
+          kind: 'person',
+          status: 'active',
         };
         const context: ContextEntry = {
           id: id('ctx'),
@@ -432,6 +622,109 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  // Noise sweep: archive is CYM-only (device address book untouched). Pending
+  // work for archived contacts is cleared; keep = confirmed person, so the
+  // sweep never asks about them again.
+  const archiveContacts = useCallback(
+    (contactIds: string[]) => {
+      // Durable verdict: remember the device ids so imports never resurrect.
+      void loadDeviceLinks().then((links) => {
+        const ids = contactIds.map((id) => links[id]).filter(Boolean) as string[];
+        void addArchiveTombstones(ids);
+      });
+      const ids = new Set(contactIds);
+      update((current) => ({
+        ...current,
+        contacts: current.contacts.map((c) =>
+          ids.has(c.id) ? { ...c, status: 'archived' as const } : c,
+        ),
+        hooks: current.hooks.filter((h) => !ids.has(h.contactId)),
+        nudges: current.nudges.filter((n) => !ids.has(n.contactId)),
+      }));
+    },
+    [update],
+  );
+
+  // "Remove from Call Your Mom": archive (not delete) so a linked device
+  // contact can't resurrect on the next contacts sync, and purge everything
+  // CYM-private about them. The device address book is never touched.
+  const removeContact = useCallback(
+    (contactId: string) => {
+      void loadDeviceLinks().then((links) => {
+        const dev = links[contactId];
+        if (dev) void addArchiveTombstones([dev]);
+      });
+      update((current) => ({
+        ...current,
+        contacts: current.contacts.map((c) =>
+          c.id === contactId ? { ...c, status: 'archived' as const } : c,
+        ),
+        contexts: current.contexts.filter((c) => c.contactId !== contactId),
+        interactions: current.interactions.filter(
+          (i) => i.contactId !== contactId || i.source === 'email-sync',
+        ),
+        hooks: current.hooks.filter((h) => h.contactId !== contactId),
+        nudges: current.nudges.filter((n) => n.contactId !== contactId),
+      }));
+    },
+    [update],
+  );
+
+  const keepContact = useCallback(
+    (contactId: string) => {
+      update((current) => ({
+        ...current,
+        contacts: current.contacts.map((c) =>
+          c.id === contactId ? { ...c, kind: 'person' as const, status: 'active' as const } : c,
+        ),
+      }));
+    },
+    [update],
+  );
+
+  const trackContact = useCallback(
+    (contactId: string, category: Category, cadenceDays: number) => {
+      update((current) => ({
+        ...current,
+        contacts: current.contacts.map((c) =>
+          c.id === contactId
+            ? {
+                ...c,
+                category,
+                cadenceDays,
+                importance: Math.max(c.importance, 2) as Contact['importance'],
+                kind: 'person' as const,
+                evaluatedAt: new Date().toISOString(),
+              }
+            : c,
+        ),
+      }));
+    },
+    [update],
+  );
+
+  const mergeContacts = useCallback(
+    (keeperId: string, dupeId: string) => {
+      update((current) => mergePair(current, keeperId, dupeId));
+    },
+    [update],
+  );
+
+  const applyContactKinds = useCallback(
+    (kinds: { id: string; kind: ContactKind }[]) => {
+      const byId = new Map(kinds.map((k) => [k.id, k.kind]));
+      update((current) => ({
+        ...current,
+        contacts: current.contacts.map((c) =>
+          byId.has(c.id) && (c.kind ?? 'unclear') === 'unclear'
+            ? { ...c, kind: byId.get(c.id)! }
+            : c,
+        ),
+      }));
+    },
+    [update],
+  );
+
   const updateContext = useCallback(
     (contactId: string, patch: ContextPatch) => {
       const nowIso = new Date().toISOString();
@@ -454,6 +747,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const logInteraction = useCallback(
     (contactId: string, type: InteractionType, note?: string) => {
+      diag('interaction', { type, contactId });
       update((current) =>
         refreshEngine(
           {
@@ -545,6 +839,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  // Re-pull whenever the app returns to the foreground after sitting idle —
+  // fresh devices rarely conflict, so version refusals stay a rare backstop.
+  useEffect(() => {
+    const sub = RNAppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      const userId = session?.user?.id;
+      if (!userId || syncedUserIdRef.current !== userId) return;
+      if (Date.now() - lastPullAtRef.current < 3 * 60 * 1000) return;
+      void pullFromCloud(userId).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [session, pullFromCloud]);
+
+  // Report the device timezone once it differs — server pushes use it to
+  // fire on the user's local day/hour.
+  useEffect(() => {
+    if (!db) return;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz && db.profile.timezone !== tz) updateProfile({ timezone: tz });
+    } catch {
+      // no tz info — server falls back to UTC
+    }
+  }, [db, updateProfile]);
+
   const setNotificationsEnabled = useCallback(
     (enabled: boolean) => {
       update((current) => ({
@@ -599,20 +918,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [schedulePush]);
 
   const runDeviceSync = useCallback(
-    async (withExport: boolean): Promise<{ imported: number; exported: number }> => {
+    async (
+      withExport: boolean,
+    ): Promise<{ imported: number; exported: number; deviceTotal: number; access?: string }> => {
       const current = dbRef.current;
-      if (!current) return { imported: 0, exported: 0 };
+      if (!current) return { imported: 0, exported: 0, deviceTotal: 0 };
       const result = await syncDeviceContacts(
         current.contacts,
         activePersonaIdRef.current || current.profile.defaultPersonaId,
         { export: withExport },
       );
-      if (result.newContacts.length > 0) {
+      if (result.newContacts.length > 0 || result.patches.length > 0) {
+        const patchById = new Map(result.patches.map((p) => [p.id, p]));
         update((c) =>
-          refreshEngine({ ...c, contacts: [...c.contacts, ...result.newContacts] }, new Date()),
+          refreshEngine(
+            {
+              ...c,
+              contacts: [
+                ...c.contacts.map((existing) => {
+                  const p = patchById.get(existing.id);
+                  return p ? { ...existing, ...p } : existing;
+                }),
+                ...result.newContacts,
+              ],
+            },
+            new Date(),
+          ),
         );
       }
-      return { imported: result.imported, exported: result.exported };
+      return {
+        imported: result.imported,
+        exported: result.exported,
+        deviceTotal: result.deviceTotal,
+        access: result.access,
+      };
     },
     [update],
   );
@@ -625,13 +964,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // People "Sync contacts" — two-way (pull device contacts + push app contacts out).
   const syncContacts = useCallback(
-    async (): Promise<{ imported: number; exported: number }> => runDeviceSync(true),
+    async (): Promise<{ imported: number; exported: number; deviceTotal: number; access?: string }> =>
+      runDeviceSync(true),
     [runDeviceSync],
   );
 
   const value = useMemo(
     () => ({
       db,
+      cloudReady,
       activePersonaId,
       setActivePersona,
       addPersona,
@@ -641,6 +982,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       captureContact,
       updateContact,
       deleteContact,
+      archiveContacts,
+      keepContact,
+      removeContact,
+      applyContactKinds,
+      trackContact,
+      mergeContacts,
       updateContext,
       logInteraction,
       markNudgeActed,
@@ -655,10 +1002,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetAll,
       importDeviceContacts,
       syncContacts,
+      pushContactsToDevice,
       pullNow,
     }),
     [
       db,
+      cloudReady,
       activePersonaId,
       setActivePersona,
       addPersona,
@@ -668,6 +1017,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       captureContact,
       updateContact,
       deleteContact,
+      archiveContacts,
+      keepContact,
+      removeContact,
+      applyContactKinds,
+      trackContact,
+      mergeContacts,
       updateContext,
       logInteraction,
       markNudgeActed,
@@ -682,6 +1037,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       resetAll,
       importDeviceContacts,
       syncContacts,
+      pushContactsToDevice,
       pullNow,
     ],
   );
