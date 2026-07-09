@@ -29,6 +29,28 @@ function clean(value: unknown, cap = FIELD_CAP): string | null {
   return trimmed ? trimmed.slice(0, cap) : null;
 }
 
+// Per-IP submission limiter for the public POST. Per-isolate memory (resets on
+// cold start, not shared across regions) — a speed bump against casual abuse,
+// not a fortress; Turnstile is the upgrade path if it's ever needed.
+const RATE_LIMIT = 10; // submissions per window per IP
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const submissions = new Map<string, number[]>();
+
+function rateLimited(req: Request): boolean {
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    'unknown';
+  const now = Date.now();
+  const recent = (submissions.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT) return true;
+  recent.push(now);
+  submissions.set(ip, recent);
+  // Cap the map so a scan across many IPs can't grow memory unboundedly.
+  if (submissions.size > 10_000) submissions.clear();
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
@@ -72,6 +94,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method === 'POST') {
+    if (rateLimited(req)) return json({ error: 'rate_limited' }, 429);
     let body: Record<string, unknown> = {};
     try {
       body = await req.json();

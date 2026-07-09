@@ -69,8 +69,10 @@ Deno.serve(async (req) => {
   if (tok.refresh_token) cred.refresh_token = tok.refresh_token;
 
   await admin.from('gmail_credentials').upsert(cred, { onConflict: 'user_id,email' });
+  // One row per (user, email) so multiple inboxes keep independent status
+  // and sync/backfill bookmarks.
   await admin.from('connected_accounts').upsert({
-    id: `gmail_${uid}`,
+    id: `gmail_${uid}_${email}`,
     user_id: uid,
     provider: 'gmail',
     email,

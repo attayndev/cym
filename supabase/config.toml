@@ -30,3 +30,26 @@ verify_jwt = false
 # anonymous calls are rejected). JWT possession + typed confirmation is the auth.
 [functions.delete-account]
 verify_jwt = false
+
+# drafts (AI proxy) authenticates manually: user JWT only. The Anthropic key
+# lives in function secrets and never ships in a client bundle.
+[functions.drafts]
+verify_jwt = false
+
+# revenuecat-webhook authenticates via the shared secret RevenueCat sends in
+# the Authorization header (no Supabase JWT involved).
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+# classify-contacts (AI noise classifier) authenticates manually: user JWT only.
+[functions.classify-contacts]
+verify_jwt = false
+
+[functions.enrich-contact]
+verify_jwt = false
+
+[functions.waitlist]
+verify_jwt = false
+
+[functions.card-refresh]
+verify_jwt = false
