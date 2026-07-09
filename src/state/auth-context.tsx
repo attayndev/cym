@@ -28,6 +28,7 @@ interface AuthState {
   signUp: (email: string, password: string) => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
   signInWithGoogle: () => Promise<AuthResult>;
+  signInWithMicrosoft: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
 
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: 'unavailable' };
       },
       signInWithGoogle: async () => signInWithProviderOAuth('google'),
+      signInWithMicrosoft: async () => signInWithProviderOAuth('azure'),
       signOut: async () => {
         const supabase = getSupabase();
         await supabase?.auth.signOut();

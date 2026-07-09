@@ -502,6 +502,7 @@ export const es: Partial<Dict> = {
   'auth.signIn': 'Iniciar sesión',
   'auth.or': 'o',
   'auth.continueWithApple': 'Continuar con Apple',
+  'auth.continueWithMicrosoft': 'Continuar con Microsoft',
   'auth.continueWithGoogle': 'Continuar con Google',
   'auth.webOnlyNote': 'Las cuentas se crean en la app. Inicia sesión con el correo que usaste allí.',
   'auth.signUp': 'Crear cuenta',

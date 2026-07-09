@@ -495,6 +495,7 @@ export const en = {
   'auth.signIn': 'Sign in',
   'auth.or': 'or',
   'auth.continueWithApple': 'Continue with Apple',
+  'auth.continueWithMicrosoft': 'Continue with Microsoft',
   'auth.continueWithGoogle': 'Continue with Google',
   'auth.webOnlyNote': 'Accounts are created in the app. Sign in with the email you used there.',
   'auth.signUp': 'Create account',

@@ -23,7 +23,7 @@ const WEB_LOGIN_ONLY = Platform.OS === 'web';
  * Navigation on success belongs to the parent (watch `user` from useAuth).
  */
 export function AuthPanel({ initialMode = 'signIn' }: { initialMode?: 'signIn' | 'signUp' }) {
-  const { signIn, signUp, signInWithApple, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithApple, signInWithGoogle, signInWithMicrosoft } = useAuth();
   const { t } = useTranslation();
 
   const [mode, setMode] = useState<'signIn' | 'signUp'>(WEB_LOGIN_ONLY ? 'signIn' : initialMode);
@@ -42,11 +42,16 @@ export function AuthPanel({ initialMode = 'signIn' }: { initialMode?: 'signIn' |
     }
   }, [linkingUrl]);
 
-  const runOAuth = async (provider: 'apple' | 'google') => {
+  const runOAuth = async (provider: 'apple' | 'google' | 'microsoft') => {
     setBusy(true);
     setError(null);
     setNotice(null);
-    const result = provider === 'apple' ? await signInWithApple() : await signInWithGoogle();
+    const result =
+      provider === 'apple'
+        ? await signInWithApple()
+        : provider === 'microsoft'
+          ? await signInWithMicrosoft()
+          : await signInWithGoogle();
     setBusy(false);
     if (!result.ok && result.error !== 'cancelled') {
       setError(t('auth.error'));
@@ -78,6 +83,12 @@ export function AuthPanel({ initialMode = 'signIn' }: { initialMode?: 'signIn' |
           disabled={busy}
           style={({ pressed }) => [styles.googleBtn, (pressed || busy) && { opacity: 0.7 }]}>
           <Text style={styles.googleText}>{t('auth.continueWithGoogle')}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => void runOAuth('microsoft')}
+          disabled={busy}
+          style={({ pressed }) => [styles.googleBtn, (pressed || busy) && { opacity: 0.7 }]}>
+          <Text style={styles.googleText}>{t('auth.continueWithMicrosoft')}</Text>
         </Pressable>
       </View>
 

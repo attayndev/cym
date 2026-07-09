@@ -13,7 +13,7 @@ import { getSupabase } from '@/lib/supabase';
 
 export type OAuthResult = { ok: true } | { ok: false; error: string };
 
-export type OAuthProvider = 'google' | 'apple';
+export type OAuthProvider = 'apple' | 'google' | 'azure';
 
 /** Turn a Supabase implicit-flow redirect URL into a live session. */
 export async function createSessionFromUrl(url: string): Promise<OAuthResult> {
