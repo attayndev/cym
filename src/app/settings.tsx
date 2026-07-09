@@ -10,7 +10,7 @@ import { Body, Button, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { LOCALES, useTranslation, type Locale } from '@/i18n';
 import { deleteAccount } from '@/lib/account';
-import { connectImap, connectOutlook, disconnectEmail, IMAP_PRESETS, syncAllEmail } from '@/lib/email';
+import { connectImap, disconnectEmail, IMAP_PRESETS, syncAllEmail } from '@/lib/email';
 import { connectGmail } from '@/lib/gmail';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { getSupabase } from '@/lib/supabase';
@@ -26,7 +26,7 @@ export default function SettingsScreen() {
   const [imapOpen, setImapOpen] = useState(false);
   const [imapEmail, setImapEmail] = useState('');
   const [imapPassword, setImapPassword] = useState('');
-  const [imapPreset, setImapPreset] = useState<'icloud' | 'yahoo' | 'custom'>('icloud');
+  const [imapPreset, setImapPreset] = useState<'icloud' | 'yahoo' | 'outlook' | 'custom'>('icloud');
   const [imapHost, setImapHost] = useState('');
   const [contactsBusy, setContactsBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -171,21 +171,6 @@ export default function SettingsScreen() {
     connect();
   };
 
-  const handleConnectOutlook = async () => {
-    setGmailBusy(true);
-    try {
-      const result = await connectOutlook();
-      if (result === 'connected') {
-        await syncAllEmail().catch(() => 0);
-        await pullNow();
-      } else if (result === 'error') {
-        notify(t('gmail.error'));
-      }
-    } finally {
-      setGmailBusy(false);
-    }
-  };
-
   const handleConnectImap = async () => {
     const preset = IMAP_PRESETS.find((p) => p.key === imapPreset)!;
     const host = imapPreset === 'custom' ? imapHost.trim() : preset.host;
@@ -288,9 +273,7 @@ export default function SettingsScreen() {
                         {'  '}
                         {account.provider === 'gmail'
                           ? 'Gmail'
-                          : account.provider === 'outlook'
-                            ? 'Outlook'
-                            : 'IMAP'}
+                          : 'IMAP'}
                       </Text>
                     </Text>
                     <Pressable
@@ -317,12 +300,6 @@ export default function SettingsScreen() {
                     <Text style={styles.link}>{t('email.connect.gmail')}</Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => gateInbox(() => void handleConnectOutlook())}
-                    disabled={gmailBusy}
-                    hitSlop={6}>
-                    <Text style={styles.link}>{t('email.connect.outlook')}</Text>
-                  </Pressable>
-                  <Pressable
                     onPress={() => gateInbox(() => setImapOpen((v) => !v))}
                     disabled={gmailBusy}
                     hitSlop={6}>
@@ -332,10 +309,10 @@ export default function SettingsScreen() {
                 {imapOpen && (
                   <View style={{ gap: 8, marginTop: 6 }}>
                     <View style={styles.gmailRow}>
-                      {(['icloud', 'yahoo', 'custom'] as const).map((k) => (
+                      {(['icloud', 'yahoo', 'outlook', 'custom'] as const).map((k) => (
                         <Pressable key={k} onPress={() => setImapPreset(k)} hitSlop={6}>
                           <Text style={imapPreset === k ? styles.link : styles.linkMuted}>
-                            {k === 'icloud' ? 'iCloud' : k === 'yahoo' ? 'Yahoo' : t('email.imap.custom')}
+                            {k === 'icloud' ? 'iCloud' : k === 'yahoo' ? 'Yahoo' : k === 'outlook' ? 'Outlook' : t('email.imap.custom')}
                           </Text>
                         </Pressable>
                       ))}

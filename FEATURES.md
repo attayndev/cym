@@ -102,7 +102,7 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
    email, company, role, birthday) into the linked device contacts via the existing
    link map. Additive only: fill blanks and add values, never overwrite/delete device
    data. Never export CYM-private context (why-they-matter, commitments, notes).
-8. **More email providers** — BUILT July 9 (Outlook via Graph + generic IMAP; Outlook awaits Azure app registration → MS_CLIENT_ID/MS_CLIENT_SECRET/OUTLOOK_REDIRECT_URL secrets). Original plan: (a) **Outlook/Microsoft 365** via
+8. **More email providers** — generic IMAP BUILT July 9 (iCloud, Yahoo, Outlook-via-IMAP, custom domains; app-specific passwords, envelope-only). Microsoft OAuth/Graph was built then REMOVED same day (Azure account unavailable — decision: no Microsoft dependencies). Original plan reference: (a) ~~Outlook/Microsoft 365~~ via
    Microsoft Graph (proper OAuth, revocable scopes, REST — architecturally a sibling
    of the Gmail integration: provider row on connected_accounts + an outlook-sync
    function emitting the same interaction rows); then (b) **iCloud Mail** via IMAP —
