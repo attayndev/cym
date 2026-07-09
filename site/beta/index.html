@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beta install — Call Your Mom</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,100&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FFF7E8;--butter:#FFD466;--cherry:#D9331F;--cherry-deep:#B3260F;--espresso:#3B241C;--espresso-90:rgba(59,36,28,.9);
+--display:"Fraunces",Georgia,serif;--body:"Karla",-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);background:var(--cream);color:var(--espresso);line-height:1.6;font-size:16.5px}
+.wrap{max-width:520px;margin:0 auto;padding:48px 22px 80px;text-align:center}
+img.icon{width:96px;height:96px;border-radius:22px;margin:0 auto 18px;border:2px solid var(--espresso);box-shadow:5px 5px 0 rgba(59,36,28,.15)}
+h1{font-family:var(--display);font-variation-settings:"SOFT" 100,"opsz" 144;font-weight:900;font-size:clamp(30px,8vw,42px);line-height:1.05;margin-bottom:10px}
+p{color:var(--espresso-90);margin-bottom:14px}
+.kicker{font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cherry-deep);margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:18px;text-decoration:none;padding:16px 32px;border-radius:999px;
+border:2px solid var(--espresso);background:var(--cherry);color:var(--cream);box-shadow:5px 5px 0 var(--espresso);margin:16px 0 8px}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--espresso)}
+.steps{text-align:left;background:#fff;border:2px solid var(--espresso);border-radius:18px;padding:20px 22px;box-shadow:4px 4px 0 rgba(59,36,28,.12);margin-top:26px}
+.steps h2{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:19px;margin-bottom:10px}
+.steps ol{margin-left:20px}
+.steps li{margin-bottom:8px;color:var(--espresso-90);font-size:15px}
+.fine{font-size:13px;opacity:.65;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="icon" src="/assets/apple-touch-icon.png" alt="Call Your Mom app icon">
+  <p class="kicker">Private beta · iPhone</p>
+  <h1>You're in.</h1>
+  <p>Open this page in <strong>Safari on your iPhone</strong> and tap the button. Your phone was invited by its device ID — this build only installs on beta iPhones.</p>
+  <a class="btn" href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Fgetcym.app%2Fbeta%2Fmanifest.plist">Install Call Your Mom</a>
+  <p style="font-size:14px">Tap <strong>Allow</strong>, then <strong>Install</strong>. The icon appears on your home screen and downloads in the background.</p>
+  <div class="steps">
+    <h2>If the app won't open</h2>
+    <ol>
+      <li>Go to <strong>Settings → General → VPN &amp; Device Management</strong>.</li>
+      <li>Tap <strong>Attayn Group LLC</strong> under Developer App.</li>
+      <li>Tap <strong>Trust</strong>, then open the app again.</li>
+    </ol>
+  </div>
+  <p class="fine">Install fails with "unable to install"? Your device may not be registered yet — reply to your invite email and we'll sort it. © 2026 Attayn Group LLC.</p>
+</div>
+</body>
+</html>
