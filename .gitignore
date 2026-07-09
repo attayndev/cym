@@ -53,3 +53,5 @@ AGENTS.md
 # local tool state
 .wrangler/
 supabase/.temp/
+.metro.log
+scripts/.nudges-bundle.js

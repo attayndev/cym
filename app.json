@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "app.getcym.cym",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFD466",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -61,6 +62,14 @@
         "projectId": "b120ed2f-b9d9-47a9-8749-a168f582f503"
       }
     },
-    "owner": "attayndev"
+    "owner": "attayndev",
+    "updates": {
+      "url": "https://u.expo.dev/b120ed2f-b9d9-47a9-8749-a168f582f503",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

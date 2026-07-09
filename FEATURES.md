@@ -39,7 +39,7 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
 | Local notifications + daily scheduling | ✅ | On-device: morning digest of live hook nudges + birthday-morning reminders. Mobile only |
 | Server push + nightly job | 🟡 | `daily-nudges` edge function sends localized push for today's birthdays + due commitments; nightly cron runs gmail-sync then daily-nudges. Code complete; needs EAS project + dev build + cron — see `supabase/PUSH.md`. Push is mobile-only and needs a physical device |
 | Follow-up drafts | ✅ | Generated from captured context + hook, in the user's language; context-aware template fallback; channel toggle (text/email) opens Messages/Mail |
-| Aging dashboard | ✅ | Health buckets (warm / cooling / at-risk / cold) + "bring these back to warm" |
+| Aging dashboard | ✅ | Health buckets (new / warm / cooling / at-risk / cold) + "bring these back to warm". Contacts with no logged interaction (typical for address-book imports) are 'new' — never counted warm, never targeted by decay/anniversary nudges — until a first touch is logged or Gmail sync backfills one |
 | Accounts + cross-device sync | 🟡 | Supabase backend fully scaffolded (schema, RLS, auth, sync layer, auth UI). Dormant until `EXPO_PUBLIC_SUPABASE_*` env vars are set — see `supabase/README.md` |
 | Email sync (Gmail) | 🟡 | The brief's make-or-break. Fully coded: 3 edge functions (OAuth start/callback + metadata sync), locked-down token table, "Connect Gmail / Sync now / Disconnect" in settings. Reads metadata only (timestamps + participants), matches to contacts by email, writes email-sync interactions. Needs Google OAuth provisioning + function deploy — see `supabase/GMAIL.md`. Restricted-scope verification required before public launch |
 | Real billing | ⏳ | "Go Pro" currently flips a local flag (`is_pro` column exists). Needs StoreKit/RevenueCat (mobile) + Stripe (web) + a payment webhook |
@@ -94,6 +94,32 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
 4. Share hardening: per-IP rate limiting / Turnstile on the public `share-card` POST;
    universal links (open `/c/<token>` in the app); Apple/Google Wallet pass variants
 5. More locales (the i18n foundation is in place — add a dictionary file + register it)
+6. **Remote beta distribution** — wire `expo-updates`/EAS Update channels for OTA JS
+   pushes to testers; Android beta = preview APK link; iOS beta = ad-hoc preview build
+   (register tester UDIDs via `eas device:create`). TestFlight stays gated behind the
+   RevenueCat + explicit-go production policy.
+7. **"Update Contacts" export button** — push CYM-captured directory facts (phone,
+   email, company, role, birthday) into the linked device contacts via the existing
+   link map. Additive only: fill blanks and add values, never overwrite/delete device
+   data. Never export CYM-private context (why-they-matter, commitments, notes).
+8. **More email providers** — in priority order: (a) **Outlook/Microsoft 365** via
+   Microsoft Graph (proper OAuth, revocable scopes, REST — architecturally a sibling
+   of the Gmail integration: provider row on connected_accounts + an outlook-sync
+   function emitting the same interaction rows); then (b) **iCloud Mail** via IMAP —
+   Apple has no mail API or OAuth, so this means app-specific passwords
+   (appleid.apple.com), a Deno IMAP client fetching envelope headers only, and a
+   heavier privacy disclosure (the password grants full mailbox access; headers-only
+   becomes our promise rather than a provider-enforced scope). Multi-inbox already
+   covers iCloud users' secondary Gmail/work accounts in the meantime.
+9. **CRM integrations (Salesforce, HubSpot, Pipedrive)** — needs discussion + design
+   before any build. Two pieces: (a) push CYM contacts into the connected CRM;
+   (b) for contacts flagged "in CRM", also push email/text interactions into the
+   CRM contact's activity record. Open questions for the design session: which
+   direction wins on conflicts (CRM vs CYM), per-contact vs per-category flagging,
+   OAuth app review requirements per vendor (AppExchange / HubSpot marketplace /
+   Pipedrive marketplace), whether interaction push is metadata-only (matches our
+   Gmail privacy story: timestamps + participants, never bodies), and tier gating
+   (this is a professional-audience feature — likely Plus or a higher business tier).
 
 ## 6. Changelog
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "832324163791",
+    "project_id": "call-your-mom-4340c",
+    "storage_bucket": "call-your-mom-4340c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832324163791:android:ecad5fe6d6c8297de33fba",
+        "android_client_info": {
+          "package_name": "app.getcym.cym"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsUEk6Sjxd3sX2BUtDBPuAPVeZDM3LRw4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
