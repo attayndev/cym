@@ -37,6 +37,12 @@
       "expo-router",
       "expo-apple-authentication",
       [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Call Your Mom uses the camera to scan business cards and conference badges so you can capture a contact in seconds."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#FFD466",

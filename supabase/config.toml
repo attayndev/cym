@@ -38,6 +38,11 @@ verify_jwt = false
 
 # revenuecat-webhook authenticates via the shared secret RevenueCat sends in
 # the Authorization header (no Supabase JWT involved).
+[functions.card-scan]
+verify_jwt = false
+
+# revenuecat-webhook authenticates via the shared secret RevenueCat sends in
+# the Authorization header (no Supabase JWT involved).
 [functions.revenuecat-webhook]
 verify_jwt = false
 

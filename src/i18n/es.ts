@@ -296,6 +296,13 @@ export const es: Partial<Dict> = {
   'field.birthday': 'Cumpleaños (MM-DD, si lo sabes)',
 
   // Capture
+  'capture.scan.button': 'Escanear tarjeta o gafete',
+  'capture.scan.working': 'Leyendo…',
+  'capture.scan.done': 'Listo — revisa lo que leímos antes de guardar.',
+  'capture.scan.nothing': 'No pudimos leer una tarjeta en esa foto — acércate más, con más luz.',
+  'capture.scan.noPermission': 'La cámara está desactivada — actívala en Ajustes para escanear tarjetas.',
+  'capture.scan.needsUpdate': 'Escanear requiere la versión más reciente de la app — descárgala desde tu enlace de instalación.',
+  'capture.scan.limit': 'Alcanzaste el límite de escaneos por hoy — mañana se reinicia.',
   'capture.step0.title': '¿A quién conociste?',
   'capture.next.context': 'Siguiente: el contexto',
   'capture.step1.title': 'Captúralo mientras está fresco',

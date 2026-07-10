@@ -292,6 +292,13 @@ export const en = {
   'field.birthday': 'Birthday (MM-DD, if you know it)',
 
   // Capture
+  'capture.scan.button': 'Scan a card or badge',
+  'capture.scan.working': 'Reading…',
+  'capture.scan.done': 'Got it — check what we read before saving.',
+  'capture.scan.nothing': 'Couldn\'t read a card in that photo — try again closer, with more light.',
+  'capture.scan.noPermission': 'Camera access is off — enable it in Settings to scan cards.',
+  'capture.scan.needsUpdate': 'Scanning needs the newest app build — grab it from your install link.',
+  'capture.scan.limit': 'That\'s the scan limit for today — tomorrow it resets.',
   'capture.step0.title': 'Who did you meet?',
   'capture.next.context': 'Next: the context',
   'capture.step1.title': "Capture it while it's fresh",

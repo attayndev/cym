@@ -1,14 +1,16 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { canTrackMore } from '@/lib/tier';
 import { Field } from '@/components/field';
 import { Body, Button, Chip, Eyebrow, Heading, Row, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { notify } from '@/lib/alert';
 import { addDays, isoDate } from '@/lib/dates';
+import { scanCardImage } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
 import type { Category, Importance } from '@/lib/types';
 import { useApp } from '@/state/app-context';
@@ -69,6 +71,7 @@ export default function CaptureScreen() {
   const [company, setCompany] = useState(params.company ?? '');
   const [role, setRole] = useState(params.role ?? '');
   const [birthday, setBirthday] = useState('');
+  const [scanning, setScanning] = useState(false);
 
   const [whereMet, setWhereMet] = useState('');
   const [discussed, setDiscussed] = useState(params.note ?? '');
@@ -92,6 +95,54 @@ export default function CaptureScreen() {
           : days === 90
             ? t('cadence.quarter')
             : t('cadence.6months');
+
+  // Scan a business card or conference badge: photo -> server-side vision
+  // extraction -> prefilled form. The camera module is native, so binaries
+  // that predate it get a graceful "update the app" instead of a crash —
+  // the import stays lazy on purpose (runtime policy is appVersion).
+  const handleScan = async () => {
+    let picker: typeof import('expo-image-picker');
+    try {
+      picker = await import('expo-image-picker');
+    } catch {
+      notify(t('capture.scan.needsUpdate'));
+      return;
+    }
+    try {
+      let result: import('expo-image-picker').ImagePickerResult;
+      if (Platform.OS === 'web') {
+        result = await picker.launchImageLibraryAsync({ base64: true, quality: 0.7 });
+      } else {
+        const perm = await picker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          notify(t('capture.scan.noPermission'));
+          return;
+        }
+        result = await picker.launchCameraAsync({ base64: true, quality: 0.7 });
+      }
+      if (result.canceled || !result.assets?.[0]?.base64) return;
+      setScanning(true);
+      const scan = await scanCardImage(
+        result.assets[0].base64,
+        result.assets[0].mimeType ?? 'image/jpeg',
+      );
+      if (scan === 'limit') notify(t('capture.scan.limit'));
+      else if (scan === 'error' || !scan.found) notify(t('capture.scan.nothing'));
+      else {
+        if (scan.firstName) setFirstName(scan.firstName);
+        if (scan.lastName) setLastName(scan.lastName);
+        if (scan.email) setEmail(scan.email);
+        if (scan.phone) setPhone(scan.phone);
+        if (scan.company) setCompany(scan.company);
+        if (scan.role) setRole(scan.role);
+        notify(t('capture.scan.done'));
+      }
+    } catch {
+      notify(t('capture.scan.nothing'));
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const save = () => {
     if (db && !canTrackMore(db)) {
@@ -141,6 +192,15 @@ export default function CaptureScreen() {
       {step === 0 && (
         <>
           <Heading>{t('capture.step0.title')}</Heading>
+          <Pressable
+            onPress={() => void handleScan()}
+            disabled={scanning}
+            style={({ pressed }) => [styles.scanBtn, (pressed || scanning) && { opacity: 0.7 }]}>
+            <Feather name="camera" size={17} color={colors.cream} />
+            <Text style={styles.scanBtnText}>
+              {scanning ? t('capture.scan.working') : t('capture.scan.button')}
+            </Text>
+          </Pressable>
           <Field
             label={t('field.firstName')}
             value={firstName}
@@ -298,6 +358,22 @@ export default function CaptureScreen() {
 }
 
 const styles = StyleSheet.create({
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    backgroundColor: colors.espresso,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    paddingVertical: 12,
+  },
+  scanBtnText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 14.5,
+    color: colors.cream,
+  },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
