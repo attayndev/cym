@@ -40,13 +40,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="people"
-        options={{
-          title: t('tab.people'),
-          tabBarIcon: ({ color, size }) => <Feather name="users" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="card"
         options={{
           title: t('tab.card'),
@@ -62,6 +55,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Feather name="pie-chart" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="people"
+        options={{
+          title: t('tab.people'),
+          tabBarIcon: ({ color, size }) => <Feather name="users" size={size} color={color} />,
         }}
       />
     </Tabs>

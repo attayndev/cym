@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -22,6 +22,27 @@ import { isActiveContact } from '@/lib/classify';
 import { buildHealthIndex } from '@/lib/nudges';
 import { contactsForPersona } from '@/lib/personas';
 import { useApp } from '@/state/app-context';
+import type { Contact } from '@/lib/types';
+
+/**
+ * People: the address book, shaped like one. Alphabetical sections with
+ * sticky letter headers and an A–Z rail on the right that jumps to a
+ * section. Triage lives on the Health tab; this list is for finding people.
+ */
+
+// getItemLayout arithmetic: every row is exactly ROW_H inside an ITEM_H
+// wrapper (ROW_H + gap), and headers are exactly HEADER_H. The jump rail
+// depends on these being true — ContactRow pins its height to match.
+const ROW_H = 74;
+const ITEM_H = ROW_H + 10;
+const HEADER_H = 34;
+
+type LetterSection = { key: string; data: Contact[] };
+
+function letterOf(c: Contact): string {
+  const ch = (c.firstName || c.lastName || '#').trim().charAt(0).toUpperCase();
+  return /[A-Z]/.test(ch) ? ch : '#';
+}
 
 export default function PeopleScreen() {
   const { db, activePersonaId, syncContacts } = useApp();
@@ -29,35 +50,42 @@ export default function PeopleScreen() {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [syncing, setSyncing] = useState(false);
-
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  const listRef = useRef<SectionList<Contact, LetterSection>>(null);
 
   const now = new Date();
-  // Archived contacts (noise sweep) stay out of the list; a dedicated
-  // archived view arrives with the sweep UI.
-  const personaContacts = contactsForPersona(db.contacts, activePersonaId).filter(
-    isActiveContact,
+  const personaContacts = useMemo(
+    () =>
+      db
+        ? contactsForPersona(db.contacts, activePersonaId).filter(isActiveContact)
+        : [],
+    [db, activePersonaId],
   );
-  const index = buildHealthIndex(personaContacts, db.interactions, now);
-  const filtered = personaContacts
-    .filter((c) =>
-      `${c.firstName} ${c.lastName ?? ''} ${c.company ?? ''}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
-    )
-    .sort(
-      (a, b) => index.get(b.id)!.ratio * b.importance - index.get(a.id)!.ratio * a.importance,
-    );
+  const index = useMemo(
+    () => buildHealthIndex(personaContacts, db?.interactions ?? [], now),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [personaContacts, db?.interactions],
+  );
 
-  const needsAttention = filtered.filter((c) => {
-    const h = index.get(c.id)!.health;
-    return h === 'at-risk' || h === 'cold';
-  });
-  const doingFine = filtered.filter((c) => {
-    const h = index.get(c.id)!.health;
-    return h === 'warm' || h === 'cooling';
-  });
-  const notYetInTouch = filtered.filter((c) => index.get(c.id)!.health === 'new');
+  const sections: LetterSection[] = useMemo(() => {
+    const q = query.toLowerCase();
+    const shown = personaContacts.filter((c) =>
+      `${c.firstName} ${c.lastName ?? ''} ${c.company ?? ''}`.toLowerCase().includes(q),
+    );
+    const byLetter = new Map<string, Contact[]>();
+    for (const c of shown) {
+      const k = letterOf(c);
+      byLetter.set(k, [...(byLetter.get(k) ?? []), c]);
+    }
+    const name = (c: Contact) => `${c.firstName} ${c.lastName ?? ''}`.trim();
+    return [...byLetter.entries()]
+      .sort(([a], [b]) => (a === '#' ? 1 : b === '#' ? -1 : a.localeCompare(b)))
+      .map(([key, data]) => ({
+        key,
+        data: data.sort((a, b) => name(a).localeCompare(name(b))),
+      }));
+  }, [personaContacts, query]);
+
+  if (!db) return <Screen scroll={false}>{null}</Screen>;
 
   const handleSync = async () => {
     setSyncing(true);
@@ -79,11 +107,33 @@ export default function PeopleScreen() {
     (c) => c.kind === 'business' && isActiveContact(c),
   ).length;
 
-  const sections = [
-    { key: 'attention', title: t('people.section.needsAttention'), data: needsAttention },
-    { key: 'fine', title: t('people.section.doingFine'), data: doingFine },
-    { key: 'new', title: t('people.section.new'), data: notYetInTouch },
-  ].filter((s) => s.data.length > 0);
+  // Flattened per section: 1 header + N items + 1 footer(0-height).
+  const getItemLayout = (_: unknown, target: number) => {
+    let i = 0;
+    let offset = 0;
+    for (const s of sections) {
+      if (target === i) return { length: HEADER_H, offset, index: target };
+      i += 1;
+      offset += HEADER_H;
+      if (target < i + s.data.length) {
+        const k = target - i;
+        return { length: ITEM_H, offset: offset + k * ITEM_H, index: target };
+      }
+      i += s.data.length;
+      offset += s.data.length * ITEM_H;
+      if (target === i) return { length: 0, offset, index: target };
+      i += 1;
+    }
+    return { length: 0, offset, index: target };
+  };
+
+  const jumpTo = (sectionIndex: number) => {
+    listRef.current?.scrollToLocation({
+      sectionIndex,
+      itemIndex: 0, // 0 = the section header
+      animated: false,
+    });
+  };
 
   return (
     <Screen scroll={false}>
@@ -144,39 +194,49 @@ export default function PeopleScreen() {
             </Pressable>
           )}
 
-          {/* Virtualized — address books run 10k+ contacts; only visible rows render. */}
-          <SectionList
-            sections={sections}
-            keyExtractor={(c) => c.id}
-            renderItem={({ item }) => (
-              <ContactRow
-                contact={item}
-                interactions={db.interactions}
-                health={index.get(item.id)!.health}
-              />
-            )}
-            renderSectionHeader={({ section }) => (
-              <View style={styles.sectionHeader}>
-                <Eyebrow>{section.title}</Eyebrow>
+          <View style={styles.listWrap}>
+            {/* Virtualized — address books run 10k+ contacts; only visible rows render. */}
+            <SectionList
+              ref={listRef}
+              sections={sections}
+              keyExtractor={(c) => c.id}
+              renderItem={({ item }) => (
+                <View style={styles.itemWrap}>
+                  <ContactRow
+                    contact={item}
+                    interactions={db.interactions}
+                    health={index.get(item.id)!.health}
+                  />
+                </View>
+              )}
+              renderSectionHeader={({ section }) => (
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionLetter}>{section.key}</Text>
+                </View>
+              )}
+              getItemLayout={getItemLayout}
+              stickySectionHeadersEnabled
+              showsVerticalScrollIndicator={false}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              initialNumToRender={12}
+              windowSize={7}
+              keyboardShouldPersistTaps="handled"
+            />
+            {sections.length > 1 && (
+              <View style={styles.rail} pointerEvents="box-none">
+                {sections.map((s, si) => (
+                  <Pressable key={s.key} onPress={() => jumpTo(si)} hitSlop={5}>
+                    <Text style={styles.railLetter}>{s.key}</Text>
+                  </Pressable>
+                ))}
               </View>
             )}
-            ItemSeparatorComponent={ItemGap}
-            stickySectionHeadersEnabled={false}
-            showsVerticalScrollIndicator={false}
-            style={styles.list}
-            contentContainerStyle={styles.listContent}
-            initialNumToRender={12}
-            windowSize={7}
-            keyboardShouldPersistTaps="handled"
-          />
+          </View>
         </>
       )}
     </Screen>
   );
-}
-
-function ItemGap() {
-  return <View style={{ height: 10 }} />;
 }
 
 const styles = StyleSheet.create({
@@ -245,17 +305,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.espresso,
   },
-  list: {
+  listWrap: {
     flex: 1,
     alignSelf: 'stretch',
+    flexDirection: 'row',
+  },
+  list: {
+    flex: 1,
   },
   listContent: {
     paddingBottom: 32,
     // Rows carry 3px hard offset shadows; keep them from clipping at the edge.
     paddingRight: 3,
   },
-  sectionHeader: {
-    paddingTop: 8,
+  itemWrap: {
+    height: ITEM_H,
     paddingBottom: 10,
+  },
+  sectionHeader: {
+    height: HEADER_H,
+    justifyContent: 'flex-end',
+    paddingBottom: 6,
+    backgroundColor: colors.cream,
+  },
+  sectionLetter: {
+    fontFamily: fonts.displayMedium,
+    fontSize: 16,
+    color: colors.cherryDeep,
+  },
+  rail: {
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+  },
+  railLetter: {
+    fontFamily: fonts.sansBold,
+    fontSize: 10.5,
+    color: colors.cherryDeep,
+    paddingVertical: 0.5,
   },
 });

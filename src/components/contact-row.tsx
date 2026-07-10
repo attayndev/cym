@@ -50,10 +50,10 @@ export function ContactRow({
         </Text>
       </View>
       <View style={styles.info}>
-        <Text style={styles.name}>
+        <Text style={styles.name} numberOfLines={1}>
           {contact.firstName} {contact.lastName ?? ''}
         </Text>
-        <Text style={styles.meta}>
+        <Text style={styles.meta} numberOfLines={1}>
           {subtitle ? `${subtitle} · ` : ''}
           {health === 'new'
             ? t('common.noTouchYet')
@@ -75,6 +75,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.espresso,
     padding: 14,
+    // Fixed height: the People list's getItemLayout (A-Z jump rail) depends
+    // on every row measuring exactly this.
+    height: 74,
     ...hardShadow(3, 'rgba(59,36,28,0.15)'),
   },
   avatar: {
