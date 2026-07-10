@@ -296,6 +296,13 @@ export const es: Partial<Dict> = {
   'field.birthday': 'Cumpleaños (MM-DD, si lo sabes)',
 
   // Capture
+  'tab.scan': 'Escanear',
+  'scan.title': 'Escanear',
+  'scan.sub': 'Apunta la cámara a una tarjeta de presentación o a un gafete — los datos llegan a un contacto nuevo para que los revises.',
+  'scan.tip1': '→ Llena el encuadre con la tarjeta, de frente.',
+  'scan.tip2': '→ Los gafetes también funcionan, aunque estén torcidos.',
+  'scan.tip3': '→ Nada se guarda sin tu revisión.',
+  'scan.manual': 'O agrega a alguien a mano',
   'capture.scan.button': 'Escanear tarjeta o gafete',
   'capture.scan.working': 'Leyendo…',
   'capture.scan.done': 'Listo — revisa lo que leímos antes de guardar.',

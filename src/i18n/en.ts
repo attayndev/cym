@@ -292,6 +292,13 @@ export const en = {
   'field.birthday': 'Birthday (MM-DD, if you know it)',
 
   // Capture
+  'tab.scan': 'Scan',
+  'scan.title': 'Scan',
+  'scan.sub': 'Point the camera at a business card or a conference badge — the details land in a new contact for you to check.',
+  'scan.tip1': '→ Fill the frame with the card, flat on.',
+  'scan.tip2': '→ Badges work too — even lanyard-crooked ones.',
+  'scan.tip3': '→ Nothing saves until you review it.',
+  'scan.manual': 'Or add someone by hand',
   'capture.scan.button': 'Scan a card or badge',
   'capture.scan.working': 'Reading…',
   'capture.scan.done': 'Got it — check what we read before saving.',

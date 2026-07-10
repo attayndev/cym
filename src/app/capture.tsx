@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { canTrackMore } from '@/lib/tier';
 import { Field } from '@/components/field';
@@ -10,7 +10,7 @@ import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { notify } from '@/lib/alert';
 import { addDays, isoDate } from '@/lib/dates';
-import { scanCardImage } from '@/lib/scan';
+import { runCardScan } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
 import type { Category, Importance } from '@/lib/types';
 import { useApp } from '@/state/app-context';
@@ -96,45 +96,24 @@ export default function CaptureScreen() {
             ? t('cadence.quarter')
             : t('cadence.6months');
 
-  // Scan a business card or conference badge: photo -> server-side vision
-  // extraction -> prefilled form. The camera module is native, so binaries
-  // that predate it get a graceful "update the app" instead of a crash —
-  // the import stays lazy on purpose (runtime policy is appVersion).
+  // Scan a business card or badge into the form. Camera + extraction live in
+  // runCardScan; this maps outcomes to form state and user messages.
   const handleScan = async () => {
-    let picker: typeof import('expo-image-picker');
+    setScanning(true);
     try {
-      picker = await import('expo-image-picker');
-    } catch {
-      notify(t('capture.scan.needsUpdate'));
-      return;
-    }
-    try {
-      let result: import('expo-image-picker').ImagePickerResult;
-      if (Platform.OS === 'web') {
-        result = await picker.launchImageLibraryAsync({ base64: true, quality: 0.7 });
-      } else {
-        const perm = await picker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          notify(t('capture.scan.noPermission'));
-          return;
-        }
-        result = await picker.launchCameraAsync({ base64: true, quality: 0.7 });
-      }
-      if (result.canceled || !result.assets?.[0]?.base64) return;
-      setScanning(true);
-      const scan = await scanCardImage(
-        result.assets[0].base64,
-        result.assets[0].mimeType ?? 'image/jpeg',
-      );
-      if (scan === 'limit') notify(t('capture.scan.limit'));
-      else if (scan === 'error' || !scan.found) notify(t('capture.scan.nothing'));
-      else {
-        if (scan.firstName) setFirstName(scan.firstName);
-        if (scan.lastName) setLastName(scan.lastName);
-        if (scan.email) setEmail(scan.email);
-        if (scan.phone) setPhone(scan.phone);
-        if (scan.company) setCompany(scan.company);
-        if (scan.role) setRole(scan.role);
+      const outcome = await runCardScan();
+      if (outcome.kind === 'needsUpdate') notify(t('capture.scan.needsUpdate'));
+      else if (outcome.kind === 'noPermission') notify(t('capture.scan.noPermission'));
+      else if (outcome.kind === 'limit') notify(t('capture.scan.limit'));
+      else if (outcome.kind === 'nothing') notify(t('capture.scan.nothing'));
+      else if (outcome.kind === 'fields') {
+        const f = outcome.fields;
+        if (f.firstName) setFirstName(f.firstName);
+        if (f.lastName) setLastName(f.lastName);
+        if (f.email) setEmail(f.email);
+        if (f.phone) setPhone(f.phone);
+        if (f.company) setCompany(f.company);
+        if (f.role) setRole(f.role);
         notify(t('capture.scan.done'));
       }
     } catch {
