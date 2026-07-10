@@ -114,6 +114,19 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
+    // Affiliate applications: same-origin proxy so the form works without
+    // CORS ceremony; the function rate-limits per hashed IP.
+    if (url.pathname === '/api/affiliate-apply' && request.method === 'POST') {
+      return fetch(env.ATTRIBUTION_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-cym-ip': request.headers.get('cf-connecting-ip') ?? '',
+        },
+        body: JSON.stringify({ ...(await request.json().catch(() => ({}))), action: 'apply' }),
+      });
+    }
+
     // Same-origin waitlist capture, proxied to the rate-limited edge function
     // (the client IP travels along so the per-IP limit sees real addresses).
     if (url.pathname === '/api/waitlist' && request.method === 'POST') {
