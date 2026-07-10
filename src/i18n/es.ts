@@ -464,11 +464,10 @@ export const es: Partial<Dict> = {
   'onboarding.notify.enable': 'Activar recordatorios',
   'onboarding.notify.later': 'Quizás después',
   'onboarding.start.title': 'Agrega a tu primera persona',
-  'onboarding.start.body':
-    'Empieza por alguien que importa. O explora con datos de ejemplo.',
+  'onboarding.start.body': 'Empieza con alguien que importa — escanea la tarjeta que te acaban de dar, o agrégalo a mano.',
+  'onboarding.start.scan': 'Escanear tarjeta o gafete',
   'onboarding.start.capture': 'Agregar a alguien',
   'onboarding.start.import': 'Importar mis contactos',
-  'onboarding.start.sample': 'Explorar con datos de ejemplo',
 
   // Settings
   'settings.title': 'Ajustes',

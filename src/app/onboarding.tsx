@@ -18,7 +18,6 @@ export default function OnboardingScreen() {
     cloudReady,
     completeOnboarding,
     setNotificationsEnabled,
-    loadSampleData,
     importDeviceContacts,
   } = useApp();
   const { user, configured } = useAuth();
@@ -174,7 +173,12 @@ export default function OnboardingScreen() {
           <Body muted>{t('onboarding.start.body')}</Body>
           <View style={styles.form}>
             <Button
+              title={t('onboarding.start.scan')}
+              onPress={() => finish(() => router.push('/scan'))}
+            />
+            <Button
               title={t('onboarding.start.capture')}
+              variant="ghost"
               onPress={() => finish(() => router.push('/capture'))}
             />
             {Platform.OS !== 'web' && (
@@ -184,11 +188,6 @@ export default function OnboardingScreen() {
                 <Text style={styles.secondaryText}>{t('onboarding.start.import')}</Text>
               </Pressable>
             )}
-            <Pressable
-              onPress={() => finish(() => loadSampleData())}
-              style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.6 }]}>
-              <Text style={styles.secondaryText}>{t('onboarding.start.sample')}</Text>
-            </Pressable>
           </View>
         </View>
       )}

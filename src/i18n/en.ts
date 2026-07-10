@@ -460,10 +460,10 @@ export const en = {
   'onboarding.notify.enable': 'Turn on reminders',
   'onboarding.notify.later': 'Maybe later',
   'onboarding.start.title': 'Add your first person',
-  'onboarding.start.body': 'Start with someone who matters. Or explore with sample data.',
+  'onboarding.start.body': 'Start with someone who matters — scan the card they just handed you, or add them by hand.',
+  'onboarding.start.scan': 'Scan a card or badge',
   'onboarding.start.capture': 'Add someone',
   'onboarding.start.import': 'Import my contacts',
-  'onboarding.start.sample': 'Explore with sample data',
 
   // Settings
   'settings.title': 'Settings',
