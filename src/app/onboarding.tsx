@@ -170,25 +170,6 @@ export default function OnboardingScreen() {
 
       {step === 3 && (
         <View style={styles.center}>
-          <Display style={styles.title}>{t('onboarding.notify.title')}</Display>
-          <Body muted>{t('onboarding.notify.body')}</Body>
-          {Platform.OS === 'web' ? (
-            <Button title={t('onboarding.card.cta')} onPress={() => setStep(4)} />
-          ) : (
-            <>
-              <Button title={t('onboarding.notify.enable')} onPress={enableNotifications} />
-              <Button
-                title={t('onboarding.notify.later')}
-                variant="ghost"
-                onPress={() => setStep(4)}
-              />
-            </>
-          )}
-        </View>
-      )}
-
-      {step === 4 && (
-        <View style={styles.center}>
           <Display style={styles.title}>{t('onboarding.start.title')}</Display>
           <Body muted>{t('onboarding.start.body')}</Body>
           <View style={styles.form}>
