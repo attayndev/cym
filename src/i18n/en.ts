@@ -459,6 +459,8 @@ export const en = {
     'We send a quiet nudge when there is a real reason to reach out — a birthday, a promise coming due. No spam, ever.',
   'onboarding.notify.enable': 'Turn on reminders',
   'onboarding.notify.later': 'Maybe later',
+  'onboarding.refCode': 'Invite or referral code (optional)',
+  'onboarding.refCode.hint': 'Who sent you?',
   'onboarding.start.title': 'Add your first person',
   'onboarding.start.body': 'Start with someone who matters — scan the card they just handed you, or add them by hand.',
   'onboarding.start.scan': 'Scan a card or badge',

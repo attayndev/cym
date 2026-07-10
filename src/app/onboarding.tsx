@@ -9,6 +9,7 @@ import { Body, Button, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { getSupabase } from '@/lib/supabase';
 import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
 
@@ -30,6 +31,16 @@ export default function OnboardingScreen() {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('');
   const [company, setCompany] = useState('');
+  const [refCode, setRefCode] = useState('');
+
+  // Web arrivals from a ?ref= link carry a .getcym.app cookie — prefill so
+  // the code survives without retyping. Native installs type it (the App
+  // Store strips everything, so the typed code is the source of record).
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const m = document.cookie.match(/(?:^|;\s*)cym_ref=([A-Za-z0-9_-]{2,32})/);
+    if (m) setRefCode((prev) => prev || m[1].toUpperCase());
+  }, []);
 
   // Accounts are required: the account step gates the rest of onboarding.
   // (When Supabase isn't configured — bare local dev — the step is skipped.)
@@ -70,6 +81,13 @@ export default function OnboardingScreen() {
 
   const finish = (after?: () => void) => {
     completeOnboarding(profilePatch);
+    const code = refCode.trim().toUpperCase();
+    if (code) {
+      // Fire-and-forget: attribution must never block someone getting in.
+      void getSupabase()
+        ?.functions.invoke('attribution', { body: { action: 'signup', code } })
+        .catch(() => {});
+    }
     router.replace('/');
     after?.();
   };
@@ -142,6 +160,13 @@ export default function OnboardingScreen() {
               value={company}
               onChangeText={setCompany}
               autoCapitalize="words"
+            />
+            <Field
+              label={t('onboarding.refCode')}
+              value={refCode}
+              onChangeText={setRefCode}
+              autoCapitalize="none"
+              placeholder={t('onboarding.refCode.hint')}
             />
           </View>
           <Button title={t('onboarding.card.cta')} onPress={() => setStep(2)} />

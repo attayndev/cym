@@ -13,7 +13,8 @@
   },
   "vars": {
     "SHARE_CARD_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/share-card",
-    "WAITLIST_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/waitlist"
+    "WAITLIST_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/waitlist",
+    "ATTRIBUTION_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/attribution"
   },
   "routes": [
     { "pattern": "getcym.app", "custom_domain": true },

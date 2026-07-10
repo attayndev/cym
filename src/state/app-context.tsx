@@ -959,6 +959,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activePersonaIdRef.current || current.profile.defaultPersonaId,
         { export: withExport },
       );
+      if (withExport) {
+        // Two-way means two-way: refreshed titles/companies (enrichment,
+        // LinkedIn) flow back into the phone book on every sync, not only
+        // via the separate settings button.
+        const pushed = await updateDeviceContacts(dbRef.current?.contacts ?? current.contacts);
+        diag('device-sync', { pushedUpdates: pushed });
+      }
       if (result.newContacts.length > 0 || result.patches.length > 0) {
         const patchById = new Map(result.patches.map((p) => [p.id, p]));
         update((c) =>

@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import { classifyContact } from '@/lib/classify';
 import { diag } from '@/lib/log';
 import { id } from '@/lib/ids';
-import { loadArchiveTombstones, loadDeviceLinks, saveDeviceLinks } from '@/lib/store';
+import { addArchiveTombstones, loadArchiveTombstones, loadDeviceLinks, saveDeviceLinks } from '@/lib/store';
 import type { Contact } from '@/lib/types';
 
 export interface SyncResult {
@@ -120,7 +120,12 @@ export async function syncDeviceContacts(
   }
   const linkedDeviceIds = new Set(Object.values(links));
   const linkedCymIds = new Set(Object.keys(links));
-  const existingByName = new Map(existing.map((c) => [normName(c.firstName, c.lastName), c]));
+  const existingByName = new Map(
+    existing.flatMap((c) => {
+      const k = normName(c.firstName, c.lastName);
+      return k ? [[k, c] as const] : [];
+    }),
+  );
 
   // Page through the address book — 10k+ contact books are real.
   type DeviceContact = Awaited<ReturnType<typeof Contacts.getContactsAsync>>['data'][number];
@@ -139,6 +144,7 @@ export async function syncDeviceContacts(
   // --- import: device -> app ---
   const newContacts: Contact[] = [];
   const newThisRun = new Set<string>();
+  const newTombstones: string[] = [];
   const patches: ContactAltPatch[] = [];
   const existingById = new Map(existing.map((c) => [c.id, c]));
   const cymByDeviceId = new Map(Object.entries(links).map(([cymId, devId]) => [devId, cymId]));
@@ -165,10 +171,19 @@ export async function syncDeviceContacts(
     // Match against pre-existing contacts AND ones created earlier in this
     // run — the device API returns one row per account (iCloud + Google both
     // return their copy of the same person), so a single import can see the
-    // same name twice.
-    const nameKey = normName(dc.firstName, dc.lastName);
-    const existingMatch = existingByName.get(nameKey);
+    // same name twice. The key MUST use the same org-name fallback as
+    // creation: business contacts have no first/last name, so keying on
+    // dc.firstName alone gave every org the same empty key — they matched
+    // each other, cross-wired the links map, and re-imported forever.
+    const nameKey = normName(dc.firstName ?? dc.name, dc.lastName);
+    const existingMatch = nameKey ? existingByName.get(nameKey) : undefined;
     if (existingMatch) {
+      if (existingMatch.status === 'archived') {
+        // Archived stays gone — and now we know this device row IS that
+        // contact, tombstone it so future syncs skip the lookup entirely.
+        newTombstones.push(dc.id);
+        continue;
+      }
       // Same person already tracked — just link, don't duplicate.
       links[existingMatch.id] = dc.id;
       linkedCymIds.add(existingMatch.id);
@@ -211,9 +226,11 @@ export async function syncDeviceContacts(
     links[newId] = dc.id;
     linkedCymIds.add(newId);
     newThisRun.add(newId);
-    existingByName.set(nameKey, newContacts[newContacts.length - 1]);
+    if (nameKey) existingByName.set(nameKey, newContacts[newContacts.length - 1]);
     imported += 1;
   }
+
+  if (newTombstones.length > 0) await addArchiveTombstones(newTombstones);
 
   // --- export: app -> device ---
   let exported = 0;
@@ -260,10 +277,11 @@ export async function syncDeviceContacts(
 
 /**
  * "Update Contacts": push CYM-captured directory facts into the LINKED device
- * contacts. Strictly additive — only fills fields the device contact is
- * missing, never overwrites or deletes device data — and only directory
- * facts travel (email, phone, company, role, birthday). CYM-private context
- * (why they matter, commitments, notes) never leaves the app.
+ * contacts. Emails and phones are strictly additive (never removed); company
+ * and job title OVERWRITE stale device values — CYM tracks the current role
+ * (enrichment, LinkedIn, living cards) and the phone book is usually years
+ * behind. Only directory facts travel; CYM-private context (why they matter,
+ * commitments, notes) never leaves the app.
  * Returns how many device contacts were updated.
  */
 export async function updateDeviceContacts(existing: Contact[]): Promise<number> {
@@ -290,8 +308,10 @@ export async function updateDeviceContacts(existing: Contact[]): Promise<number>
       ) {
         patch.phoneNumbers = [...(dc.phoneNumbers ?? []), { number: c.phone, label: 'other' }];
       }
-      if (c.company && !dc.company) patch.company = c.company;
-      if (c.role && !dc.jobTitle) patch.jobTitle = c.role;
+      const differs = (a?: string | null, b?: string) =>
+        (a ?? '').trim().toLowerCase() !== (b ?? '').trim().toLowerCase();
+      if (c.company && differs(dc.company, c.company)) patch.company = c.company;
+      if (c.role && differs(dc.jobTitle, c.role)) patch.jobTitle = c.role;
       if (c.birthday && !dc.birthday) {
         const [mm, dd] = c.birthday.split('-').map(Number);
         if (mm && dd) patch.birthday = { month: mm - 1, day: dd, format: 'gregorian' };

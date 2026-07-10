@@ -463,6 +463,8 @@ export const es: Partial<Dict> = {
     'Enviamos un aviso discreto cuando hay una razón real para contactar — un cumpleaños, una promesa por cumplir. Sin spam, nunca.',
   'onboarding.notify.enable': 'Activar recordatorios',
   'onboarding.notify.later': 'Quizás después',
+  'onboarding.refCode': 'Código de invitación o referido (opcional)',
+  'onboarding.refCode.hint': '¿Quién te envió?',
   'onboarding.start.title': 'Agrega a tu primera persona',
   'onboarding.start.body': 'Empieza con alguien que importa — escanea la tarjeta que te acaban de dar, o agrégalo a mano.',
   'onboarding.start.scan': 'Escanear tarjeta o gafete',

@@ -9,6 +9,7 @@ interface Env {
   ASSETS: Fetcher;
   SHARE_CARD_URL: string;
   WAITLIST_URL: string;
+  ATTRIBUTION_URL: string;
 }
 
 interface SharedCard {
@@ -69,8 +70,42 @@ ${wrong ? '<p class="err">That&#39;s not it — check your invite.</p>' : ''}
   });
 }
 
+const REF_RE = /^[A-Za-z0-9_-]{2,32}$/;
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url);
+
+    // Referral/affiliate landing (?ref=CODE): log the click server-side and
+    // hand the visitor a 30-day cookie scoped to .getcym.app so the web app
+    // can prefill "who sent you" at signup. Attribution truth stays the code
+    // typed at onboarding — this is assist + stats, not the source of record.
+    const ref = url.searchParams.get('ref')?.trim().toUpperCase();
+    if (ref && REF_RE.test(ref) && request.method === 'GET') {
+      ctx.waitUntil(
+        fetch(env.ATTRIBUTION_URL, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-cym-ip': request.headers.get('cf-connecting-ip') ?? '' },
+          body: JSON.stringify({
+            action: 'click',
+            code: ref,
+            landing: url.pathname,
+            userAgent: request.headers.get('user-agent') ?? '',
+          }),
+        }).catch(() => {}),
+      );
+      const resp = await this.route(request, env);
+      const out = new Response(resp.body, resp);
+      out.headers.append(
+        'set-cookie',
+        `cym_ref=${ref}; Domain=.getcym.app; Path=/; Max-Age=2592000; Secure; SameSite=Lax`,
+      );
+      return out;
+    }
+    return this.route(request, env);
+  },
+
+  async route(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     // getcym.com is an alias; getcym.app is canonical.
