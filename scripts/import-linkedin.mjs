@@ -21,7 +21,10 @@ const { createClient } = require('@supabase/supabase-js');
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');
-const [csvPath, userEmail = 'ytsirklin@gmail.com'] = args.filter((a) => a !== '--apply');
+// --trust-linkedin: also apply conflicts — LinkedIn is the contact's own
+// self-reported current position, which outranks third-party enrichment.
+const trustConflicts = args.includes('--trust-linkedin');
+const [csvPath, userEmail = 'ytsirklin@gmail.com'] = args.filter((a) => !a.startsWith('--'));
 if (!csvPath) { console.error('usage: import-linkedin.mjs Connections.csv [--apply] [user-email]'); process.exit(1); }
 if (!process.env.SERVICE_KEY) { console.error('SERVICE_KEY env var required'); process.exit(1); }
 
@@ -156,7 +159,20 @@ if (!apply) {
   process.exit(0);
 }
 
-// ---------- apply fills (and only fills) ----------
+// ---------- apply ----------
+if (trustConflicts) {
+  // Fold conflict values into per-contact patches so each row updates once.
+  const byId = new Map(fills.map((f) => [f.contact.id, f]));
+  for (const c of conflicts) {
+    const entry = byId.get(c.contact.id) ?? { contact: c.contact, patch: {}, how: c.how };
+    for (const d of c.conflict) entry.patch[d.field] = d.proposed;
+    if (!byId.has(c.contact.id)) {
+      byId.set(c.contact.id, entry);
+      fills.push(entry);
+    }
+  }
+}
+
 let written = 0;
 for (const f of fills) {
   const { error: e } = await admin.from('contacts')
@@ -169,4 +185,4 @@ for (const f of fills) {
 // push and pull-merges these rows instead of clobbering them.
 const { data: prof } = await admin.from('profiles').select('graph_version').eq('user_id', user.id).single();
 await admin.from('profiles').update({ graph_version: (prof?.graph_version ?? 0) + 1 }).eq('user_id', user.id);
-console.log(`\nApplied ${written}/${fills.length} fills; graph_version bumped. Devices will merge on next pull.`);
+console.log(`\nApplied ${written}/${fills.length} contact updates; graph_version bumped. Devices will merge on next pull.`);
