@@ -78,9 +78,9 @@ export const en = {
   'sweep.ai.progress': 'Sorting… {done} of {total}',
   'sweep.ai.error': "Sorting didn't finish — check your connection and try again.",
   'sweep.done': '{count} archived. Your phone contacts are untouched.',
-  'people.empty.title': 'No people yet',
+  'people.empty.title': 'Your people will live here',
   'people.empty.body':
-    'Capture someone you just met, or import your address book to get started.',
+    'Start with one person who matters — scan their card, or add them by hand.',
   'people.import.imported': 'Imported {count} contacts',
   'people.import.importedBody':
     'They came in without context — add why each one matters when you get a chance.',
@@ -229,8 +229,8 @@ export const en = {
   'dashboard.bringBack': 'Bring these back to warm',
   'dashboard.bucketEmpty': 'No one here right now.',
   'dashboard.more': '+ {n} more — find them in People',
-  'dashboard.empty': "Everyone is warm or cooling. That's the whole game — keep it up.",
-  'dashboard.emptyNoContacts': 'Add people and their health will show up here.',
+  'dashboard.empty': 'Nobody’s going quiet on you. That’s the whole game — keep it up.',
+  'dashboard.emptyNoContacts': 'Add your people and you’ll see who’s warm — and who’s going quiet — at a glance.',
 
   // Card
   'card.brand': 'Call Your Mom',
@@ -446,15 +446,15 @@ export const en = {
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Welcome to Call Your Mom',
-  'onboarding.welcome.title': 'Keep the relationships you\ncare about from going cold.',
+  'onboarding.welcome.title': 'You said you’d call.\nWe’ll make sure you do.',
   'onboarding.welcome.body':
-    'Capture the people you meet with the context of why they matter — and we tell you the right moment and the right move to reconnect.',
-  'onboarding.welcome.cta': 'Get started',
+    'Life gets busy. Call Your Mom quietly remembers the people who matter — so you simply show up.',
+  'onboarding.welcome.cta': 'Start remembering',
   'onboarding.restoring': 'Signing you in and restoring your data…',
   'onboarding.account.title': 'Create your account',
   'onboarding.account.body':
     'Your people and notes are backed up and follow you to any device.',
-  'onboarding.card.title': 'Enter your contact information',
+  'onboarding.card.title': 'Start with you',
   'onboarding.card.body':
     'This becomes your shareable card — name, email, phone, and what you do. Trade it by QR when you meet someone.',
   'onboarding.card.cta': 'Continue',

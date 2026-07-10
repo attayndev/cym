@@ -80,9 +80,9 @@ export const es: Partial<Dict> = {
   'sweep.ai.progress': 'Ordenando… {done} de {total}',
   'sweep.ai.error': 'La clasificación no terminó — revisa tu conexión e inténtalo de nuevo.',
   'sweep.done': '{count} archivados. Los contactos de tu teléfono siguen intactos.',
-  'people.empty.title': 'Aún no hay personas',
+  'people.empty.title': 'Tu gente vivirá aquí',
   'people.empty.body':
-    'Captura a alguien que acabas de conocer o importa tu agenda para empezar.',
+    'Empieza con una persona que importe — escanea su tarjeta o agrégala a mano.',
   'people.import.imported': 'Se importaron {count} contactos',
   'people.import.importedBody':
     'Llegaron sin contexto — agrega por qué importa cada uno cuando puedas.',
@@ -232,8 +232,8 @@ export const es: Partial<Dict> = {
   'dashboard.bringBack': 'Devuélvelas a cercanas',
   'dashboard.bucketEmpty': 'Nadie por aquí ahora mismo.',
   'dashboard.more': '+ {n} más — encuéntralos en Personas',
-  'dashboard.empty': 'Todos están cercanos o enfriándose. De eso se trata — sigue así.',
-  'dashboard.emptyNoContacts': 'Agrega personas y su salud aparecerá aquí.',
+  'dashboard.empty': 'Nadie se está quedando en silencio contigo. Ese es todo el juego — sigue así.',
+  'dashboard.emptyNoContacts': 'Agrega a tu gente y verás quién está cerca — y quién se está quedando en silencio — de un vistazo.',
 
   // Card
   'card.brand': 'Call Your Mom',
@@ -450,15 +450,15 @@ export const es: Partial<Dict> = {
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Bienvenido a Call Your Mom',
-  'onboarding.welcome.title': 'Evita que se enfríen las\nrelaciones que te importan.',
+  'onboarding.welcome.title': 'Dijiste que ibas a llamar.\nNos aseguraremos de que lo hagas.',
   'onboarding.welcome.body':
-    'Captura a las personas que conoces con el contexto de por qué importan — y te decimos el momento justo y el gesto justo para reconectar.',
-  'onboarding.welcome.cta': 'Empezar',
+    'La vida se llena. Call Your Mom recuerda en silencio a las personas que importan — para que tú simplemente estés presente.',
+  'onboarding.welcome.cta': 'Empezar a recordar',
   'onboarding.restoring': 'Iniciando sesión y restaurando tus datos…',
   'onboarding.account.title': 'Crea tu cuenta',
   'onboarding.account.body':
     'Tus personas y notas se respaldan y te siguen a cualquier dispositivo.',
-  'onboarding.card.title': 'Ingresa tu información de contacto',
+  'onboarding.card.title': 'Empieza contigo',
   'onboarding.card.body':
     'Esto se convierte en tu tarjeta para compartir — nombre, correo, teléfono y a qué te dedicas. Intercámbiala por QR cuando conozcas a alguien.',
   'onboarding.card.cta': 'Continuar',

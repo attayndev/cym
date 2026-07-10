@@ -60,7 +60,7 @@ const COPY: Record<Locale, {
     commitment: (n) => `You made ${n} a promise`,
     multi: (c) => `${c} reasons to reach out today`,
     deck: (c) => `Your ${c} for today`,
-    body: 'Open Call Your Mom for a ready draft.',
+    body: 'The note is already half-written — just add you.',
     deckBody: 'A few minutes keeps them warm.',
   },
   es: {
@@ -68,7 +68,7 @@ const COPY: Record<Locale, {
     commitment: (n) => `Le hiciste una promesa a ${n}`,
     multi: (c) => `${c} razones para escribir hoy`,
     deck: (c) => `Tus ${c} de hoy`,
-    body: 'Abre Call Your Mom para un borrador listo.',
+    body: 'La nota ya está medio escrita — solo faltas tú.',
     deckBody: 'Unos minutos y siguen cerca.',
   },
 };

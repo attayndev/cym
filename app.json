@@ -11,7 +11,7 @@
       "bundleIdentifier": "app.getcym.cym",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSContactsUsageDescription": "Call Your Mom syncs with your address book so your relationships stay in one place.",
+        "NSContactsUsageDescription": "Call Your Mom uses your contacts to remember the people already in your life. Nothing on your phone changes unless you ask.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
