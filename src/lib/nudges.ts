@@ -19,6 +19,10 @@ const HOOK_NUDGE_WINDOW_PAST_DAYS = 14;
 // The keep-warm deck: up to 10 live decay nudges (was 3 pre-deck).
 const MAX_DECAY_NUDGES = 10;
 const DECAY_COOLDOWN_DAYS = 14;
+// Six months of silence is cold no matter how relaxed the cadence — and an
+// undecided import with no history has, by definition, been silent at least
+// that long (importing is not meeting).
+const COLD_SILENCE_DAYS = 180;
 
 export function lastContactAt(
   contact: Contact,
@@ -53,14 +57,25 @@ export function healthOf(ratio: number): Health {
   return 'cold';
 }
 
+function untouchedHealth(contact: Contact, now: Date): Health {
+  // Undecided imports with no history: you never reached out inside the
+  // email lookback, so the silence is already six months or more — cold.
+  if (contact.source === 'import' && !contact.evaluatedAt) return 'cold';
+  // Decided people (captured or tracked) get the meeting itself as the
+  // starting touch; they turn cold when even that is six months stale.
+  return daysBetween(new Date(contact.createdAt), now) >= COLD_SILENCE_DAYS ? 'cold' : 'new';
+}
+
 export function contactHealth(
   contact: Contact,
   interactions: Interaction[],
   now: Date,
 ): Health {
-  // No logged touch at all (typical for address-book imports): we can't claim
-  // any warmth, so the contact is 'new' until a first interaction lands.
-  if (!interactions.some((i) => i.contactId === contact.id)) return 'new';
+  if (!interactions.some((i) => i.contactId === contact.id)) {
+    return untouchedHealth(contact, now);
+  }
+  const days = Math.max(0, daysBetween(new Date(lastContactAt(contact, interactions)), now));
+  if (days >= COLD_SILENCE_DAYS) return 'cold';
   return healthOf(decayRatio(contact, interactions, now));
 }
 
@@ -84,7 +99,12 @@ export function buildHealthIndex(
     const touchedAt = latest.get(c.id);
     const days = Math.max(0, daysBetween(new Date(touchedAt ?? c.createdAt), now));
     const ratio = days / Math.max(1, c.cadenceDays);
-    index.set(c.id, { health: touchedAt ? healthOf(ratio) : 'new', ratio });
+    const health = touchedAt
+      ? days >= COLD_SILENCE_DAYS
+        ? 'cold'
+        : healthOf(ratio)
+      : untouchedHealth(c, now);
+    index.set(c.id, { health, ratio });
   }
   return index;
 }

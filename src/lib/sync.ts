@@ -304,7 +304,23 @@ export function mergeGraphs(local: DB, remote: GraphData): DB {
     },
     onboarded: remote.onboarded || local.onboarded,
     personas: newestById(remote.personas, local.personas),
-    contacts: newestById(remote.contacts, local.contacts),
+    // Archived is a one-way latch: a device that hadn't heard about the
+    // archive yet can stamp the row (enrichment fill, deck pre-enrich) with a
+    // newer updatedAt and win the merge — resurrecting someone the user
+    // removed. Whoever wins the row, an archive on EITHER side sticks.
+    // (Revisit if an unarchive control ever ships.)
+    contacts: (() => {
+      const archived = new Set(
+        [...remote.contacts, ...local.contacts]
+          .filter((c) => c.status === 'archived')
+          .map((c) => c.id),
+      );
+      return newestById(remote.contacts, local.contacts).map((c) =>
+        archived.has(c.id) && c.status !== 'archived'
+          ? { ...c, status: 'archived' as const }
+          : c,
+      );
+    })(),
     contexts: newestById(remote.contexts, local.contexts),
     interactions: [...remoteEmailInts, ...manualById.values()],
     hooks: [...hookById.values()],

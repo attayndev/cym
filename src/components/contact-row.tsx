@@ -35,6 +35,7 @@ export function ContactRow({
   const router = useRouter();
   const now = new Date();
   const health = healthProp ?? contactHealth(contact, interactions, now);
+  const touched = interactions.some((i) => i.contactId === contact.id);
   const last = lastContactAt(contact, interactions);
   const subtitle = [contact.role, contact.company].filter(Boolean).join(' · ');
   const palette = avatarPalette(contact.id);
@@ -55,9 +56,7 @@ export function ContactRow({
         </Text>
         <Text style={styles.meta} numberOfLines={1}>
           {subtitle ? `${subtitle} · ` : ''}
-          {health === 'new'
-            ? t('common.noTouchYet')
-            : t('common.lastTouch', { when: relativeTime(last, now) })}
+          {touched ? t('common.lastTouch', { when: relativeTime(last, now) }) : t('common.noTouchYet')}
         </Text>
       </View>
       <HealthBadge health={health} />

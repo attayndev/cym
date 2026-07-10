@@ -80,12 +80,34 @@ describe('decay scoring', () => {
       { id: 'i1', contactId: 'c1', type: 'email', occurredAt: sixMonthsAgo, source: 'email-sync' },
     ];
     expect(lastContactAt(c, interactions)).toBe(sixMonthsAgo);
-    expect(contactHealth(c, interactions, NOW)).toBe('at-risk');
+    expect(contactHealth(c, interactions, NOW)).toBe('cold'); // 6-month silence cap
   });
 
-  test('a contact with no logged interactions is new, never warm', () => {
+  test('an undecided import with no history is cold — importing is not meeting', () => {
     const justImported = makeContact({ id: 'c1', source: 'import', createdAt: NOW.toISOString() });
-    expect(contactHealth(justImported, [], NOW)).toBe('new');
+    expect(contactHealth(justImported, [], NOW)).toBe('cold');
+  });
+
+  test('a decided contact with no interactions is new until the meeting goes stale', () => {
+    const captured = makeContact({ id: 'c1', source: 'manual', createdAt: addDays(NOW, -3).toISOString() });
+    expect(contactHealth(captured, [], NOW)).toBe('new');
+    const trackedLongAgo = makeContact({
+      id: 'c2',
+      source: 'import',
+      evaluatedAt: addDays(NOW, -200).toISOString(),
+      createdAt: addDays(NOW, -200).toISOString(),
+    });
+    expect(contactHealth(trackedLongAgo, [], NOW)).toBe('cold');
+  });
+
+  test('six months of silence is cold even on a relaxed cadence', () => {
+    // cadence 180: ratio at 200 days is ~1.1 (barely cooling) — but the
+    // 6-month silence cap overrides.
+    const c = makeContact({ id: 'c1', cadenceDays: 180, createdAt: addDays(NOW, -400).toISOString() });
+    const interactions: Interaction[] = [
+      { id: 'i1', contactId: 'c1', type: 'email', occurredAt: addDays(NOW, -200).toISOString(), source: 'email-sync' },
+    ];
+    expect(contactHealth(c, interactions, NOW)).toBe('cold');
   });
 
   test('buildHealthIndex matches contactHealth/decayRatio per contact', () => {
@@ -98,7 +120,9 @@ describe('decay scoring', () => {
     const index = buildHealthIndex([touched, untouched], interactions, NOW);
     expect(index.get('c1')!.health).toBe(contactHealth(touched, interactions, NOW));
     expect(index.get('c1')!.ratio).toBeCloseTo(decayRatio(touched, interactions, NOW));
-    expect(index.get('c2')!.health).toBe('new');
+    // c2 is an undecided import with no history — cold by the silence rule.
+    expect(index.get('c2')!.health).toBe('cold');
+    expect(index.get('c2')!.health).toBe(contactHealth(untouched, [], NOW));
   });
 });
 

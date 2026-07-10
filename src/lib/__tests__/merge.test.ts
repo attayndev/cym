@@ -131,3 +131,20 @@ describe('mergeGraphs — the data-loss fix', () => {
     expect(merged.profile.timezone).toBe('America/New_York'); // local device
   });
 });
+
+describe('archive latch', () => {
+  test('an archive on either side survives a newer active stamp', () => {
+    const remote = remoteData({
+      contacts: [contact({ status: 'archived', updatedAt: T1 })],
+    });
+    // Local device never heard about the archive and stamped the row later
+    // (enrichment fill) — newest-wins would resurrect without the latch.
+    const local = localDB({
+      contacts: [contact({ company: 'Acme', updatedAt: T2 })],
+    });
+    const merged = mergeGraphs(local, remote);
+    const c = merged.contacts.find((x) => x.id === 'c1')!;
+    expect(c.status).toBe('archived');
+    expect(c.company).toBe('Acme'); // newest fields still win — only status latches
+  });
+});
