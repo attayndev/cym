@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call Your Mom — Capture contacts. Keep relationships warm.</title>
+<meta name="description" content="Capture the people you meet, remember why they matter, and follow up before the relationship goes cold. Not a CRM — a memory that works. Private beta now open.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:title" content="Call Your Mom">
+<meta property="og:description" content="You met them for a reason. Don't let them disappear into your phone.">
+<meta property="og:image" content="https://getcym.app/assets/app-icon-1024.png">
+<meta property="og:url" content="https://getcym.app/">
+<link rel="canonical" href="https://getcym.app/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,100&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FFF7E8;
+  --butter:#FFD466;
+  --cherry:#D9331F;
+  --cherry-deep:#B3260F;
+  --espresso:#3B241C;
+  --espresso-90:rgba(59,36,28,.9);
+  --avocado:#7A8B4C;
+  --blush:#F9DFC9;
+  --display:"Fraunces",Georgia,serif;
+  --body:"Karla",-apple-system,sans-serif;
+  --radius:22px;
+  --max:1180px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+body{font-family:var(--body);background:var(--cream);color:var(--espresso);line-height:1.55;font-size:17px}
+h1,h2,h3{font-family:var(--display);font-variation-settings:"SOFT" 100,"opsz" 144;font-weight:900;line-height:1.02;letter-spacing:-.01em}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid var(--cherry);outline-offset:3px;border-radius:6px}
+img,svg{display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px}
+
+/* ---------- nav ---------- */
+header{position:sticky;top:0;z-index:50;background:var(--butter);border-bottom:2px solid var(--espresso)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:76px}
+.nav .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav .logo svg{height:40px;width:40px}
+.nav .logo b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:24px;letter-spacing:-.01em}
+.nav-right{display:flex;align-items:center;gap:26px}
+.login-link{text-decoration:none;font-weight:700;font-size:16px;border-bottom:2px solid transparent;padding-bottom:2px}
+.login-link:hover{border-bottom-color:var(--espresso)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--body);font-weight:700;font-size:16px;text-decoration:none;padding:13px 24px;border-radius:999px;border:2px solid var(--espresso);transition:transform .15s ease,box-shadow .15s ease;cursor:pointer}
+.btn-cherry{background:var(--cherry);color:var(--cream);box-shadow:4px 4px 0 var(--espresso)}
+.btn-cherry:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--espresso)}
+.btn-espresso{background:var(--espresso);color:var(--cream);box-shadow:4px 4px 0 rgba(59,36,28,.25)}
+.btn-espresso:hover{transform:translate(-2px,-2px)}
+.btn-ghost{background:transparent;color:var(--espresso)}
+
+/* ---------- hero ---------- */
+.hero{background:var(--butter);overflow:hidden;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;padding:72px 0 88px}
+.hero h1{font-size:clamp(46px,6.2vw,86px);max-width:13ch}
+.hero .kicker{display:inline-block;background:var(--espresso);color:var(--butter);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:22px}
+.hero p.sub{font-size:20px;max-width:44ch;margin:24px 0 34px;color:var(--espresso-90)}
+.store-row{display:flex;gap:14px;flex-wrap:wrap}
+.store-badge{display:flex;align-items:center;gap:12px;background:var(--espresso);color:var(--cream);text-decoration:none;padding:12px 20px;border-radius:14px;border:2px solid var(--espresso);transition:transform .15s ease}
+.store-badge:hover{transform:translateY(-3px)}
+.store-badge svg{width:26px;height:26px;flex:none}
+.store-badge small{display:block;font-size:11px;opacity:.75;letter-spacing:.04em}
+.store-badge b{font-size:17px;line-height:1.1}
+.hero .web-note{margin-top:22px;font-size:15px;color:var(--espresso-90)}
+.hero .web-note a{font-weight:700}
+
+/* hero promo video */
+.promo-video{position:relative;z-index:1;width:420px;max-width:100%;border-radius:26px;border:2px solid var(--espresso);box-shadow:12px 14px 0 rgba(59,36,28,.22);display:block;background:var(--espresso)}
+@media (max-width:900px){.promo-video{width:100%}}
+
+/* phone mockup */
+.phone-wrap{position:relative;justify-self:center}
+.dial-ornament{position:absolute;width:340px;height:340px;top:-40px;right:-70px;opacity:.9;z-index:0;animation:spin 60s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.phone{position:relative;z-index:1;width:300px;background:var(--espresso);border-radius:44px;padding:12px;box-shadow:12px 14px 0 rgba(59,36,28,.22)}
+.screen{background:var(--cream);border-radius:34px;overflow:hidden;padding:22px 16px 26px;min-height:540px}
+.screen .s-date{font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cherry-deep)}
+.screen .s-title{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:26px;margin:6px 0 16px;line-height:1.05}
+.nudge{background:#fff;border:2px solid var(--espresso);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:3px 3px 0 rgba(59,36,28,.15)}
+.nudge .who{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--cream);flex:none}
+.nudge .why{font-size:13.5px;color:var(--espresso-90);line-height:1.45}
+.nudge .why b{color:var(--cherry-deep)}
+.nudge .act{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;background:var(--butter);border:2px solid var(--espresso);padding:5px 12px;border-radius:999px}
+.nudge.quiet{opacity:.85}
+
+/* ---------- ticker ---------- */
+.ticker{background:var(--cherry);color:var(--cream);border-top:2px solid var(--espresso);border-bottom:2px solid var(--espresso);overflow:hidden;padding:13px 0}
+.ticker-track{display:flex;width:max-content;animation:ticker 28s linear infinite;font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:20px;letter-spacing:.02em;white-space:nowrap}
+.ticker-track span{padding-right:34px}
+@keyframes ticker{to{transform:translateX(-50%)}}
+
+/* ---------- sections ---------- */
+section{padding:96px 0}
+.eyebrow{font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--cherry-deep);margin-bottom:16px}
+h2{font-size:clamp(36px,4.4vw,60px);max-width:20ch}
+.section-sub{font-size:19px;max-width:56ch;margin-top:18px;color:var(--espresso-90)}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:52px}
+.cards.loop{grid-template-columns:repeat(2,1fr)}
+@media (max-width:640px){.cards.loop{grid-template-columns:1fr}}
+.card{border:2px solid var(--espresso);border-radius:var(--radius);padding:30px 26px;background:#fff;box-shadow:6px 6px 0 rgba(59,36,28,.12)}
+.card .glyph{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;border:2px solid var(--espresso)}
+.card h3{font-size:24px;margin-bottom:10px}
+.card p{font-size:16px;color:var(--espresso-90)}
+
+/* nudge demo — dark */
+.dark{background:var(--espresso);color:var(--cream)}
+.dark .eyebrow{color:var(--butter)}
+.dark h2{color:var(--cream)}
+.dark .section-sub{color:rgba(255,247,232,.8)}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:20px}
+.big-nudge{background:var(--cream);color:var(--espresso);border-radius:26px;padding:34px;border:2px solid var(--espresso);box-shadow:10px 10px 0 var(--cherry);transform:rotate(-1.2deg)}
+.big-nudge .who{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.big-nudge .avatar{width:46px;height:46px;font-size:18px}
+.big-nudge p.line{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:700;font-size:24px;line-height:1.25}
+.big-nudge p.line b{color:var(--cherry-deep)}
+.big-nudge .row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.chip{font-size:14px;font-weight:700;border:2px solid var(--espresso);border-radius:999px;padding:8px 16px;background:var(--butter)}
+.chip.alt{background:#fff}
+.dark ul.points{list-style:none;margin-top:34px;display:grid;gap:20px}
+.dark ul.points li{display:flex;gap:16px;font-size:17px;color:rgba(255,247,232,.9)}
+.dark ul.points li::before{content:"→";flex:none;color:var(--butter);font-weight:700}
+
+/* work section */
+.work{background:var(--butter)}
+.work-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:48px}
+.work-card{background:var(--cream);border:2px solid var(--espresso);border-radius:var(--radius);padding:28px;box-shadow:6px 6px 0 rgba(59,36,28,.18)}
+.work-card .label{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cherry-deep);margin-bottom:14px}
+.work-card p.line{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:700;font-size:21px;line-height:1.3}
+.work-card p.line b{color:var(--cherry-deep)}
+.work-card .meta{margin-top:14px;font-size:14.5px;color:var(--espresso-90)}
+.persona-line{margin-top:34px;font-size:18px;max-width:60ch}
+.persona-line b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900}
+@media(max-width:960px){.work-grid{grid-template-columns:1fr}}
+
+/* pricing */
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:52px;max-width:900px}
+.plan{border:2px solid var(--espresso);border-radius:var(--radius);padding:36px 32px;background:#fff}
+.plan.featured{background:var(--butter);box-shadow:8px 8px 0 var(--cherry);position:relative}
+.plan .tag{position:absolute;top:-16px;right:24px;background:var(--cherry);color:var(--cream);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;border:2px solid var(--espresso)}
+.plan h3{font-size:30px}
+.plan .price{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:44px;margin:14px 0 4px}
+.plan .per{font-size:14px;color:var(--espresso-90);margin-bottom:22px}
+.plan ul{list-style:none;display:grid;gap:12px;font-size:16px}
+.plan ul li{display:flex;gap:10px}
+.plan ul li::before{content:"✓";font-weight:700;color:var(--avocado);flex:none}
+.plan.featured ul li::before{color:var(--cherry-deep)}
+.plan .note{margin-top:22px;font-size:14px;color:var(--espresso-90)}
+
+/* download / cherry */
+.cta-section{background:var(--cherry);color:var(--cream);text-align:center;border-top:2px solid var(--espresso)}
+.cta-section h2{color:var(--cream);margin:0 auto;font-size:clamp(44px,6vw,84px)}
+.cta-section .section-sub{color:rgba(255,247,232,.85);margin:20px auto 40px}
+.cta-section .store-row{justify-content:center}
+.cta-section .store-badge{background:var(--cream);color:var(--espresso);border-color:var(--espresso)}
+.cta-section .web-note{margin-top:26px;font-size:15px;color:rgba(255,247,232,.85)}
+
+/* footer */
+footer{background:var(--espresso);color:var(--cream);padding:56px 0 40px}
+.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;flex-wrap:wrap}
+.foot-logo{display:flex;align-items:center;gap:12px}
+.foot-logo svg{width:38px;height:38px}
+.foot-logo b{font-family:var(--display);font-variation-settings:"SOFT" 100;font-weight:900;font-size:22px}
+footer nav{display:flex;gap:28px;flex-wrap:wrap;font-size:15px}
+footer nav a{text-decoration:none;opacity:.85}
+footer nav a:hover{opacity:1;text-decoration:underline}
+.fine{margin-top:36px;font-size:13px;opacity:.6}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* responsive */
+@media(max-width:960px){
+  .hero-grid{grid-template-columns:1fr;padding:56px 0 64px}
+  .phone-wrap{margin-top:20px}
+  .dial-ornament{width:260px;height:260px;right:-40px;top:-30px}
+  .cards{grid-template-columns:1fr}
+  .demo-grid{grid-template-columns:1fr}
+  .price-grid{grid-template-columns:1fr}
+  section{padding:72px 0}
+}
+@media(max-width:520px){
+  .nav .logo b{display:none}
+  .phone{width:270px}
+}
+
+/* ---------- coming-soon modal ---------- */
+.cs-overlay{position:fixed;inset:0;background:rgba(59,36,28,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:22px}
+.cs-overlay.open{display:flex}
+.cs-modal{background:var(--cream);border:2px solid var(--espresso);border-radius:22px;box-shadow:8px 8px 0 rgba(59,36,28,.3);max-width:440px;width:100%;padding:34px 30px;position:relative}
+.cs-modal .cs-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:26px;line-height:1;cursor:pointer;color:var(--espresso);opacity:.6}
+.cs-modal .cs-close:hover{opacity:1}
+.cs-modal .kicker-sm{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cherry-deep)}
+.cs-modal h3{font-family:var(--display);font-variation-settings:"SOFT" 100,"opsz" 144;font-weight:900;font-size:34px;margin:8px 0 10px;line-height:1.05}
+.cs-modal p{font-size:15.5px;color:var(--espresso-90);margin-bottom:18px}
+.cs-form{display:flex;gap:10px}
+.cs-form input[type=email]{flex:1;font-family:var(--body);font-size:15px;padding:12px 14px;border:2px solid var(--espresso);border-radius:12px;background:#fff;color:var(--espresso)}
+.cs-form input[type=email]:focus{outline:3px solid var(--butter)}
+.cs-form button{font-family:var(--body);font-weight:700;font-size:15px;padding:12px 18px;border-radius:12px;border:2px solid var(--espresso);background:var(--cherry);color:var(--cream);cursor:pointer;box-shadow:3px 3px 0 var(--espresso);transition:transform .12s ease}
+.cs-form button:hover{transform:translate(-1px,-1px)}
+.cs-form button:disabled{opacity:.6;cursor:wait;transform:none}
+.cs-fine{font-size:12.5px;color:var(--espresso-90);opacity:.75;margin-top:12px}
+.cs-success{display:none;text-align:center;padding:10px 0 4px}
+.cs-success .big{font-size:40px;margin-bottom:8px}
+.cs-hp{position:absolute;left:-9999px;opacity:0}
+@media (max-width:480px){.cs-form{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#" aria-label="Call Your Mom home">
+      <svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="112" fill="#D9331F"/><g fill="#FFF7E8"><circle cx="199.4" cy="144.3" r="16.5"/><circle cx="196.1" cy="86.8" r="16.5"/><circle cx="156.3" cy="45.3" r="16.5"/><circle cx="98.9" cy="39.7" r="16.5"/><circle cx="51.8" cy="72.7" r="16.5"/><circle cx="37.4" cy="128.5" r="16.5"/><circle cx="62.8" cy="180.1" r="16.5"/><circle cx="115.7" cy="202.9" r="16.5"/></g><g transform="translate(171.6 193.7) rotate(55)"><rect x="-17" y="-6.5" width="34" height="13" rx="6.5" fill="#FFF7E8"/></g><path fill="#FFF7E8" d="M120 157c-15-12.5-38-28.6-38-47.2C82 96.3 92.6 86 105.6 86c5.7 0 11 2.2 14.4 6.1C123.4 88.2 128.7 86 134.4 86 147.4 86 158 96.3 158 109.8c0 18.6-23 34.7-38 47.2z"/></svg>
+      <b>Call Your Mom</b>
+    </a>
+    <nav class="nav-right" aria-label="Primary">
+      <a class="login-link" href="/articles">Articles</a>
+      <a class="login-link" href="https://app.getcym.app/login">Log in</a>
+      <a class="btn btn-cherry js-beta" href="#download">Join the beta</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero" style="padding:0">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="kicker">Private beta — now enrolling</span>
+      <h1>You met them for a reason.</h1>
+      <p class="sub">Don't let them disappear into your phone. Call Your Mom captures who you met, why they mattered, and what you promised — then nudges you when there's a real reason to follow up. Not a CRM. Not another reminder app. A memory that works.</p>
+      <div class="store-row">
+        <a class="btn btn-cherry js-beta" href="#download">Join the private beta</a>
+      </div>
+      <p class="web-note">Coming soon to iPhone and Android. Already in the beta? <a href="https://app.getcym.app/login">Log in on the web</a>.</p>
+    </div>
+    <div class="phone-wrap">
+      <svg class="dial-ornament" viewBox="0 0 240 240" aria-hidden="true"><g fill="none" stroke="#3B241C" stroke-width="3" opacity=".35"><circle cx="120" cy="120" r="112"/><circle cx="199.4" cy="144.3" r="16.5"/><circle cx="196.1" cy="86.8" r="16.5"/><circle cx="156.3" cy="45.3" r="16.5"/><circle cx="98.9" cy="39.7" r="16.5"/><circle cx="51.8" cy="72.7" r="16.5"/><circle cx="37.4" cy="128.5" r="16.5"/><circle cx="62.8" cy="180.1" r="16.5"/><circle cx="115.7" cy="202.9" r="16.5"/></g></svg>
+      <div class="phone" role="img" aria-label="Preview of the Call Your Mom app showing today's suggested calls">
+        <div class="screen">
+          <div class="s-date" id="s-date">Sunday, June 28</div>
+          <div class="s-title">Three people to reach today</div>
+          <div class="nudge">
+            <div class="who"><span class="avatar" style="background:#D9331F">M</span><b>Mom</b></div>
+            <div class="why">You usually talk <b>Sunday afternoons</b>. It's been 12 days.</div>
+            <span class="act">Call now</span>
+          </div>
+          <div class="nudge">
+            <div class="who"><span class="avatar" style="background:#7A8B4C">JT</span><b>Joe Tran</b></div>
+            <div class="why"><b>Birthday Thursday.</b> Last talked 11 months ago — met at the Fintech Summit.</div>
+            <span class="act">Draft a note</span>
+          </div>
+          <div class="nudge quiet">
+            <div class="who"><span class="avatar" style="background:#B3260F">AR</span><b>Ana Reyes</b></div>
+            <div class="why">Started a <b>new job</b> this week. You said you'd grab coffee.</div>
+            <span class="act">Suggest a time</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:64px 0 10px">
+  <div class="wrap" style="display:flex;justify-content:center">
+    <video class="promo-video reveal" controls playsinline preload="metadata" poster="/assets/promo-poster.jpg" style="width:760px;max-width:100%" aria-label="Fifteen-second film: you meet someone, life happens, Call Your Mom nudges you, and you reach back out — ending on a call to Mom.">
+      <source src="/assets/promo-v5.mp4" type="video/mp4">
+    </video>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>CALL YOUR MOM <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR CLIENT <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR COLLEGE ROOMMATE <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR INVESTOR <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR OLD BOSS <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR MENTOR <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR BEST FRIEND <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg>&nbsp; </span>
+    <span>CALL YOUR MOM <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR CLIENT <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR COLLEGE ROOMMATE <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR INVESTOR <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR OLD BOSS <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR MENTOR <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg> CALL YOUR BEST FRIEND <svg viewBox="0 0 24 24" width="16" height="16" fill="#FFD466" style="display:inline-block;vertical-align:-2px" aria-hidden="true"><path d="M12 21c-4-3.3-9-7.6-9-12C3 5.2 5.8 3 8.6 3c1.3 0 2.6.5 3.4 1.4C12.8 3.5 14.1 3 15.4 3 18.2 3 21 5.2 21 9c0 4.4-5 8.7-9 12z"/></svg>&nbsp; </span>
+  </div>
+</div>
+
+<section id="problem" style="padding-bottom:0">
+  <div class="wrap">
+    <p class="eyebrow reveal">The problem</p>
+    <h2 class="reveal">Three weeks later, they're just another name in your phone.</h2>
+    <p class="section-sub reveal">You meet someone. Good conversation. You say you'll follow up. Then life happens.</p>
+    <p class="section-sub reveal" style="margin-top:10px">By the time you remember, you've lost where you met, what you talked about, who introduced you, and what you said you'd send. That's how good relationships go cold — not from a falling-out, just from drift.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <p class="eyebrow reveal">How it works</p>
+    <h2 class="reveal">Capture the context.<br>Catch the moment.</h2>
+    <p class="section-sub reveal">One simple loop: save who they are while you still remember, then get a nudge when there's a natural reason to reach out.</p>
+    <div class="cards loop">
+      <div class="card reveal">
+        <div class="glyph" style="background:var(--butter)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B241C" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h3>Capture the contact</h3>
+        <p>Ten seconds after you meet: where, who introduced you, what you discussed, what you promised. From your phone book, a QR card, or by hand.</p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph" style="background:var(--blush)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B241C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h3>Keep the story</h3>
+        <p>Your contacts app remembers names. Call Your Mom remembers the story — the notes, promises, and details that make a follow-up feel personal months later.</p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph" style="background:#E4E9D3"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B241C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <h3>Get the nudge</h3>
+        <p>Birthdays, job changes, promises coming due, or simply too much time passing — a few a day, at the right moment. Never a guilt list.</p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph" style="background:var(--butter)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B241C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+        <h3>Follow up like a human</h3>
+        <p>One tap to call, text, email, or WhatsApp — with a drafted note that sounds like you and the context already worked in. No more "just checking in."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="dark">
+  <div class="wrap">
+    <div class="demo-grid">
+      <div>
+        <p class="eyebrow reveal">The nudge engine</p>
+        <h2 class="reveal">"It's been a year. His birthday is Thursday."</h2>
+        <ul class="points reveal">
+          <li>Learns the rhythm of each relationship — and notices when it drifts.</li>
+          <li>Watches for occasions worth showing up for: birthdays, new roles, promises coming due.</li>
+          <li>Email sync reads only headers — who and when, never contents — so "last talked" is always true.</li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="big-nudge">
+          <div class="who"><span class="avatar" style="background:#7A8B4C">JT</span><div><b>Joe Tran</b><div style="font-size:13px;opacity:.7">Met at Fintech Summit · via Priya</div></div></div>
+          <p class="line">It's been <b>11 months</b> since you talked to Joe — and his birthday is <b>Thursday</b>.</p>
+          <div class="row"><span class="chip">Draft a birthday note</span><span class="chip alt">Call Joe</span><span class="chip alt">Snooze</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="work" id="work">
+  <div class="wrap">
+    <p class="eyebrow reveal">Not another CRM</p>
+    <h2 class="reveal">CRMs are for pipelines.<br>This is for people.</h2>
+    <p class="section-sub reveal">Salesforce is where deals live. Call Your Mom is where relationships live — clients, investors, mentors, old bosses, new friends, family. And yes, your mom. It keeps the right people warm without turning anyone into a pipeline stage, or your life into admin work.</p>
+    <div class="work-grid">
+      <div class="work-card reveal">
+        <div class="label">Capture · at the conference</div>
+        <p class="line">Priya Shah, met at <b>SaaStr, booth 12</b> — she introduced you to Joe. Saved in eight seconds, context and all.</p>
+        <p class="meta">Where you met, who made the intro, what you promised to send. Findable a year later.</p>
+      </div>
+      <div class="work-card reveal">
+        <div class="label">Nudge · six months later</div>
+        <p class="line">Dana just <b>stepped into a new role.</b> A congrats today beats a check-in next quarter.</p>
+        <p class="meta">Occasion-aware for clients too: new roles, birthdays, promises coming due.</p>
+      </div>
+    </div>
+    <p class="persona-line reveal">And with <b>personas</b>, work-you and weekend-you share different cards from the same brain — the right details for the right person, every time.</p>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <p class="eyebrow reveal">Your network is yours</p>
+    <h2 class="reveal">Private by design.</h2>
+    <p class="section-sub reveal">Call Your Mom exists to help you remember and reconnect — not to mine your life.</p>
+    <div class="cards">
+      <div class="card reveal">
+        <h3>No ads, ever</h3>
+        <p>On any tier. The free plan isn't paid for with your attention or your data, and your information is never sold. Full stop.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Email stays sealed</h3>
+        <p>Connect email and we read headers only — who a message was from, and when. We can't read contents or subject lines, by the permission's own design.</p>
+      </div>
+      <div class="card reveal">
+        <h3>You're in control</h3>
+        <p>You decide who gets added, what gets tracked, and who matters. Export everything or delete your account any time, right in the app.</p>
+      </div>
+    </div>
+    <p class="section-sub reveal" style="margin-top:26px;font-size:15px">The details, in plain English: <a href="/privacy" style="font-weight:700">our privacy policy</a>.</p>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <p class="eyebrow reveal">Pricing</p>
+    <h2 class="reveal">Free to remember.<br>Paid to never forget.</h2>
+    <p class="section-sub reveal">The private beta is free while we polish. At launch:</p>
+    <div class="price-grid">
+      <div class="plan reveal">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <div class="per">forever · no ads, ever</div>
+        <ul>
+          <li>Unlimited contact capture with context</li>
+          <li>Keep 10 relationships warm — real nudges included</li>
+          <li>3 AI-drafted notes a month</li>
+          <li>Contact sync across your devices</li>
+        </ul>
+        <p class="note">Everything you need to stop losing people.</p>
+      </div>
+      <div class="plan featured reveal">
+        <span class="tag">Most loved</span>
+        <h3>Plus</h3>
+        <div class="price">$15</div>
+        <div class="per">per month, or $120 a year · 7-day free trial</div>
+        <ul>
+          <li>The nudge engine, uncapped — keep everyone warm</li>
+          <li>Email sync across all your accounts</li>
+          <li>Contact enrichment: titles and companies filled in — and kept current</li>
+          <li>Unlimited AI-drafted notes in your voice</li>
+          <li>Multiple personas: work you, weekend you</li>
+        </ul>
+        <p class="note">Upgrade inside the app after you join.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="download">
+  <div class="wrap">
+    <h2 class="reveal">Private beta now open.</h2>
+    <p class="section-sub reveal">Call Your Mom is coming soon to iPhone and Android. Join the list and we'll let you in as spots open — then add ten people and let the first nudge surprise you.</p>
+    <div class="store-row reveal">
+      <a class="btn btn-cherry js-beta" href="#download" style="font-size:17px;padding:15px 28px">Join the private beta</a>
+    </div>
+    <p class="web-note reveal">App Store and Google Play links coming soon. Already in? <a href="https://app.getcym.app/login" style="color:var(--cream);font-weight:700">Log in on the web</a>.</p>
+    <p class="web-note reveal" style="max-width:60ch;margin-left:auto;margin-right:auto;margin-top:26px;opacity:.85">Why "Call Your Mom"? Because the hardest test of any relationship system isn't your pipeline — it's the person you love most and still forget to call. If it works for her, it'll work for your investors.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-logo">
+        <svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="112" fill="#D9331F"/><g fill="#FFF7E8"><circle cx="199.4" cy="144.3" r="16.5"/><circle cx="196.1" cy="86.8" r="16.5"/><circle cx="156.3" cy="45.3" r="16.5"/><circle cx="98.9" cy="39.7" r="16.5"/><circle cx="51.8" cy="72.7" r="16.5"/><circle cx="37.4" cy="128.5" r="16.5"/><circle cx="62.8" cy="180.1" r="16.5"/><circle cx="115.7" cy="202.9" r="16.5"/></g><path fill="#FFF7E8" d="M120 157c-15-12.5-38-28.6-38-47.2C82 96.3 92.6 86 105.6 86c5.7 0 11 2.2 14.4 6.1C123.4 88.2 128.7 86 134.4 86 147.4 86 158 96.3 158 109.8c0 18.6-23 34.7-38 47.2z"/></svg>
+        <b>Call Your Mom</b>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#download">Get the app</a>
+        <a href="https://app.getcym.app/login">Log in</a>
+        <a href="/articles">Articles</a>
+      <a href="/faq">FAQ</a>
+      <a href="/affiliates">Affiliates</a>
+      <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+    </div>
+    <p class="fine">© 2026 Attayn Group LLC, DBA Call Your Mom. Made with love and one persistent nudge.</p>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+var sd=document.getElementById('s-date'); if(sd) sd.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+</script>
+
+<div class="cs-overlay" id="csOverlay" role="dialog" aria-modal="true" aria-labelledby="csTitle">
+  <div class="cs-modal">
+    <button class="cs-close" id="csClose" aria-label="Close">&times;</button>
+    <div id="csFormWrap">
+      <p class="kicker-sm">Almost here</p>
+      <h3 id="csTitle">Coming soon</h3>
+      <p>Call Your Mom is in private beta while we put the finishing touches on the store releases. Leave your email and you'll be the first to know the moment it's live.</p>
+      <form class="cs-form" id="csForm">
+        <input type="text" class="cs-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="email" id="csEmail" name="email" placeholder="you@example.com" required autocomplete="email" aria-label="Email address">
+        <button type="submit" id="csSubmit">Notify me</button>
+      </form>
+      <p class="cs-fine">One email when we launch. No newsletter, no spam — we're a "call your mom" company, not a "fill your inbox" company.</p>
+    </div>
+    <div class="cs-success" id="csSuccess">
+      <div class="big">&#127882;</div>
+      <h3>You're on the list</h3>
+      <p>We'll email you the moment Call Your Mom hits the stores. Until then — call your mom.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var overlay=document.getElementById('csOverlay'),form=document.getElementById('csForm'),
+      email=document.getElementById('csEmail'),btn=document.getElementById('csSubmit'),
+      wrap=document.getElementById('csFormWrap'),ok=document.getElementById('csSuccess'),src='web';
+  function open(s){src=s;overlay.classList.add('open');wrap.style.display='';ok.style.display='none';setTimeout(function(){email.focus()},50)}
+  function close(){overlay.classList.remove('open')}
+  document.querySelectorAll('.store-badge, .js-beta').forEach(function(a){
+    a.addEventListener('click',function(e){
+      e.preventDefault();
+      var label=(a.getAttribute('aria-label')||'');
+      open(label.indexOf('App Store')>-1?'ios':label.indexOf('Google Play')>-1?'android':'web');
+    });
+  });
+  document.getElementById('csClose').addEventListener('click',close);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)close()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(form.website && form.website.value) return; // honeypot
+    btn.disabled=true;btn.textContent='Saving…';
+    fetch('/api/waitlist',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({email:email.value,source:src})})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(d&&d.ok){wrap.style.display='none';ok.style.display='block';}
+        else{btn.disabled=false;btn.textContent='Notify me';alert('That email didn\u2019t look right \u2014 mind trying again?');}
+      })
+      .catch(function(){btn.disabled=false;btn.textContent='Notify me';alert('Network hiccup \u2014 try again?');});
+  });
+})();
+</script>
+</body>
+</html>
