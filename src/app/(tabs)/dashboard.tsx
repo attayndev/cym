@@ -33,23 +33,8 @@ export default function DashboardScreen() {
 
   if (!db) return <Screen scroll={false}>{null}</Screen>;
 
-  if (!db.profile.isPro) {
-    return (
-      <Screen>
-        <Display>{t('dashboard.title')}</Display>
-        <Card dark style={{ gap: 10 }}>
-          <Feather name="lock" size={18} color={colors.cardMuted} />
-          <Text style={styles.gateHeadline}>{t('dashboard.gate.headline')}</Text>
-          <Body style={{ color: colors.cardMuted }}>{t('dashboard.gate.body')}</Body>
-          <Pressable
-            onPress={() => router.push('/paywall')}
-            style={({ pressed }) => [styles.gateBtn, pressed && { opacity: 0.8 }]}>
-            <Text style={styles.gateBtnText}>{t('dashboard.gate.cta')}</Text>
-          </Pressable>
-        </Card>
-      </Screen>
-    );
-  }
+  // Health is ungated for the beta (Yan, July 10) — restore the isPro gate
+  // when RevenueCat billing goes live.
 
   const now = new Date();
   const personaContacts = contactsForPersona(db.contacts, activePersonaId).filter(
