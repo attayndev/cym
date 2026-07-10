@@ -15,7 +15,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gfrtj-ai5LppIrfSzfJRug_rtZHNToq",
         "EXPO_PUBLIC_DRAFTS_ENDPOINT": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/drafts",
-        "EXPO_PUBLIC_SHARE_BASE_URL": "https://getcym.app"
+        "EXPO_PUBLIC_SHARE_BASE_URL": "https://getcym.app",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_JeiUxJCtfCyDkpnfxfrEgLmQaDK"
       }
     },
     "production": {
@@ -25,7 +26,8 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gfrtj-ai5LppIrfSzfJRug_rtZHNToq",
         "EXPO_PUBLIC_DRAFTS_ENDPOINT": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/drafts",
-        "EXPO_PUBLIC_SHARE_BASE_URL": "https://getcym.app"
+        "EXPO_PUBLIC_SHARE_BASE_URL": "https://getcym.app",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_JeiUxJCtfCyDkpnfxfrEgLmQaDK"
       }
     }
   },
