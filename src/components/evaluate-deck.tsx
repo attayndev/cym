@@ -41,6 +41,17 @@ export function EvaluateDeck() {
   const [category, setCategory] = useState<Category>('friend');
   const [cadence, setCadence] = useState<number>(90);
   const [inbox, setInbox] = useState<InboxSuggestion[]>([]);
+  // Hooks stay ABOVE the early return below — conditional hooks are a fatal
+  // render error (React #310), and this component sits on Today.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    void loadDeckCollapsed().then(setCollapsed);
+  }, []);
+  const toggleCollapsed = () =>
+    setCollapsed((v) => {
+      void saveDeckCollapsed(!v);
+      return !v;
+    });
 
   useEffect(() => {
     void loadDeckSkips(day).then(setSkips);
@@ -183,16 +194,6 @@ export function EvaluateDeck() {
       });
     }
   };
-
-  const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => {
-    void loadDeckCollapsed().then(setCollapsed);
-  }, []);
-  const toggleCollapsed = () =>
-    setCollapsed((v) => {
-      void saveDeckCollapsed(!v);
-      return !v;
-    });
 
   const signal = (e: EvaluateCandidate) =>
     e.emailCount > 0
