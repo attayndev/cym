@@ -77,10 +77,14 @@ export function processMessage(
   msg: ParsedMessage,
 ): void {
   const isOutbound = msg.from.some((p) => ownEmails.has(p.email));
+  // Only outbound messages create interaction rows — warmth is proof of YOUR
+  // effort. Inbound still feeds name hints below.
   const contactIds = new Set<string>();
-  for (const p of [...msg.from, ...msg.toCc]) {
-    const cid = idx.byEmail.get(p.email);
-    if (cid) contactIds.add(cid);
+  if (isOutbound) {
+    for (const p of msg.toCc) {
+      const cid = idx.byEmail.get(p.email);
+      if (cid) contactIds.add(cid);
+    }
   }
   for (const contactId of contactIds) {
     h.rows.push({

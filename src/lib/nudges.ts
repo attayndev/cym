@@ -24,13 +24,17 @@ export function lastContactAt(
   contact: Contact,
   interactions: Interaction[],
 ): string {
-  let latest = contact.createdAt;
+  // Real touches only: when any interaction exists, createdAt must not mask
+  // an old history (a contact added yesterday with 6-month-old emails is
+  // at-risk, not warm). createdAt remains the fallback for zero-history
+  // contacts, which the engine already treats as 'new'.
+  let latest = '';
   for (const i of interactions) {
     if (i.contactId === contact.id && i.occurredAt > latest) {
       latest = i.occurredAt;
     }
   }
-  return latest;
+  return latest || contact.createdAt;
 }
 
 export function decayRatio(

@@ -71,6 +71,18 @@ describe('decay scoring', () => {
     expect(contactHealth(c, interactions, NOW)).toBe('cold');
   });
 
+  test('old interactions beat a recent createdAt — adding is not touching', () => {
+    // The Steven Quintano case: contact created 2 days ago, real email
+    // history 6 months old. Last touch must be the emails, not the add.
+    const c = makeContact({ id: 'c1', cadenceDays: 90, createdAt: addDays(NOW, -2).toISOString() });
+    const sixMonthsAgo = addDays(NOW, -180).toISOString();
+    const interactions: Interaction[] = [
+      { id: 'i1', contactId: 'c1', type: 'email', occurredAt: sixMonthsAgo, source: 'email-sync' },
+    ];
+    expect(lastContactAt(c, interactions)).toBe(sixMonthsAgo);
+    expect(contactHealth(c, interactions, NOW)).toBe('at-risk');
+  });
+
   test('a contact with no logged interactions is new, never warm', () => {
     const justImported = makeContact({ id: 'c1', source: 'import', createdAt: NOW.toISOString() });
     expect(contactHealth(justImported, [], NOW)).toBe('new');

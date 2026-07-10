@@ -217,10 +217,15 @@ async function syncAccount(
     const toCc = [...parseParticipants(headers['to']), ...parseParticipants(headers['cc'])];
     const isOutbound = from.some((p) => ownEmails.has(p.email));
 
+    // Warmth = your outbound effort. Inbound mail still feeds name hints and
+    // matching, but only messages YOU sent create interaction rows — receiving
+    // an email is not keeping in touch.
     const contactIds = new Set<string>();
-    for (const p of [...from, ...toCc]) {
-      const cid = byEmail.get(p.email);
-      if (cid) contactIds.add(cid);
+    if (isOutbound) {
+      for (const p of toCc) {
+        const cid = byEmail.get(p.email);
+        if (cid) contactIds.add(cid);
+      }
     }
     for (const contactId of contactIds) {
       rows.push({
