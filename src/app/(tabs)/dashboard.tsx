@@ -61,7 +61,13 @@ export default function DashboardScreen() {
     byHealth.get(index.get(contact.id)!.health)!.push(contact);
   }
 
-  const attention = [...byHealth.get('at-risk')!, ...byHealth.get('cold')!];
+  // Worst first, hard-capped: this default view renders unvirtualized, and
+  // the cold bucket runs to hundreds — uncapped it hangs the JS thread on
+  // device (the buckets above are the way to browse the full list).
+  const attention = [...byHealth.get('at-risk')!, ...byHealth.get('cold')!]
+    .sort((a, b) => (index.get(b.id)?.ratio ?? 0) - (index.get(a.id)?.ratio ?? 0))
+    .slice(0, 25);
+  const attentionTotal = byHealth.get('at-risk')!.length + byHealth.get('cold')!.length;
 
   return (
     <Screen>
@@ -140,6 +146,9 @@ export default function DashboardScreen() {
               health={index.get(c.id)!.health}
             />
           ))}
+          {attentionTotal > attention.length && (
+            <Body muted>{t('dashboard.more', { n: attentionTotal - attention.length })}</Body>
+          )}
         </View>
       ) : (
         <Card>
