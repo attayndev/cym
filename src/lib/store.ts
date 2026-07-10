@@ -164,6 +164,17 @@ export async function saveRefreshState(state: RefreshState): Promise<void> {
 
 const DECK_SKIPS_KEY = 'cym.deckSkips.v1';
 
+const DECK_COLLAPSED_KEY = 'cym.deckCollapsed.v1';
+
+/** "Worth tracking?" stays the way you left it — folded or open. */
+export async function loadDeckCollapsed(): Promise<boolean> {
+  return (await AsyncStorage.getItem(DECK_COLLAPSED_KEY)) === '1';
+}
+
+export async function saveDeckCollapsed(collapsed: boolean): Promise<void> {
+  await AsyncStorage.setItem(DECK_COLLAPSED_KEY, collapsed ? '1' : '0');
+}
+
 export async function loadDeckSkips(day: string): Promise<string[]> {
   try {
     const raw = await AsyncStorage.getItem(DECK_SKIPS_KEY);

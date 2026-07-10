@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -14,7 +15,7 @@ import {
   type InboxSuggestion,
 } from '@/lib/enrich';
 import { looseNameKey } from '@/lib/dedupe';
-import { loadDeckSkips, saveDeckSkips } from '@/lib/store';
+import { loadDeckCollapsed, loadDeckSkips, saveDeckCollapsed, saveDeckSkips } from '@/lib/store';
 import { canTrackMore } from '@/lib/tier';
 import type { Category } from '@/lib/types';
 import { useApp } from '@/state/app-context';
@@ -183,6 +184,16 @@ export function EvaluateDeck() {
     }
   };
 
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    void loadDeckCollapsed().then(setCollapsed);
+  }, []);
+  const toggleCollapsed = () =>
+    setCollapsed((v) => {
+      void saveDeckCollapsed(!v);
+      return !v;
+    });
+
   const signal = (e: EvaluateCandidate) =>
     e.emailCount > 0
       ? t('deck.signal.emails', {
@@ -222,11 +233,21 @@ export function EvaluateDeck() {
       )}
       {deck.length > 0 && (
         <>
-          <Eyebrow>{t('deck.evaluate.title')}</Eyebrow>
-          <Body muted>{t('deck.evaluate.sub')}</Body>
+          <Pressable onPress={toggleCollapsed} style={styles.collapseHeader} hitSlop={6}>
+            <Eyebrow>
+              {t('deck.evaluate.title')}
+              {collapsed ? `  (${deck.length})` : ''}
+            </Eyebrow>
+            <Feather
+              name={collapsed ? 'chevron-down' : 'chevron-up'}
+              size={18}
+              color={colors.espresso}
+            />
+          </Pressable>
+          {!collapsed && <Body muted>{t('deck.evaluate.sub')}</Body>}
         </>
       )}
-      {deck.map((e) => {
+      {(collapsed ? [] : deck).map((e) => {
         const c = e.contact;
         const meta = [c.role, c.company].filter(Boolean).join(' · ');
         return (
@@ -297,6 +318,11 @@ export function EvaluateDeck() {
 }
 
 const styles = StyleSheet.create({
+  collapseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   section: {
     gap: 10,
   },
