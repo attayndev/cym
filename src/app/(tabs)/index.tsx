@@ -39,6 +39,21 @@ export default function TodayScreen() {
   const decayNudges = nudges.filter((n) => n.kind === 'decay');
   const hasContacts = db.contacts.some((c) => c.personaId === activePersonaId);
 
+  // The remembered fact that makes the nudge feel personal: where you met
+  // beats what you discussed beats title/company.
+  const contextLineFor = (contactId: string): string | undefined => {
+    if (!db) return undefined;
+    const ctx = db.contexts.find((c) => c.contactId === contactId);
+    const contact = contactsById.get(contactId);
+    if (ctx?.whereMet) return t('nudge.context.met', { where: ctx.whereMet });
+    if (ctx?.discussed) {
+      const d = ctx.discussed.trim();
+      return d.length > 60 ? `${d.slice(0, 57)}…` : d;
+    }
+    const pro = [contact?.role, contact?.company].filter(Boolean).join(' · ');
+    return pro || undefined;
+  };
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -92,6 +107,7 @@ export default function TodayScreen() {
                     key={nudge.id}
                     nudge={nudge}
                     contact={contact}
+                    contextLine={contextLineFor(nudge.contactId)}
                     onSnooze={() => snoozeNudge(nudge.id)}
                     onDismiss={() => dismissNudge(nudge.id)}
                   />
@@ -110,6 +126,7 @@ export default function TodayScreen() {
                     key={nudge.id}
                     nudge={nudge}
                     contact={contact}
+                    contextLine={contextLineFor(nudge.contactId)}
                     onSnooze={() => snoozeNudge(nudge.id)}
                     onDismiss={() => dismissNudge(nudge.id)}
                   />

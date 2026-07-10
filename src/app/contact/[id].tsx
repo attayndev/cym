@@ -17,6 +17,7 @@ import { HealthBadge } from '@/components/health-badge';
 import { Body, Button, Card, Chip, Display, Eyebrow, Row, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { formatShortDate, relativeTime, useTranslation, type TKey } from '@/i18n';
+import { addDays, isoDate } from '@/lib/dates';
 import { draftSubject, generateDraft, toneCycle } from '@/lib/drafts';
 import { enrichFromHunter, hunterConflicts, hunterPatch } from '@/lib/enrich';
 import { applyCard, fetchCards, parseCardToken } from '@/lib/living-cards';
@@ -70,7 +71,7 @@ type ComposeChannel = Channel | 'whatsapp' | 'telegram' | 'signal';
 
 export default function ContactScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { db, logInteraction, removeContact, updateContact } = useApp();
+  const { db, logInteraction, removeContact, updateContact, updateContext } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -157,6 +158,16 @@ export default function ContactScreen() {
     tone: tones[toneIdx % tones.length],
     variant: variantN,
   });
+
+  // One tap converts "I should reach out" into a dated promise the engine
+  // will make sure you keep — the hero line, as a mechanic.
+  const promiseNextWeek = () => {
+    updateContext(contact.id, {
+      commitment: t('contact.promiseWeek.commitment', { name: contact.firstName }),
+      commitmentDueAt: isoDate(addDays(new Date(), 7)),
+    });
+    notify(t('contact.promiseWeek.done', { name: contact.firstName }));
+  };
 
   const writeDraft = async (ch: ComposeChannel, toneIdx = toneIndex, variantN = 0) => {
     setChannel(ch);
@@ -435,6 +446,9 @@ export default function ContactScreen() {
             </Text>
           </Pressable>
         </Row>
+        <Pressable onPress={promiseNextWeek} hitSlop={6} style={{ alignSelf: 'flex-start' }}>
+          <Text style={styles.promiseLink}>{t('contact.promiseWeek')}</Text>
+        </Pressable>
         {canText && (
           <Row>
             {(
@@ -617,6 +631,11 @@ export default function ContactScreen() {
 }
 
 const styles = StyleSheet.create({
+  promiseLink: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13.5,
+    color: colors.cherryDeep,
+  },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',

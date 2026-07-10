@@ -9,33 +9,63 @@ import type { Contact, Nudge } from '@/lib/types';
 export function NudgeCard({
   nudge,
   contact,
+  contextLine,
   onSnooze,
   onDismiss,
 }: {
   nudge: Nudge;
   contact: Contact;
+  /** One remembered fact — where you met, what you discussed — shown on the
+   *  card itself. The differentiator, visible at the moment of the nudge. */
+  contextLine?: string;
   onSnooze: () => void;
   onDismiss: () => void;
 }) {
   const router = useRouter();
   const { t } = useTranslation();
   const isHook = nudge.kind === 'hook';
+  // A promise coming due is the product's hero moment — dress it apart.
+  const isPromise = nudge.reason.key.startsWith('nudgec.commitment');
 
   return (
-    <View style={[styles.card, isHook ? styles.cardHook : styles.cardQuiet]}>
+    <View
+      style={[
+        styles.card,
+        isHook ? styles.cardHook : styles.cardQuiet,
+        isPromise && styles.cardPromise,
+      ]}>
       <View style={styles.header}>
-        <View style={[styles.kindBadge, !isHook && styles.kindBadgeQuiet]}>
+        <View
+          style={[
+            styles.kindBadge,
+            !isHook && styles.kindBadgeQuiet,
+            isPromise && styles.kindBadgePromise,
+          ]}>
           <Feather
-            name={isHook ? 'gift' : 'wind'}
+            name={isPromise ? 'bookmark' : isHook ? 'gift' : 'wind'}
             size={11}
-            color={isHook ? colors.butter : colors.inkSoft}
+            color={isPromise ? colors.cream : isHook ? colors.butter : colors.inkSoft}
           />
-          <Text style={[styles.kindText, !isHook && { color: colors.inkSoft }]}>
-            {isHook ? t('nudge.kind.moment') : t('nudge.kind.drifting')}
+          <Text
+            style={[
+              styles.kindText,
+              !isHook && { color: colors.inkSoft },
+              isPromise && { color: colors.cream },
+            ]}>
+            {isPromise
+              ? t('nudge.kind.promise')
+              : isHook
+                ? t('nudge.kind.moment')
+                : t('nudge.kind.drifting')}
           </Text>
         </View>
       </View>
       <Text style={styles.headline}>{tx(nudge.headline)}</Text>
+      {contextLine ? (
+        <Text style={styles.context} numberOfLines={1}>
+          {contextLine}
+        </Text>
+      ) : null}
       <Text style={styles.reason}>{tx(nudge.reason)}</Text>
       <View style={styles.actionRow}>
         <Text style={styles.action}>{tx(nudge.suggestedAction)}</Text>
@@ -73,6 +103,17 @@ const styles = StyleSheet.create({
   cardQuiet: {
     backgroundColor: colors.white,
     opacity: 0.85,
+  },
+  cardPromise: {
+    backgroundColor: colors.creamDeep,
+  },
+  kindBadgePromise: {
+    backgroundColor: colors.cherry,
+  },
+  context: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 12.5,
+    color: colors.cherryDeep,
   },
   header: {
     flexDirection: 'row',

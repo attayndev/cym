@@ -12,8 +12,8 @@ export const es: Partial<Dict> = {
   'health.new': 'Nueva',
   'health.warm': 'Cercana',
   'health.cooling': 'Enfriándose',
-  'health.atRisk': 'En riesgo',
-  'health.cold': 'Fría',
+  'health.atRisk': 'Quedando en silencio',
+  'health.cold': 'En silencio',
 
   // Categories
   'category.professional': 'Profesional',
@@ -52,7 +52,7 @@ export const es: Partial<Dict> = {
     'Call Your Mom detecta la ocasión adecuada — un cumpleaños, una promesa por cumplir, una relación que se enfría — y te da el gesto exacto con el mensaje ya redactado.',
   'today.teaser.cta': 'Activar el motor de recordatorios',
   'today.empty.allWarm':
-    'Hoy no necesitas hacer nada. Todas tus relaciones están cercanas — disfrútalas.',
+    'Nadie se está quedando en silencio contigo. Cada relación que cuidas está cálida — disfrútalo.',
   'today.empty.noContacts':
     'Aún no hay nadie con quien reconectar. Agrega a las personas que te importan y los momentos justos aparecerán aquí.',
   'today.section.worthActingOn': 'Vale la pena actuar',
@@ -157,6 +157,11 @@ export const es: Partial<Dict> = {
   'deck.cadence.180': 'Dos veces al año',
 
   // Nudge card
+  'nudge.kind.promise': 'Dijiste que ibas a…',
+  'nudge.context.met': 'Se conocieron en {where}',
+  'contact.promiseWeek': 'Me comunico la próxima semana →',
+  'contact.promiseWeek.commitment': 'Comunicarme con {name}',
+  'contact.promiseWeek.done': 'Anotado. Nos aseguraremos de que lo hagas.',
   'nudge.kind.moment': 'El momento',
   'nudge.kind.drifting': 'Distanciándose',
   'nudge.writeIt': 'Escribir',
@@ -219,7 +224,7 @@ export const es: Partial<Dict> = {
   'draft.subj.checkin.pro': 'Para ponernos al día',
 
   // Dashboard
-  'dashboard.title': 'Salud de relaciones',
+  'dashboard.title': 'Quién se está quedando en silencio',
   'dashboard.gate.headline': 'Mira qué relaciones se están enfriando en silencio',
   'dashboard.gate.body':
     'El panel de seguimiento clasifica a todos tus conocidos en cercana, enfriándose, en riesgo y fría — para que nada muera por descuido.',
@@ -339,7 +344,7 @@ export const es: Partial<Dict> = {
   'cadence.quarter': 'trimestre',
   'cadence.6months': '6 meses',
   'capture.cadence.suggestion': 'Sugerido para {category}: cada {n} días',
-  'capture.save': 'Guardar contacto',
+  'capture.save': 'Recuérdalos',
 
   // Contact detail
   'contact.notFound': 'Contacto no encontrado.',
@@ -411,24 +416,24 @@ export const es: Partial<Dict> = {
   'paywall.headline': 'Recordar es difícil.\nNosotros lo hacemos por ti.',
   'paywall.body':
     'Capturar contactos es gratis, para siempre. Pro es la capa de inteligencia: detecta el momento justo y te da el gesto.',
-  'paywall.feature.nudges.title': 'Recordatorios según la ocasión',
+  'paywall.feature.nudges.title': 'Mantén a todos cerca — sin límites',
   'paywall.feature.nudges.body':
-    'Gratis mantiene 10 relaciones cerca. Plus cuida a todos — cumpleaños, promesas, cambios de trabajo y distancia.',
+    'Gratis mantiene 10 relaciones cálidas. Plus cuida a todos — cumpleaños, promesas, cambios de trabajo, silencios largos.',
   'paywall.feature.drafts.title': 'Mensajes, ya empezados',
   'paywall.feature.drafts.body':
     'Notas ilimitadas con tu voz y tu contexto. Gratis incluye 3 al mes.',
-  'paywall.feature.dashboard.title': 'El panel de seguimiento',
+  'paywall.feature.dashboard.title': 'Mira quién se está quedando en silencio',
   'paywall.feature.dashboard.body':
-    'Mira exactamente qué relaciones están cercanas, enfriándose, en riesgo o frías.',
-  'paywall.feature.personas.title': 'Personas',
+    'Cada relación de un vistazo — cálida, enfriándose o en silencio — antes de que importe.',
+  'paywall.feature.personas.title': 'Tu yo del trabajo y tu yo del finde',
   'paywall.feature.personas.body':
-    'Grafos separados para tu yo fundador, tu yo del trabajo y tu yo personal, cada uno con su tarjeta, su gente y sus ritmos.',
-  'paywall.feature.email.title': 'Sincronización de correo (primero Gmail)',
+    'Una sola memoria, círculos separados — la tarjeta y la gente correcta para cada lado de tu vida.',
+  'paywall.feature.email.title': 'Sabe cuándo hablaron por última vez',
   'paywall.feature.email.body':
-    'Las fechas de último contacto se mantienen exactas sin registrar nada a mano.',
-  'paywall.feature.enrich.title': 'Enriquecimiento de contactos',
+    'Conecta tus bandejas y “última vez” se mantiene al día solo — encabezados, nunca contenidos.',
+  'paywall.feature.enrich.title': 'Nota los cambios de trabajo por ti',
   'paywall.feature.enrich.body':
-    'Cargos y empresas completados desde tu correspondencia y fuentes públicas — y actualizados cuando alguien cambia de trabajo.',
+    'Cargos y empresas se mantienen al día solos — para que tu felicitación llegue la semana que importa.',
   'paywall.plan.annual': 'Anual',
   'paywall.plan.monthly': 'Mensual',
   'paywall.price.annual': '$120 / año',
@@ -533,7 +538,7 @@ export const es: Partial<Dict> = {
     'Solo guardamos los datos de tus relaciones — nunca el contenido de los mensajes. Sin anuncios, nunca.',
 
   // Gmail sync
-  'settings.section.gmail': 'Sincronización de correo',
+  'settings.section.gmail': 'Bandejas conectadas — mantiene “última vez” al día',
   'gmail.connect': 'Conectar Gmail',
   'gmail.connected': 'Gmail conectado: {email}',
   'gmail.body':

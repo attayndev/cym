@@ -10,8 +10,8 @@ export const en = {
   'health.new': 'New',
   'health.warm': 'Warm',
   'health.cooling': 'Cooling',
-  'health.atRisk': 'At risk',
-  'health.cold': 'Cold',
+  'health.atRisk': 'Going quiet',
+  'health.cold': 'Gone quiet',
 
   // Categories
   'category.professional': 'Professional',
@@ -50,7 +50,7 @@ export const en = {
     'Call Your Mom watches for the right occasion — a birthday, a promise coming due, a relationship drifting — and hands you the exact move with the message already drafted.',
   'today.teaser.cta': 'Unlock the nudge engine',
   'today.empty.allWarm':
-    'Nothing needs you today. Every relationship you track is warm — go enjoy it.',
+    'Nobody’s going quiet on you right now. Every relationship you track is warm — go enjoy it.',
   'today.empty.noContacts':
     'No one to reconnect with yet. Add the people you care about and the right moments will show up here.',
   'today.section.worthActingOn': 'Worth acting on',
@@ -155,6 +155,11 @@ export const en = {
   'deck.cadence.180': 'Twice a year',
 
   // Nudge card
+  'nudge.kind.promise': 'You said you’d…',
+  'nudge.context.met': 'Met at {where}',
+  'contact.promiseWeek': 'I’ll reach out next week →',
+  'contact.promiseWeek.commitment': 'Reach out to {name}',
+  'contact.promiseWeek.done': 'Noted. We’ll make sure you do.',
   'nudge.kind.moment': 'The moment',
   'nudge.kind.drifting': 'Drifting',
   'nudge.writeIt': 'Write it',
@@ -216,7 +221,7 @@ export const en = {
   'draft.subj.checkin.pro': 'Catching up',
 
   // Dashboard
-  'dashboard.title': 'Relationship health',
+  'dashboard.title': 'Who’s going quiet',
   'dashboard.gate.headline': 'See which relationships are quietly going cold',
   'dashboard.gate.body':
     'The aging dashboard sorts everyone you know into warm, cooling, at-risk, and cold — so nothing dies of neglect.',
@@ -335,7 +340,7 @@ export const en = {
   'cadence.quarter': 'quarter',
   'cadence.6months': '6 months',
   'capture.cadence.suggestion': 'Suggested for {category}: every {n} days',
-  'capture.save': 'Save contact',
+  'capture.save': 'Remember them',
 
   // Contact detail
   'contact.notFound': 'Contact not found.',
@@ -407,24 +412,24 @@ export const en = {
   'paywall.headline': 'Remembering is hard.\nSo we do it for you.',
   'paywall.body':
     'Capturing contacts is free, forever. Pro is the intelligence layer: it watches for the right moment and hands you the move.',
-  'paywall.feature.nudges.title': 'Occasion-aware nudges',
+  'paywall.feature.nudges.title': 'Keep everyone warm — no caps',
   'paywall.feature.nudges.body':
-    'Free keeps 10 relationships warm. Plus watches everyone — birthdays, promises, job changes, and drift.',
+    'Free keeps 10 relationships warm. Plus watches everyone — birthdays, promises, job changes, long silences.',
   'paywall.feature.drafts.title': 'Messages, half-written',
   'paywall.feature.drafts.body':
     'Unlimited notes in your voice, context worked in. Free includes 3 a month.',
-  'paywall.feature.dashboard.title': 'The aging dashboard',
+  'paywall.feature.dashboard.title': 'See who’s going quiet',
   'paywall.feature.dashboard.body':
-    'See exactly which relationships are warm, cooling, at risk, or cold.',
-  'paywall.feature.personas.title': 'Personas',
+    'Every relationship at a glance — warm, cooling, or going quiet — before it matters.',
+  'paywall.feature.personas.title': 'Work-you and weekend-you',
   'paywall.feature.personas.body':
-    'Separate graphs for founder you, day-job you, personal you — each with its own card, people, and rhythms.',
-  'paywall.feature.email.title': 'Email sync (coming first to Gmail)',
+    'One shared memory, separate circles — the right card and the right people for each side of your life.',
+  'paywall.feature.email.title': 'Knows when you last talked',
   'paywall.feature.email.body':
-    'Last-contact dates stay accurate without logging anything by hand.',
-  'paywall.feature.enrich.title': 'Contact enrichment',
+    'Connect your inboxes and “last talked” stays true on its own — headers only, never contents.',
+  'paywall.feature.enrich.title': 'Notices job changes for you',
   'paywall.feature.enrich.body':
-    'Titles and companies filled in from your correspondence and public sources — and refreshed when people change jobs.',
+    'Titles and companies stay current on their own — so your congrats lands the week it matters.',
   'paywall.plan.annual': 'Annual',
   'paywall.plan.monthly': 'Monthly',
   'paywall.price.annual': '$120 / year',
@@ -526,7 +531,7 @@ export const en = {
   'auth.privacyNote': 'We only store your relationship data — never message contents. No ads, ever.',
 
   // Gmail sync
-  'settings.section.gmail': 'Email sync',
+  'settings.section.gmail': 'Connected inboxes — keeps “last talked” true',
   'gmail.connect': 'Connect Gmail',
   'gmail.connected': 'Gmail connected: {email}',
   'gmail.body': 'We read only timestamps and participants to keep "last contact" accurate — never the contents of your emails.',
