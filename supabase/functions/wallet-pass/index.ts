@@ -212,7 +212,7 @@ async function handleGoogle(token: string, card: CardFields, shareUrl: string): 
     barcode: { type: 'QR_CODE', value: shareUrl, alternateText: 'Scan to trade cards' },
     hexBackgroundColor: '#FFF7E8',
     logo: { sourceUri: { uri: 'https://getcym.app/assets/app-icon-1024.png' } },
-    heroImage: { sourceUri: { uri: 'https://getcym.app/assets/wallet/google-hero.png' } },
+    heroImage: { sourceUri: { uri: 'https://getcym.app/assets/wallet/google-hero-v2.png' } },
   };
   const subheader = [card.role, card.company].filter(Boolean).join(' · ');
   if (subheader) {
@@ -342,9 +342,9 @@ async function handleApple(token: string, card: CardFields, shareUrl: string): P
     loadAsset('apple-icon.png'),
     loadAsset('apple-icon@2x.png'),
     loadAsset('apple-icon@3x.png'),
-    loadAsset('apple-logo-v2.png'),
-    loadAsset('apple-logo-v2@2x.png'),
-    loadAsset('apple-logo-v2@3x.png'),
+    loadAsset('apple-logo-v3.png'),
+    loadAsset('apple-logo-v3@2x.png'),
+    loadAsset('apple-logo-v3@3x.png'),
   ]);
 
   const passFiles: Record<string, Uint8Array> = {
