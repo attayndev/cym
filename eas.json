@@ -20,6 +20,18 @@
         "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_vDRACvglgKWSPlgOxUfRGvmfmuO"
       }
     },
+    "beta": {
+      "autoIncrement": true,
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://jvuvuukvgunhpemrhqxl.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gfrtj-ai5LppIrfSzfJRug_rtZHNToq",
+        "EXPO_PUBLIC_DRAFTS_ENDPOINT": "https://jvuvuukvgunhpemrhqxl.supabase.co/functions/v1/drafts",
+        "EXPO_PUBLIC_SHARE_BASE_URL": "https://getcym.app",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_JeiUxJCtfCyDkpnfxfrEgLmQaDK",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_vDRACvglgKWSPlgOxUfRGvmfmuO"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "channel": "production",
@@ -34,6 +46,14 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "beta": {
+      "ios": {
+        "ascApiKeyPath": "/Users/yan/Downloads/AuthKey_7D3B3KZ38X.p8",
+        "ascApiKeyId": "7D3B3KZ38X",
+        "ascApiKeyIssuerId": "ad6d95fb-60e2-4dec-b233-a85f877e779b",
+        "ascAppId": "6789712471"
+      }
+    }
   }
 }
