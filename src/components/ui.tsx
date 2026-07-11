@@ -25,7 +25,9 @@ export function Screen({
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.scrollOuter}
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets>
           <View style={styles.scrollContent}>{children}</View>
         </ScrollView>
       ) : (
