@@ -4,13 +4,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ContactRow } from '@/components/contact-row';
-import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow, healthColors } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { isActiveContact } from '@/lib/classify';
 import { buildHealthIndex } from '@/lib/nudges';
-import { contactsForPersona } from '@/lib/personas';
 import type { Health } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -24,7 +22,7 @@ const BUCKET_LABEL = {
 } as const;
 
 export default function DashboardScreen() {
-  const { db, activePersonaId } = useApp();
+  const { db } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
   // Tapping a bucket filters the list below to exactly that health state;
@@ -37,9 +35,9 @@ export default function DashboardScreen() {
   // when RevenueCat billing goes live.
 
   const now = new Date();
-  const personaContacts = contactsForPersona(db.contacts, activePersonaId).filter(
-    isActiveContact,
-  );
+  // One relationship graph: personas are cards you present, not partitions
+  // of who you know. Health always sees everyone.
+  const personaContacts = db.contacts.filter(isActiveContact);
   const index = buildHealthIndex(personaContacts, db.interactions, now);
   const byHealth = new Map<Health, typeof db.contacts>(BUCKETS.map((b) => [b, []]));
   for (const contact of personaContacts) {
@@ -58,7 +56,6 @@ export default function DashboardScreen() {
     <Screen>
       <View style={styles.headerRow}>
         <Display>{t('dashboard.title')}</Display>
-        <PersonaSwitcher />
       </View>
 
       <View style={styles.grid}>

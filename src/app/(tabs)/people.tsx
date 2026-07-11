@@ -14,13 +14,11 @@ import {
 import { notify } from '@/lib/alert';
 import { ContactRow } from '@/components/contact-row';
 import { ExchangeInbox } from '@/components/exchange-inbox';
-import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { isActiveContact } from '@/lib/classify';
 import { buildHealthIndex } from '@/lib/nudges';
-import { contactsForPersona } from '@/lib/personas';
 import { useApp } from '@/state/app-context';
 import type { Contact } from '@/lib/types';
 
@@ -45,7 +43,7 @@ function letterOf(c: Contact): string {
 }
 
 export default function PeopleScreen() {
-  const { db, activePersonaId, syncContacts } = useApp();
+  const { db, syncContacts } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
@@ -55,10 +53,8 @@ export default function PeopleScreen() {
   const now = new Date();
   const personaContacts = useMemo(
     () =>
-      db
-        ? contactsForPersona(db.contacts, activePersonaId).filter(isActiveContact)
-        : [],
-    [db, activePersonaId],
+      db ? db.contacts.filter(isActiveContact) : [],
+    [db],
   );
   const index = useMemo(
     () => buildHealthIndex(personaContacts, db?.interactions ?? [], now),
@@ -140,7 +136,6 @@ export default function PeopleScreen() {
       <View style={styles.headerRow}>
         <Display>{t('people.title')}</Display>
         <View style={styles.headerActions}>
-          <PersonaSwitcher />
           <Pressable
             onPress={() => router.push('/capture')}
             style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}>

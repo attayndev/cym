@@ -8,7 +8,6 @@ import { MergeReview } from '@/components/merge-review';
 import { UpdatesDeck } from '@/components/updates-deck';
 import { GettingStarted } from '@/components/getting-started';
 import { NudgeCard } from '@/components/nudge-card';
-import { PersonaSwitcher } from '@/components/persona-switcher';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
 import { formatDateline, useTranslation } from '@/i18n';
@@ -60,7 +59,6 @@ export default function TodayScreen() {
         <View style={styles.headerTop}>
           <Eyebrow>{formatDateline(new Date())}</Eyebrow>
           <View style={styles.headerActions}>
-            <PersonaSwitcher />
             <Pressable onPress={() => router.push('/settings')} hitSlop={10}>
               <Feather name="settings" size={20} color={colors.inkSoft} />
             </Pressable>
