@@ -116,33 +116,38 @@ export default function CardScreen() {
   };
 
   const save = () => {
-    // Editing edits the card you're looking at. The default persona IS the
-    // profile (base identity); any other persona keeps its own overrides so
-    // Personal and Professional never bleed into each other.
+    // Editing edits the card you're looking at. The DEFAULT persona is the
+    // base identity: its edits write the profile — including clearing a
+    // field, which really clears it — and any stale overrides on the default
+    // persona are wiped so the base stays the single truth. Every other
+    // persona edits only its own overrides; clearing there means "inherit".
     const isDefaultPersona = !activePersona || activePersona.id === profile.defaultPersonaId;
     if (isDefaultPersona) {
       updateProfile({
         name: draft.name.trim() || profile.name,
         email: draft.email.trim() || undefined,
         phone: draft.phone.trim() || undefined,
+        role: draft.role.trim() || undefined,
+        company: draft.company.trim() || undefined,
       });
+      if (activePersona) {
+        updatePersona(activePersona.id, {
+          displayName: '',
+          email: '',
+          phone: '',
+          role: '',
+          company: '',
+          tagline: draft.tagline,
+        });
+      }
     } else {
       updatePersona(activePersona!.id, {
         displayName: draft.name,
         email: draft.email,
         phone: draft.phone,
-      });
-    }
-    if (activePersona) {
-      updatePersona(activePersona.id, {
         role: draft.role,
         company: draft.company,
         tagline: draft.tagline,
-      });
-    } else {
-      updateProfile({
-        role: draft.role.trim() || undefined,
-        company: draft.company.trim() || undefined,
       });
     }
     setEditing(false);
