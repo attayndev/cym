@@ -49,8 +49,9 @@ Claims guardrail: everything below exists and ships today.
 
   Free forever: capture without limits, keep 10 relationships warm, 3
   drafted notes a month. Plus removes the caps and adds connected inboxes,
-  automatic job-change radar, and unlimited drafts — $14.99/month or
-  $119.99/year with a 7-day free trial.
+  automatic job-change radar, and unlimited drafts — founding price
+  $14.99/month or $119.99/year with a 7-day free trial, locked in for as
+  long as you stay. ($29.99/month after launch.)
 
   Why "Call Your Mom"? Because the hardest relationship to keep warm is the
   one that matters most. If it works for her, it'll work for everyone else.

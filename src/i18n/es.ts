@@ -439,7 +439,7 @@ export const es: Partial<Dict> = {
   'paywall.price.annual': '$120 / año',
   'paywall.price.monthly': '$15 / mes',
   'paywall.bestValue': 'Mejor precio',
-  'paywall.priceSub': 'Una relación reavivada paga una década de esto.',
+  'paywall.priceSub': 'Precio fundador — se queda contigo mientras sigas suscrito. $30/mes después del lanzamiento. Una relación recuperada paga una década de esto.',
   'paywall.cta': 'Prueba 7 días gratis',
   'paywall.trialFine': 'Gratis 7 días, luego {price}. Se renueva automáticamente — cancela cuando quieras.',
   'paywall.fine': 'Sin anuncios. Nunca. Tus relaciones no están en venta.',

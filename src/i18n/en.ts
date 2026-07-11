@@ -435,7 +435,7 @@ export const en = {
   'paywall.price.annual': '$120 / year',
   'paywall.price.monthly': '$15 / month',
   'paywall.bestValue': 'Best value',
-  'paywall.priceSub': 'One rekindled relationship pays for a decade of this.',
+  'paywall.priceSub': 'Founding price — locked in for as long as you stay. $30/month after launch. One rekindled relationship pays for a decade of this.',
   'paywall.cta': 'Start 7-day free trial',
   'paywall.trialFine': 'Free for 7 days, then {price}. Auto-renews — cancel anytime.',
   'paywall.fine': "No ads. Ever. Your relationships aren't for sale.",
