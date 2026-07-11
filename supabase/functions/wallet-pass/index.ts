@@ -60,8 +60,8 @@ async function loadCard(
 
   return {
     name: persona?.display_name ?? profile.name,
-    role: persona?.role ?? profile.role ?? null,
-    company: persona?.company ?? profile.company ?? null,
+    role: persona?.role ?? null,
+    company: persona?.company ?? null,
     tagline: persona?.tagline ?? null,
   };
 }

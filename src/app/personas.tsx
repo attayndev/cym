@@ -124,14 +124,12 @@ export default function PersonasScreen() {
         label={t('persona.displayName')}
         value={draft.displayName}
         onChangeText={(displayName) => setDraft((d) => ({ ...d, displayName }))}
-        placeholder={db.profile.name}
         autoCapitalize="words"
       />
       <Field
         label={t('field.email')}
         value={draft.email}
         onChangeText={(email) => setDraft((d) => ({ ...d, email }))}
-        placeholder={db.profile.email}
         autoCapitalize="none"
         keyboardType="email-address"
       />
@@ -139,7 +137,6 @@ export default function PersonasScreen() {
         label={t('field.phone')}
         value={draft.phone}
         onChangeText={(phone) => setDraft((d) => ({ ...d, phone }))}
-        placeholder={db.profile.phone}
         keyboardType="phone-pad"
       />
       <View style={styles.formActions}>

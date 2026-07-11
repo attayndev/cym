@@ -85,10 +85,10 @@ Deno.serve(async (req) => {
     return json({
       name: persona?.display_name ?? profile.name,
       tagline: persona?.tagline ?? null,
-      role: persona?.role ?? profile.role ?? null,
-      company: persona?.company ?? profile.company ?? null,
-      email: persona?.email ?? profile.email ?? null,
-      phone: persona?.phone ?? profile.phone ?? null,
+      role: persona?.role ?? null,
+      company: persona?.company ?? null,
+      email: persona?.email ?? null,
+      phone: persona?.phone ?? null,
       city: profile.city ?? null,
     });
   }

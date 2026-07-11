@@ -54,37 +54,17 @@ describe('personaCardFields', () => {
     email: 'yan@example.com',
     phone: '+1 555',
   };
-  it('uses persona overrides when present', () => {
-    const f = personaCardFields(personas[1], profile);
-    expect(f).toEqual({
-      name: 'Yan',
-      role: 'CEO',
-      company: 'Dayjob Inc',
-      tagline: 'Building CYM',
-      email: 'yan@example.com',
-      phone: '+1 555',
-    });
-  });
-  it('falls back to profile fields entirely', () => {
+
+  it('cards own their fields — nothing inherits from the profile', () => {
     const f = personaCardFields(personas[0], profile);
-    expect(f.role).toBe('Engineer');
-    expect(f.company).toBe('Dayjob Inc');
+    expect(f.role).toBeUndefined();
+    expect(f.company).toBeUndefined();
+    expect(f.email).toBeUndefined();
+    expect(f.phone).toBeUndefined();
     expect(f.tagline).toBeUndefined();
   });
-  it('handles a missing persona', () => {
-    const f = personaCardFields(undefined, profile);
-    expect(f.name).toBe('Yan');
-    expect(f.role).toBe('Engineer');
-  });
 
-  it('falls back to the profile name/email/phone when the persona has none set', () => {
-    const f = personaCardFields(personas[0], profile);
-    expect(f.name).toBe('Yan');
-    expect(f.email).toBe('yan@example.com');
-    expect(f.phone).toBe('+1 555');
-  });
-
-  it('lets a persona override name/email/phone independently of the profile', () => {
+  it('persona fields are the card', () => {
     const proPersona: Persona = {
       id: 'psn_c',
       name: 'Professional',
@@ -92,34 +72,24 @@ describe('personaCardFields', () => {
       displayName: 'Yan T.',
       email: 'yan@work.example.com',
       phone: '+1 999',
+      role: 'CEO',
+      company: 'CYM',
+      tagline: 'Building CYM',
     };
     const f = personaCardFields(proPersona, profile);
     expect(f).toEqual({
       name: 'Yan T.',
-      role: 'Engineer',
-      company: 'Dayjob Inc',
-      tagline: undefined,
+      role: 'CEO',
+      company: 'CYM',
+      tagline: 'Building CYM',
       email: 'yan@work.example.com',
       phone: '+1 999',
     });
   });
 
-  it('treats an empty-string persona field as unset (falls back to profile)', () => {
-    const persona: Persona = {
-      id: 'psn_d',
-      name: 'Edge case',
-      isDefault: false,
-      displayName: '',
-      email: '',
-      phone: '',
-    };
-    // Empty string is not nullish, so `??` alone would keep it — this
-    // documents current behavior: callers (updatePersona's cleanPatch) are
-    // responsible for normalizing blanks to undefined before they reach here.
-    const f = personaCardFields(persona, profile);
-    expect(f.name).toBe('');
-    expect(f.email).toBe('');
-    expect(f.phone).toBe('');
+  it('name alone keeps the profile safety net so a card is never blank', () => {
+    expect(personaCardFields(personas[0], profile).name).toBe('Yan');
+    expect(personaCardFields(undefined, profile).name).toBe('Yan');
   });
 });
 
