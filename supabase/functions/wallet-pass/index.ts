@@ -209,9 +209,10 @@ async function handleGoogle(token: string, card: CardFields, shareUrl: string): 
     classId: WALLET_CLASS_ID,
     cardTitle: { defaultValue: { language: 'en-US', value: 'Call Your Mom' } },
     header: { defaultValue: { language: 'en-US', value: card.name } },
-    barcode: { type: 'QR_CODE', value: shareUrl },
-    hexBackgroundColor: '#FFD466',
+    barcode: { type: 'QR_CODE', value: shareUrl, alternateText: 'Scan to trade cards' },
+    hexBackgroundColor: '#FFF7E8',
     logo: { sourceUri: { uri: 'https://getcym.app/assets/app-icon-1024.png' } },
+    heroImage: { sourceUri: { uri: 'https://getcym.app/assets/wallet/google-hero.png' } },
   };
   const subheader = [card.role, card.company].filter(Boolean).join(' · ');
   if (subheader) {
@@ -240,22 +241,25 @@ async function handleGoogle(token: string, card: CardFields, shareUrl: string): 
 // Apple Wallet (.pkpass)
 // ---------------------------------------------------------------------------
 
-// Same bytes stand in for icon/icon@2x/logo for now — good enough until a
-// dedicated pass-icon asset exists. Cached across warm invocations.
-let cachedIconBytes: Uint8Array | null = null;
+// Brand pass art, pre-rendered (Fraunces wordmark + dial mark) and served
+// from the site. Cached across warm invocations.
+const ASSET_BASE = 'https://getcym.app/assets/wallet';
+const assetCache = new Map<string, Uint8Array>();
 
-async function loadIconBytes(): Promise<Uint8Array> {
-  if (cachedIconBytes) return cachedIconBytes;
-  const res = await fetch('https://getcym.app/assets/apple-touch-icon.png');
-  if (!res.ok) throw new Error(`icon fetch failed: ${res.status}`);
-  cachedIconBytes = new Uint8Array(await res.arrayBuffer());
-  return cachedIconBytes;
+async function loadAsset(name: string): Promise<Uint8Array> {
+  const hit = assetCache.get(name);
+  if (hit) return hit;
+  const res = await fetch(`${ASSET_BASE}/${name}`);
+  if (!res.ok) throw new Error(`asset fetch failed: ${name} ${res.status}`);
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  assetCache.set(name, bytes);
+  return bytes;
 }
 
 function buildPassJson(token: string, card: CardFields, shareUrl: string) {
   const secondaryFields: Record<string, string>[] = [];
-  if (card.role) secondaryFields.push({ key: 'role', label: '', value: card.role });
-  if (card.company) secondaryFields.push({ key: 'company', label: '', value: card.company });
+  if (card.role) secondaryFields.push({ key: 'role', label: 'TITLE', value: card.role });
+  if (card.company) secondaryFields.push({ key: 'company', label: 'COMPANY', value: card.company });
 
   const auxiliaryFields: Record<string, string>[] = [];
   if (card.tagline) auxiliaryFields.push({ key: 'tagline', label: '', value: card.tagline });
@@ -273,10 +277,22 @@ function buildPassJson(token: string, card: CardFields, shareUrl: string) {
     serialNumber: token,
     organizationName: 'Call Your Mom',
     description: 'Call Your Mom contact card',
+    // The site's card look: cream paper, espresso ink, cherry accents.
     foregroundColor: 'rgb(59,36,28)',
-    backgroundColor: 'rgb(255,212,102)',
+    backgroundColor: 'rgb(255,247,232)',
     labelColor: 'rgb(179,38,15)',
-    barcodes: [{ format: 'PKBarcodeFormatQR', message: shareUrl, messageEncoding: 'iso-8859-1' }],
+    barcodes: [
+      {
+        format: 'PKBarcodeFormatQR',
+        message: shareUrl,
+        messageEncoding: 'iso-8859-1',
+        altText: 'Scan to trade cards',
+      },
+    ],
+    backFields: [
+      { key: 'link', label: 'MY CARD', value: shareUrl },
+      { key: 'about', label: 'CALL YOUR MOM', value: 'The memory for your relationships. getcym.app' },
+    ],
     generic,
   };
 }
@@ -322,13 +338,23 @@ function signManifest(manifestBytes: Uint8Array): Uint8Array {
 
 async function handleApple(token: string, card: CardFields, shareUrl: string): Promise<Response> {
   const encoder = new TextEncoder();
-  const iconBytes = await loadIconBytes();
+  const [icon1, icon2, icon3, logo1, logo2, logo3] = await Promise.all([
+    loadAsset('apple-icon.png'),
+    loadAsset('apple-icon@2x.png'),
+    loadAsset('apple-icon@3x.png'),
+    loadAsset('apple-logo.png'),
+    loadAsset('apple-logo@2x.png'),
+    loadAsset('apple-logo@3x.png'),
+  ]);
 
   const passFiles: Record<string, Uint8Array> = {
     'pass.json': encoder.encode(JSON.stringify(buildPassJson(token, card, shareUrl))),
-    'icon.png': iconBytes,
-    'icon@2x.png': iconBytes,
-    'logo.png': iconBytes,
+    'icon.png': icon1,
+    'icon@2x.png': icon2,
+    'icon@3x.png': icon3,
+    'logo.png': logo1,
+    'logo@2x.png': logo2,
+    'logo@3x.png': logo3,
   };
 
   const manifest: Record<string, string> = {};
