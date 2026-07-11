@@ -342,9 +342,9 @@ async function handleApple(token: string, card: CardFields, shareUrl: string): P
     loadAsset('apple-icon.png'),
     loadAsset('apple-icon@2x.png'),
     loadAsset('apple-icon@3x.png'),
-    loadAsset('apple-logo.png'),
-    loadAsset('apple-logo@2x.png'),
-    loadAsset('apple-logo@3x.png'),
+    loadAsset('apple-logo-v2.png'),
+    loadAsset('apple-logo-v2@2x.png'),
+    loadAsset('apple-logo-v2@3x.png'),
   ]);
 
   const passFiles: Record<string, Uint8Array> = {
