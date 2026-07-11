@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
     // Card-safe fields only — never echo ids.
     return json({
-      name: persona?.display_name ?? profile.name,
+      name: persona?.display_name ?? '',
       tagline: persona?.tagline ?? null,
       role: persona?.role ?? null,
       company: persona?.company ?? null,

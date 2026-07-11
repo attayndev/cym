@@ -931,6 +931,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       update((current) => ({
         ...current,
         profile: { ...current.profile, ...profile },
+        // Cards live on personas only (no base layer): the onboarding card
+        // step seeds the default persona's card so a new account isn't blank.
+        personas: current.personas.map((p) =>
+          p.id === current.profile.defaultPersonaId
+            ? {
+                ...p,
+                displayName: profile.name?.trim() || p.displayName,
+                email: profile.email?.trim() || p.email,
+                phone: profile.phone?.trim() || p.phone,
+                role: profile.role?.trim() || p.role,
+                company: profile.company?.trim() || p.company,
+              }
+            : p,
+        ),
         onboarded: true,
       }));
     },

@@ -87,9 +87,8 @@ describe('personaCardFields', () => {
     });
   });
 
-  it('name alone keeps the profile safety net so a card is never blank', () => {
-    expect(personaCardFields(personas[0], profile).name).toBe('Yan');
-    expect(personaCardFields(undefined, profile).name).toBe('Yan');
+  it('name does not inherit either — no base layer anywhere', () => {
+    expect(personaCardFields(undefined, profile).name).toBe('');
   });
 });
 

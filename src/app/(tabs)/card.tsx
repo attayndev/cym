@@ -117,7 +117,6 @@ export default function CardScreen() {
 
   const save = () => {
     // One rule: editing a card edits THAT card. Empty fields stay empty.
-    // (Profile name is kept in step for account identity/onboarding only.)
     if (activePersona) {
       updatePersona(activePersona.id, {
         displayName: draft.name,
@@ -128,7 +127,6 @@ export default function CardScreen() {
         tagline: draft.tagline,
       });
     }
-    if (draft.name.trim()) updateProfile({ name: draft.name.trim() });
     setEditing(false);
   };
 

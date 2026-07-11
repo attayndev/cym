@@ -32,11 +32,10 @@ export function personaCardFields(
   persona: Persona | undefined,
   profile: Pick<UserProfile, 'name' | 'role' | 'company' | 'email' | 'phone'>,
 ): PersonaCardFields {
-  // Cards own their fields — no inheritance. Deleting a field deletes it.
-  // (Existing personas were materialized once server-side; new personas are
-  // seeded at creation.) Name keeps a safety net so a card is never blank.
+  // Cards own their fields — no inheritance, no base layer, no exceptions.
+  // The profile is account identity; personas are the only card storage.
   return {
-    name: persona?.displayName ?? profile.name,
+    name: persona?.displayName ?? '',
     role: persona?.role,
     company: persona?.company,
     tagline: persona?.tagline,

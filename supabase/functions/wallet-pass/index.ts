@@ -59,7 +59,7 @@ async function loadCard(
     .maybeSingle();
 
   return {
-    name: persona?.display_name ?? profile.name,
+    name: persona?.display_name ?? '',
     role: persona?.role ?? null,
     company: persona?.company ?? null,
     tagline: persona?.tagline ?? null,
