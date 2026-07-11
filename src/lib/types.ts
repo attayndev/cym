@@ -49,6 +49,12 @@ export interface Persona {
   /** Card overrides; fall back to the profile's role/company when unset. */
   role?: string;
   company?: string;
+  /** Card overrides; fall back to the profile's name/email/phone when unset —
+   *  a new persona inherits the profile's identity until explicitly saved
+   *  with its own values, so Personal and Professional cards can diverge. */
+  displayName?: string;
+  email?: string;
+  phone?: string;
   isDefault: boolean;
   updatedAt?: string;
 }

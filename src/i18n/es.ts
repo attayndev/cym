@@ -269,6 +269,7 @@ export const es: Partial<Dict> = {
   'persona.deleteConfirm': '¿Eliminar de verdad?',
   'persona.deleteBody': 'Su gente pasa a tu persona predeterminada. Toca de nuevo para confirmar.',
   'persona.contactCount': '{n} personas',
+  'persona.displayName': 'Nombre en la tarjeta',
 
   // Exchange inbox
   'inbox.title': 'Desde tu tarjeta · {n}',

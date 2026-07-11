@@ -53,13 +53,13 @@ async function loadCard(
 
   const { data: persona } = await admin
     .from('personas')
-    .select('tagline, role, company')
+    .select('tagline, role, company, display_name')
     .eq('id', link.persona_id)
     .eq('user_id', link.user_id)
     .maybeSingle();
 
   return {
-    name: profile.name,
+    name: persona?.display_name ?? profile.name,
     role: persona?.role ?? profile.role ?? null,
     company: persona?.company ?? profile.company ?? null,
     tagline: persona?.tagline ?? null,

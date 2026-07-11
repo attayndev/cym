@@ -25,19 +25,20 @@ export interface PersonaCardFields {
   phone?: string;
 }
 
-/** The sharing card for a persona: identity (name/email/phone) always comes
- *  from the profile; role/company fall back persona → profile. */
+/** The sharing card for a persona: name/email/phone/role/company all fall
+ *  back persona → profile, so a new persona inherits the profile's identity
+ *  until it's customized with its own card fields. */
 export function personaCardFields(
   persona: Persona | undefined,
   profile: Pick<UserProfile, 'name' | 'role' | 'company' | 'email' | 'phone'>,
 ): PersonaCardFields {
   return {
-    name: profile.name,
+    name: persona?.displayName ?? profile.name,
     role: persona?.role ?? profile.role,
     company: persona?.company ?? profile.company,
     tagline: persona?.tagline,
-    email: profile.email,
-    phone: profile.phone,
+    email: persona?.email ?? profile.email,
+    phone: persona?.phone ?? profile.phone,
   };
 }
 

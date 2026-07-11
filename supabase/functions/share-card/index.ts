@@ -76,19 +76,19 @@ Deno.serve(async (req) => {
 
     const { data: persona } = await admin
       .from('personas')
-      .select('tagline, role, company')
+      .select('tagline, role, company, display_name, email, phone')
       .eq('id', link.persona_id)
       .eq('user_id', link.user_id)
       .maybeSingle();
 
     // Card-safe fields only — never echo ids.
     return json({
-      name: profile.name,
+      name: persona?.display_name ?? profile.name,
       tagline: persona?.tagline ?? null,
       role: persona?.role ?? profile.role ?? null,
       company: persona?.company ?? profile.company ?? null,
-      email: profile.email ?? null,
-      phone: profile.phone ?? null,
+      email: persona?.email ?? profile.email ?? null,
+      phone: persona?.phone ?? profile.phone ?? null,
       city: profile.city ?? null,
     });
   }

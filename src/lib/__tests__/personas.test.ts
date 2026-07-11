@@ -76,6 +76,51 @@ describe('personaCardFields', () => {
     expect(f.name).toBe('Yan');
     expect(f.role).toBe('Engineer');
   });
+
+  it('falls back to the profile name/email/phone when the persona has none set', () => {
+    const f = personaCardFields(personas[0], profile);
+    expect(f.name).toBe('Yan');
+    expect(f.email).toBe('yan@example.com');
+    expect(f.phone).toBe('+1 555');
+  });
+
+  it('lets a persona override name/email/phone independently of the profile', () => {
+    const proPersona: Persona = {
+      id: 'psn_c',
+      name: 'Professional',
+      isDefault: false,
+      displayName: 'Yan T.',
+      email: 'yan@work.example.com',
+      phone: '+1 999',
+    };
+    const f = personaCardFields(proPersona, profile);
+    expect(f).toEqual({
+      name: 'Yan T.',
+      role: 'Engineer',
+      company: 'Dayjob Inc',
+      tagline: undefined,
+      email: 'yan@work.example.com',
+      phone: '+1 999',
+    });
+  });
+
+  it('treats an empty-string persona field as unset (falls back to profile)', () => {
+    const persona: Persona = {
+      id: 'psn_d',
+      name: 'Edge case',
+      isDefault: false,
+      displayName: '',
+      email: '',
+      phone: '',
+    };
+    // Empty string is not nullish, so `??` alone would keep it — this
+    // documents current behavior: callers (updatePersona's cleanPatch) are
+    // responsible for normalizing blanks to undefined before they reach here.
+    const f = personaCardFields(persona, profile);
+    expect(f.name).toBe('');
+    expect(f.email).toBe('');
+    expect(f.phone).toBe('');
+  });
 });
 
 describe('reassignContacts', () => {

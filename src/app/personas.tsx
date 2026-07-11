@@ -15,12 +15,31 @@ interface Draft {
   tagline: string;
   role: string;
   company: string;
+  displayName: string;
+  email: string;
+  phone: string;
 }
 
-const emptyDraft: Draft = { name: '', tagline: '', role: '', company: '' };
+const emptyDraft: Draft = {
+  name: '',
+  tagline: '',
+  role: '',
+  company: '',
+  displayName: '',
+  email: '',
+  phone: '',
+};
 
 function draftFrom(p: Persona): Draft {
-  return { name: p.name, tagline: p.tagline ?? '', role: p.role ?? '', company: p.company ?? '' };
+  return {
+    name: p.name,
+    tagline: p.tagline ?? '',
+    role: p.role ?? '',
+    company: p.company ?? '',
+    displayName: p.displayName ?? '',
+    email: p.email ?? '',
+    phone: p.phone ?? '',
+  };
 }
 
 export default function PersonasScreen() {
@@ -100,6 +119,28 @@ export default function PersonasScreen() {
         value={draft.company}
         onChangeText={(company) => setDraft((d) => ({ ...d, company }))}
         autoCapitalize="words"
+      />
+      <Field
+        label={t('persona.displayName')}
+        value={draft.displayName}
+        onChangeText={(displayName) => setDraft((d) => ({ ...d, displayName }))}
+        placeholder={db.profile.name}
+        autoCapitalize="words"
+      />
+      <Field
+        label={t('field.email')}
+        value={draft.email}
+        onChangeText={(email) => setDraft((d) => ({ ...d, email }))}
+        placeholder={db.profile.email}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+      <Field
+        label={t('field.phone')}
+        value={draft.phone}
+        onChangeText={(phone) => setDraft((d) => ({ ...d, phone }))}
+        placeholder={db.profile.phone}
+        keyboardType="phone-pad"
       />
       <View style={styles.formActions}>
         <Button

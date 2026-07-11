@@ -49,6 +49,9 @@ const toPersonaRow = (p: Persona, userId: string) => ({
   tagline: p.tagline ?? null,
   role: p.role ?? null,
   company: p.company ?? null,
+  display_name: p.displayName ?? null,
+  email: p.email ?? null,
+  phone: p.phone ?? null,
   is_default: p.isDefault,
   updated_at: p.updatedAt ?? '1970-01-01T00:00:00.000Z',
 });
@@ -58,6 +61,9 @@ const fromPersonaRow = (r: any): Persona => ({
   tagline: r.tagline ?? undefined,
   role: r.role ?? undefined,
   company: r.company ?? undefined,
+  displayName: r.display_name ?? undefined,
+  email: r.email ?? undefined,
+  phone: r.phone ?? undefined,
   isDefault: r.is_default,
   updatedAt: r.updated_at ?? undefined,
 });

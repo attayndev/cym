@@ -68,7 +68,9 @@ export interface ContactPatch {
   cardToken?: string;
 }
 
-export type PersonaPatch = Partial<Pick<Persona, 'name' | 'tagline' | 'role' | 'company'>>;
+export type PersonaPatch = Partial<
+  Pick<Persona, 'name' | 'tagline' | 'role' | 'company' | 'displayName' | 'email' | 'phone'>
+>;
 
 export type ContextPatch = Partial<
   Pick<ContextEntry, 'whereMet' | 'discussed' | 'whyMatters' | 'commitment' | 'commitmentDueAt'>
@@ -109,7 +111,15 @@ interface AppState {
   cloudReady: boolean;
   activePersonaId: string;
   setActivePersona: (personaId: string) => void;
-  addPersona: (input: { name: string; tagline?: string; role?: string; company?: string }) => string;
+  addPersona: (input: {
+    name: string;
+    tagline?: string;
+    role?: string;
+    company?: string;
+    displayName?: string;
+    email?: string;
+    phone?: string;
+  }) => string;
   updatePersona: (personaId: string, patch: PersonaPatch) => void;
   deletePersona: (personaId: string) => void;
   setDefaultPersona: (personaId: string) => void;
@@ -482,7 +492,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const addPersona = useCallback(
-    (input: { name: string; tagline?: string; role?: string; company?: string }): string => {
+    (input: {
+      name: string;
+      tagline?: string;
+      role?: string;
+      company?: string;
+      displayName?: string;
+      email?: string;
+      phone?: string;
+    }): string => {
       const personaId = id('psn');
       update((current) => ({
         ...current,
@@ -494,6 +512,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             tagline: input.tagline?.trim() || undefined,
             role: input.role?.trim() || undefined,
             company: input.company?.trim() || undefined,
+            displayName: input.displayName?.trim() || undefined,
+            email: input.email?.trim() || undefined,
+            phone: input.phone?.trim() || undefined,
             isDefault: false,
           },
         ],

@@ -116,13 +116,23 @@ export default function CardScreen() {
   };
 
   const save = () => {
-    // Identity lives on the profile; the card's role/company/tagline belong to
-    // the active persona so each persona can present differently.
-    updateProfile({
-      name: draft.name.trim() || profile.name,
-      email: draft.email.trim() || undefined,
-      phone: draft.phone.trim() || undefined,
-    });
+    // Editing edits the card you're looking at. The default persona IS the
+    // profile (base identity); any other persona keeps its own overrides so
+    // Personal and Professional never bleed into each other.
+    const isDefaultPersona = !activePersona || activePersona.id === profile.defaultPersonaId;
+    if (isDefaultPersona) {
+      updateProfile({
+        name: draft.name.trim() || profile.name,
+        email: draft.email.trim() || undefined,
+        phone: draft.phone.trim() || undefined,
+      });
+    } else {
+      updatePersona(activePersona!.id, {
+        displayName: draft.name,
+        email: draft.email,
+        phone: draft.phone,
+      });
+    }
     if (activePersona) {
       updatePersona(activePersona.id, {
         role: draft.role,

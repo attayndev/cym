@@ -265,6 +265,7 @@ export const en = {
   'persona.deleteConfirm': 'Really delete?',
   'persona.deleteBody': 'Its people move to your default persona. Tap again to confirm.',
   'persona.contactCount': '{n} people',
+  'persona.displayName': 'Card name',
 
   // Exchange inbox
   'inbox.title': 'From your card · {n}',
