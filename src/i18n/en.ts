@@ -245,6 +245,8 @@ export const en = {
   'card.edit': 'Edit details',
   'card.editHeading': 'Edit card',
   'card.save': 'Save card',
+  'card.wallet.apple': 'Add to Apple Wallet',
+  'card.wallet.google': 'Save to Google Wallet',
 
   // Personas
   'persona.title': 'Personas',

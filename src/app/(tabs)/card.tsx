@@ -1,16 +1,23 @@
+import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { Field } from '@/components/field';
 import { PersonaSwitcher } from '@/components/persona-switcher';
-import { Body, Button, Display, Eyebrow, Screen } from '@/components/ui';
+import { Body, Button, Display, Eyebrow, Row, Screen } from '@/components/ui';
 import { MARK_SVG } from '@/constants/mark-svg';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { personaCardFields } from '@/lib/personas';
-import { buildShareUrl, getOrCreateShareToken, rotateShareToken, shareBaseUrl } from '@/lib/share';
+import {
+  buildShareUrl,
+  buildWalletPassUrl,
+  getOrCreateShareToken,
+  rotateShareToken,
+  shareBaseUrl,
+} from '@/lib/share';
 import { buildVCard } from '@/lib/vcard';
 import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
@@ -30,6 +37,7 @@ export default function CardScreen() {
   });
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [confirmRotate, setConfirmRotate] = useState(false);
+  const [walletBusy, setWalletBusy] = useState(false);
 
   // Signed in with a share host configured → the QR carries a token URL to the
   // landing page. Until the token arrives (or offline) it stays the vCard QR.
@@ -70,6 +78,22 @@ export default function CardScreen() {
       if (token) setShareUrl(buildShareUrl(token));
     } catch {
       // keep the current link
+    }
+  };
+
+  // Fetches a fresh token the same way the share link does, then hands off to
+  // the OS: Safari shows the Add-to-Wallet sheet, Chrome/Android does its own.
+  const openWalletPass = async (type: 'google' | 'apple') => {
+    if (!activePersonaId || walletBusy) return;
+    setWalletBusy(true);
+    try {
+      const token = await getOrCreateShareToken(activePersonaId);
+      const url = token ? buildWalletPassUrl(token, type) : null;
+      if (url) await Linking.openURL(url);
+    } catch (e) {
+      console.warn('wallet pass fetch failed', e);
+    } finally {
+      setWalletBusy(false);
     }
   };
 
@@ -153,6 +177,28 @@ export default function CardScreen() {
         {card.email && <Text style={styles.cardMeta}>{card.email}</Text>}
         {card.phone && <Text style={styles.cardMeta}>{card.phone}</Text>}
       </View>
+
+      {shareUrl && !editing && (
+        <Row style={styles.walletRow}>
+          {Platform.OS === 'ios' ? (
+            <Pressable
+              onPress={() => void openWalletPass('apple')}
+              disabled={walletBusy}
+              style={[styles.walletButton, walletBusy && styles.walletButtonDisabled]}>
+              <Feather name="credit-card" size={15} color={colors.ink} />
+              <Text style={styles.walletButtonText}>{t('card.wallet.apple')}</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => void openWalletPass('google')}
+              disabled={walletBusy}
+              style={[styles.walletButton, walletBusy && styles.walletButtonDisabled]}>
+              <Feather name="credit-card" size={15} color={colors.ink} />
+              <Text style={styles.walletButtonText}>{t('card.wallet.google')}</Text>
+            </Pressable>
+          )}
+        </Row>
+      )}
 
       {shareUrl && !editing && (
         <Button
@@ -271,6 +317,27 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: 13.5,
     color: colors.cardMuted,
+  },
+  walletRow: {
+    justifyContent: 'center',
+  },
+  walletButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+  },
+  walletButtonDisabled: {
+    opacity: 0.5,
+  },
+  walletButtonText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13,
+    color: colors.ink,
   },
   form: {
     gap: 12,

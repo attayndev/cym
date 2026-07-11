@@ -26,6 +26,11 @@ verify_jwt = false
 [functions.share-card]
 verify_jwt = false
 
+# wallet-pass mints the Google/Apple Wallet pass for a persona's card. Same
+# token-capability model as share-card: the share token is the authorization.
+[functions.wallet-pass]
+verify_jwt = false
+
 # delete-account authenticates manually: user JWT only (service key and
 # anonymous calls are rejected). JWT possession + typed confirmation is the auth.
 [functions.delete-account]

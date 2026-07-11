@@ -31,6 +31,15 @@ export function buildShareUrl(token: string): string | null {
   return base ? `${base.replace(/\/$/, '')}/c/${token}` : null;
 }
 
+/** URL for the wallet-pass function: redirects to Google Wallet, or streams a
+ *  .pkpass for Apple Wallet. Same EXPO_PUBLIC_SUPABASE_URL base as the other
+ *  function calls (gmail-auth-start, share-card's landing page). */
+export function buildWalletPassUrl(token: string, type: 'google' | 'apple'): string | null {
+  const base = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  return `${base}/functions/v1/wallet-pass?token=${encodeURIComponent(token)}&type=${type}`;
+}
+
 /** The persona's share token, minted server-side on first use. */
 export async function getOrCreateShareToken(personaId: string): Promise<string | null> {
   const supabase = getSupabase();

@@ -249,6 +249,8 @@ export const es: Partial<Dict> = {
   'card.edit': 'Editar datos',
   'card.editHeading': 'Editar tarjeta',
   'card.save': 'Guardar tarjeta',
+  'card.wallet.apple': 'Añadir a Apple Wallet',
+  'card.wallet.google': 'Guardar en Google Wallet',
 
   // Personas
   'persona.title': 'Personas',
