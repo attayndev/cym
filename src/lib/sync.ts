@@ -477,11 +477,10 @@ export async function pushGraph(
   db: DB,
   expectedVersion: number,
 ): Promise<number> {
-  const { error } = await client
-    .from('profiles')
-    .upsert({ ...toProfileRow(db.profile, userId), onboarded: db.onboarded });
-  if (error) throw new Error(`push profile: ${error.message}`);
-
+  // Claim the version FIRST: writing profile fields before the compare-and-
+  // bump let a stale device overwrite server-side edits and then "merge" its
+  // own poison back in on the conflict retry. Nothing may write until the
+  // claim succeeds.
   const claim = await client
     .from('profiles')
     .update({ graph_version: expectedVersion + 1 })
@@ -490,6 +489,15 @@ export async function pushGraph(
     .select('graph_version');
   if (claim.error) throw new Error(`claim graph version: ${claim.error.message}`);
   if (!claim.data || claim.data.length === 0) throw new GraphVersionConflict();
+
+  const { error } = await client
+    .from('profiles')
+    .upsert({
+      ...toProfileRow(db.profile, userId),
+      onboarded: db.onboarded,
+      graph_version: expectedVersion + 1, // keep the claimed version through the upsert
+    });
+  if (error) throw new Error(`push profile: ${error.message}`);
 
   const manualInteractions = db.interactions
     .filter((i) => i.source !== 'email-sync')
