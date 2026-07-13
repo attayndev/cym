@@ -259,6 +259,7 @@ export const es: Partial<Dict> = {
   'persona.switcher.title': 'Viendo como',
   'persona.switcher.manage': 'Gestionar personas',
   'persona.new': 'Nueva persona',
+  'persona.name': 'Nombre de la persona',
   'persona.save': 'Guardar',
   'persona.cancel': 'Cancelar',
   'persona.default': 'Predeterminada',

@@ -98,7 +98,7 @@ export default function PersonasScreen() {
   const form = (
     <View style={styles.form}>
       <Field
-        label={t('field.name')}
+        label={t('persona.name')}
         value={draft.name}
         onChangeText={(name) => setDraft((d) => ({ ...d, name }))}
         autoCapitalize="words"

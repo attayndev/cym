@@ -255,6 +255,7 @@ export const en = {
   'persona.switcher.title': 'Viewing as',
   'persona.switcher.manage': 'Manage personas',
   'persona.new': 'New persona',
+  'persona.name': 'Persona name',
   'persona.save': 'Save',
   'persona.cancel': 'Cancel',
   'persona.default': 'Default',
