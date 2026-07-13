@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.imap-sync]
 verify_jwt = false
+
+[functions.memory-extract]
+verify_jwt = false

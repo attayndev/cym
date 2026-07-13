@@ -379,6 +379,8 @@ export const es: Partial<Dict> = {
     'Sin contexto capturado. La próxima vez que hablen, anota por qué importa esta persona — tu yo futuro lo agradecerá.',
   'contact.history': 'Historial',
   'contact.noHistory': 'Aún no hay interacciones registradas.',
+  'contact.memory.title': 'Lo que sabes',
+  'contact.memory.until': 'hasta {date}',
   'contact.threads.title': 'Hilos recientes',
   'contact.threads.locked':
     'Plus recuerda cada hilo — de qué hablaron, qué se viene — para que tu próxima nota siga justo donde la dejaste.',
@@ -422,6 +424,9 @@ export const es: Partial<Dict> = {
   'paywall.headline': 'Recordar es difícil.\nNosotros lo hacemos por ti.',
   'paywall.body':
     'Capturar contactos es gratis, para siempre. Pro es la capa de inteligencia: detecta el momento justo y te da el gesto.',
+  'paywall.feature.memory.title': 'Memoria de relación',
+  'paywall.feature.memory.body':
+    'Cada hilo, promesa y momento, guardado — para retomar justo donde lo dejaste.',
   'paywall.feature.nudges.title': 'Mantén a todos cerca — sin límites',
   'paywall.feature.nudges.body':
     'Gratis mantiene 10 relaciones cálidas. Plus cuida a todos — cumpleaños, promesas, cambios de trabajo, silencios largos.',
@@ -471,6 +476,11 @@ export const es: Partial<Dict> = {
     'Esto se convierte en tu tarjeta para compartir — nombre, correo, teléfono y a qué te dedicas. Intercámbiala por QR cuando conozcas a alguien.',
   'onboarding.card.cta': 'Continuar',
   'onboarding.card.skip': 'Omitir por ahora',
+  'onboarding.memory.eyebrow': 'Cómo funciona',
+  'onboarding.memory.title': 'Ella recuerda, para que tú no tengas que hacerlo.',
+  'onboarding.memory.body':
+    'Después de cada charla, anota una línea — de qué hablaron, qué se les viene. La próxima vez que contactes, la nota ya está medio escrita y retoma el hilo. Se construye solo con lo que tú escribes aquí — nunca leyendo tu correo.',
+  'onboarding.memory.cta': 'Entendido',
   'onboarding.notify.title': 'No te pierdas el momento',
   'onboarding.notify.body':
     'Enviamos un aviso discreto cuando hay una razón real para contactar — un cumpleaños, una promesa por cumplir. Sin spam, nunca.',

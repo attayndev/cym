@@ -375,6 +375,8 @@ export const en = {
     'No context captured. The next time you talk, jot down why this person matters — future-you will thank you.',
   'contact.history': 'History',
   'contact.noHistory': 'No interactions logged yet.',
+  'contact.memory.title': 'What you know',
+  'contact.memory.until': 'until {date}',
   'contact.threads.title': 'Recent threads',
   'contact.threads.locked':
     "Plus remembers every thread — what you talked about, what's coming up — so your next note picks up where you left off.",
@@ -418,6 +420,9 @@ export const en = {
   'paywall.headline': 'Remembering is hard.\nSo we do it for you.',
   'paywall.body':
     'Capturing contacts is free, forever. Pro is the intelligence layer: it watches for the right moment and hands you the move.',
+  'paywall.feature.memory.title': 'Relationship Memory',
+  'paywall.feature.memory.body':
+    'Every thread, promise, and moment kept, so you pick up right where you left off.',
   'paywall.feature.nudges.title': 'Keep everyone warm — no caps',
   'paywall.feature.nudges.body':
     'Free keeps 10 relationships warm. Plus watches everyone — birthdays, promises, job changes, long silences.',
@@ -467,6 +472,11 @@ export const en = {
     'This becomes your shareable card — name, email, phone, and what you do. Trade it by QR when you meet someone.',
   'onboarding.card.cta': 'Continue',
   'onboarding.card.skip': 'Skip for now',
+  'onboarding.memory.eyebrow': 'How it works',
+  'onboarding.memory.title': 'It remembers, so you don’t have to.',
+  'onboarding.memory.body':
+    'After every catch-up, jot one line — what you talked about, what they’ve got coming up. Next time you reach out, the note is already half-written and it picks up the thread. Built only from what you type here — never from reading your mail.',
+  'onboarding.memory.cta': 'Got it',
   'onboarding.notify.title': 'Never miss the moment',
   'onboarding.notify.body':
     'We send a quiet nudge when there is a real reason to reach out — a birthday, a promise coming due. No spam, ever.',

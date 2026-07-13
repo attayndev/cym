@@ -89,10 +89,49 @@ describe('buildPrompt recentNotes', () => {
   });
 });
 
+describe('buildPrompt memoryLines', () => {
+  test('includes a "what you know" block when memoryLines are provided', () => {
+    const prompt = buildPrompt(
+      baseInput({ memoryLines: ['Daughter is named Maya', 'Open thread: the Austin move'] }),
+    );
+    expect(prompt).toContain('Daughter is named Maya');
+    expect(prompt).toContain('Open thread: the Austin move');
+    expect(prompt).toContain('What you know about them');
+  });
+
+  test('omits the block when memoryLines is absent', () => {
+    const prompt = buildPrompt(baseInput());
+    expect(prompt).not.toContain('What you know about them');
+  });
+
+  test('omits the block when memoryLines is empty', () => {
+    const prompt = buildPrompt(baseInput({ memoryLines: [] }));
+    expect(prompt).not.toContain('What you know about them');
+  });
+
+  test('appears above the recent-threads block', () => {
+    const prompt = buildPrompt(
+      baseInput({
+        memoryLines: ['A durable fact'],
+        recentNotes: ['A recent note'],
+      }),
+    );
+    expect(prompt.indexOf('What you know about them')).toBeLessThan(
+      prompt.indexOf('Recent threads with this person'),
+    );
+  });
+});
+
 describe('templateDraft', () => {
   test('is unaffected by recentNotes (free template stays memory-blind)', () => {
     const withNotes = templateDraft(baseInput({ recentNotes: ['Some prior thread'] }));
     const withoutNotes = templateDraft(baseInput());
     expect(withNotes).toBe(withoutNotes);
+  });
+
+  test('is unaffected by memoryLines (free template stays memory-blind)', () => {
+    const withMemory = templateDraft(baseInput({ memoryLines: ['Daughter is named Maya'] }));
+    const withoutMemory = templateDraft(baseInput());
+    expect(withMemory).toBe(withoutMemory);
   });
 });

@@ -10,6 +10,7 @@ import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { notify } from '@/lib/alert';
 import { addDays, isoDate } from '@/lib/dates';
+import { extractMemory } from '@/lib/memory';
 import { runCardScan } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
 import type { Category, Importance } from '@/lib/types';
@@ -149,6 +150,13 @@ export default function CaptureScreen() {
           : undefined,
       source: params.source === 'qr' ? 'qr' : undefined,
     });
+    if (db?.profile.isPro) {
+      const text = [whereMet, discussed, whyMatters, commitment]
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .join('\n');
+      if (text) extractMemory({ contactId, text, source: 'capture' });
+    }
     if (params.submissionId) void markSubmission(params.submissionId, 'accepted');
     router.dismiss();
     router.push(`/contact/${contactId}`);

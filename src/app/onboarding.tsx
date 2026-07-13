@@ -95,7 +95,7 @@ export default function OnboardingScreen() {
   const enableNotifications = async () => {
     const granted = await requestNotificationPermission();
     setNotificationsEnabled(granted);
-    setStep(3);
+    setStep(4);
   };
 
   return (
@@ -175,24 +175,33 @@ export default function OnboardingScreen() {
 
       {step === 2 && (
         <View style={styles.center}>
+          <Eyebrow>{t('onboarding.memory.eyebrow')}</Eyebrow>
+          <Display style={styles.title}>{t('onboarding.memory.title')}</Display>
+          <Body muted>{t('onboarding.memory.body')}</Body>
+          <Button title={t('onboarding.memory.cta')} onPress={() => setStep(3)} />
+        </View>
+      )}
+
+      {step === 3 && (
+        <View style={styles.center}>
           <Display style={styles.title}>{t('onboarding.notify.title')}</Display>
           <Body muted>{t('onboarding.notify.body')}</Body>
           {Platform.OS === 'web' ? (
-            <Button title={t('onboarding.card.cta')} onPress={() => setStep(3)} />
+            <Button title={t('onboarding.card.cta')} onPress={() => setStep(4)} />
           ) : (
             <>
               <Button title={t('onboarding.notify.enable')} onPress={enableNotifications} />
               <Button
                 title={t('onboarding.notify.later')}
                 variant="ghost"
-                onPress={() => setStep(3)}
+                onPress={() => setStep(4)}
               />
             </>
           )}
         </View>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <View style={styles.center}>
           <Display style={styles.title}>{t('onboarding.start.title')}</Display>
           <Body muted>{t('onboarding.start.body')}</Body>

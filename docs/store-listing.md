@@ -9,7 +9,7 @@ Claims guardrail: everything below exists and ships today.
 - **Name** (30 ch): `Call Your Mom - CYM` *(listing name; revisit if "Call Your Mom" frees up)*
 - **Subtitle** (30 ch): `Never lose touch by accident`
 - **Promotional text** (170 ch):
-  > We've all said "I'll call them next week." Call Your Mom quietly remembers the people who matter — and the moment that makes reaching out easy.
+  > Introducing Relationship Memory: it keeps every thread — the talk, the promise, the moment — so you pick up right where you left off.
 - **Keywords** (100 ch):
   `stay in touch,relationships,keep in touch,birthday,networking,follow up,contacts,reminder,family`
 - **Description**:
@@ -27,7 +27,10 @@ Claims guardrail: everything below exists and ships today.
   IT REMEMBERS
   Where you met, what you talked about, what you promised — captured in ten
   seconds. Point the camera at a business card or a conference badge and the
-  details land in a new contact, ready to check.
+  details land in a new contact, ready to check. With Relationship Memory
+  (Plus), every line you jot becomes memory — the daughter's name, the
+  move, the open thread — waiting under "What you know" the next time you
+  reach out.
 
   IT NOTICES
   Birthdays. Job changes. Long silences. Promises coming due. Connect your
@@ -48,8 +51,10 @@ Claims guardrail: everything below exists and ships today.
   delete your account any time, right in the app.
 
   Free forever: capture without limits, keep 10 relationships warm, 3
-  drafted notes a month. Plus removes the caps and adds connected inboxes,
-  automatic job-change radar, and unlimited drafts — founding price
+  drafted notes a month. Plus adds Relationship Memory — every thread,
+  promise, and moment kept, so every note picks up where you left off —
+  along with connected inboxes, automatic job-change radar, and unlimited
+  drafts. Founding price
   $14.99/month or $119.99/year with a 7-day free trial, locked in for as
   long as you stay. ($29.99/month after launch.)
 

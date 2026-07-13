@@ -39,6 +39,9 @@ export interface DraftInput {
   /** Up to 3 most recent interaction notes for this contact, newest first —
    *  Plus-only memory signal (Phase 0: verbatim notes, no extraction yet). */
   recentNotes?: string[];
+  /** Distilled Relationship Memory (Phase 1) — top facts/events then live
+   *  threads, already ordered by liveMemory + memoryLines. Plus-only. */
+  memoryLines?: string[];
 }
 
 /** Phase 0 memory: what gets persisted onto the interaction at Mark sent.
@@ -112,6 +115,12 @@ export function buildPrompt(input: DraftInput): string {
       : null,
     input.userContext?.trim()
       ? `What I want this note to be about (make this the anchor): ${input.userContext.trim()}`
+      : null,
+    input.memoryLines && input.memoryLines.length > 0
+      ? `What you know about them (distilled from your own past notes — use only what fits):\n${input.memoryLines
+          .slice(0, 6)
+          .map((n) => `- ${n}`)
+          .join('\n')}`
       : null,
     input.recentNotes && input.recentNotes.length > 0
       ? `Recent threads with this person, newest first — weave one in naturally only if it fits:\n${input.recentNotes

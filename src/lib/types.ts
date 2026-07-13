@@ -100,6 +100,20 @@ export interface Contact {
   evaluatedAt?: string;
 }
 
+/** Relationship Memory (Phase 1): per-contact facts/threads/events distilled
+ *  server-side from what the user typed or approved. Server-owned (RLS
+ *  select+delete only) — deliberately outside pullGraph/pushGraph. */
+export interface ContactMemory {
+  id: string;
+  contactId: string;
+  kind: 'fact' | 'thread' | 'event';
+  theme: string;
+  content: string;
+  weight: number;
+  expiresAt?: string;
+  updatedAt: string;
+}
+
 export interface ContextEntry {
   id: string;
   contactId: string;

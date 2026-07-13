@@ -18,6 +18,7 @@ import {
 import { useApp } from '@/state/app-context';
 
 const FEATURES = [
+  { icon: 'heart' as const, title: 'paywall.feature.memory.title', body: 'paywall.feature.memory.body' },
   { icon: 'gift' as const, title: 'paywall.feature.nudges.title', body: 'paywall.feature.nudges.body' },
   { icon: 'edit-3' as const, title: 'paywall.feature.drafts.title', body: 'paywall.feature.drafts.body' },
   { icon: 'pie-chart' as const, title: 'paywall.feature.dashboard.title', body: 'paywall.feature.dashboard.body' },

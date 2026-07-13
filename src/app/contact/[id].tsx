@@ -22,10 +22,11 @@ import { composerNote, draftSubject, generateDraft, toneCycle } from '@/lib/draf
 import { enrichFromHunter, hunterConflicts, hunterPatch } from '@/lib/enrich';
 import { applyCard, fetchCards, parseCardToken } from '@/lib/living-cards';
 import { diag } from '@/lib/log';
+import { dismissMemory, extractMemory, fetchContactMemory, liveMemory, memoryLines } from '@/lib/memory';
 import { addProposals, resolveProposals } from '@/lib/refresh';
 import { loadRefreshState, type UpdateProposal } from '@/lib/store';
 import { contactHealth, lastContactAt } from '@/lib/nudges';
-import type { Channel, Contact, InteractionType, Nudge } from '@/lib/types';
+import type { Channel, Contact, ContactMemory, InteractionType, Nudge } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
 /** A synthetic no-occasion "nudge" so the draft engine can write a
@@ -95,6 +96,9 @@ export default function ContactScreen() {
   // Pending update proposals (from the daily sweep or a manual lookup) —
   // highlighted on this screen so a contact you look up shows its diffs.
   const [proposals, setProposals] = useState<UpdateProposal[]>([]);
+  // Relationship Memory (Plus): per-contact facts/threads fetched on mount.
+  const [memory, setMemory] = useState<ContactMemory[]>([]);
+  const isPro = db?.profile.isPro ?? false;
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +109,20 @@ export default function ContactScreen() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!isPro || !id) {
+      setMemory([]);
+      return;
+    }
+    let cancelled = false;
+    void fetchContactMemory(id).then((rows) => {
+      if (!cancelled) setMemory(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isPro]);
 
   if (!db) return <Screen scroll={false}>{null}</Screen>;
 
@@ -160,6 +178,12 @@ export default function ContactScreen() {
     .filter((n): n is string => Boolean(n))
     .slice(0, 3);
 
+  // Relationship Memory (Plus): live rows (expired threads dropped) for both
+  // the "What you know" display and the composer prompt.
+  const liveMem = liveMemory(memory, now);
+  const memLines = isPro ? memoryLines(liveMem) : [];
+  const memoryRows = liveMem.slice(0, 6);
+
   const composeInput = (ch: ComposeChannel, toneIdx = toneIndex, variantN = variant) => ({
     contact,
     context,
@@ -171,16 +195,26 @@ export default function ContactScreen() {
     tone: tones[toneIdx % tones.length],
     variant: variantN,
     ...(db.profile.isPro && recentNotes.length > 0 ? { recentNotes } : {}),
+    ...(memLines.length > 0 ? { memoryLines: memLines } : {}),
   });
 
   // One tap converts "I should reach out" into a dated promise the engine
   // will make sure you keep — the hero line, as a mechanic.
   const promiseNextWeek = () => {
+    const commitment = t('contact.promiseWeek.commitment', { name: contact.firstName });
     updateContext(contact.id, {
-      commitment: t('contact.promiseWeek.commitment', { name: contact.firstName }),
+      commitment,
       commitmentDueAt: isoDate(addDays(new Date(), 7)),
     });
+    if (db.profile.isPro) {
+      extractMemory({ contactId: contact.id, text: commitment, source: 'commitment' });
+    }
     notify(t('contact.promiseWeek.done', { name: contact.firstName }));
+  };
+
+  const dismissMemoryRow = (memId: string) => {
+    setMemory((prev) => prev.filter((m) => m.id !== memId));
+    void dismissMemory(memId);
   };
 
   const writeDraft = async (ch: ComposeChannel, toneIdx = toneIndex, variantN = 0) => {
@@ -241,6 +275,10 @@ export default function ContactScreen() {
     const note = composerNote(noteContext, draft);
     logInteraction(contact.id, channel === 'email' ? 'email' : 'text', note);
     if (note) diag('composer-note', { contactId: contact.id, len: note.length });
+    if (db.profile.isPro) {
+      const text = [noteContext, draft].filter(Boolean).join('\n');
+      extractMemory({ contactId: contact.id, text, source: 'draft' });
+    }
     closeComposer();
   };
 
@@ -597,6 +635,29 @@ export default function ContactScreen() {
         </Row>
       </View>
 
+      {isPro && memoryRows.length > 0 && (
+        <Card>
+          <Eyebrow>{t('contact.memory.title')}</Eyebrow>
+          {memoryRows.map((m) => (
+            <View key={m.id} style={styles.memoryRow}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.memoryContent} numberOfLines={2}>
+                  {m.content}
+                </Text>
+                {m.kind === 'thread' && m.expiresAt && (
+                  <Text style={styles.memoryMeta}>
+                    {t('contact.memory.until', { date: formatShortDate(m.expiresAt) })}
+                  </Text>
+                )}
+              </View>
+              <Pressable onPress={() => dismissMemoryRow(m.id)} hitSlop={8}>
+                <Feather name="x" size={14} color={colors.inkSoft} />
+              </Pressable>
+            </View>
+          ))}
+        </Card>
+      )}
+
       {threadNotes.length > 0 &&
         (db.profile.isPro ? (
           <Card>
@@ -911,6 +972,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.ink,
+  },
+  memoryRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  memoryContent: {
+    fontFamily: fonts.sans,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.ink,
+  },
+  memoryMeta: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 11.5,
+    color: colors.muted,
   },
   lockedRow: {
     flexDirection: 'row',

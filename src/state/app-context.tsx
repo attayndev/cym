@@ -19,6 +19,7 @@ import { dedupeImports, mergePair } from '@/lib/dedupe';
 import { applyEnrichment, fetchNameHints } from '@/lib/enrich';
 import { diag } from '@/lib/log';
 import { refreshLivingCards } from '@/lib/living-cards';
+import { extractMemory, purgeContactMemory } from '@/lib/memory';
 import { refreshEngine, roleChangeHook } from '@/lib/nudges';
 import { reassignContacts, resolveActivePersonaId } from '@/lib/personas';
 import { emptyDB, sampleEntities } from '@/lib/seed';
@@ -377,6 +378,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!changed) continue;
         const hook = roleChangeHook({ ...next, hooks }, c.id, new Date());
         if (hook) hooks = [...hooks, hook];
+        // Relationship Memory (Plus): a confirmed job change from the
+        // subject's own card is durable life-event signal — worth a memory row.
+        if (current.profile.isPro) {
+          extractMemory({
+            contactId: c.id,
+            text: `Now ${c.role ?? 'in a new role'}${c.company ? ` at ${c.company}` : ''}.`,
+            source: 'card',
+          });
+        }
       }
       if (hooks !== next.hooks) next = refreshEngine({ ...next, hooks }, new Date());
       if (next !== current) {
@@ -691,6 +701,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const dev = links[contactId];
         if (dev) void addArchiveTombstones([dev]);
       });
+      purgeContactMemory(contactId);
       update((current) => ({
         ...current,
         contacts: current.contacts.map((c) =>
