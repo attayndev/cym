@@ -155,7 +155,7 @@ export interface Nudge {
 
 export interface ConnectedAccount {
   id: string;
-  provider: 'gmail' | 'outlook';
+  provider: 'gmail' | 'imap';
   email: string;
   status: 'connected' | 'disconnected' | 'error';
   lastSyncAt?: string;

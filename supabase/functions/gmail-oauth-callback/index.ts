@@ -4,15 +4,21 @@
 // account, then deep-link back into the app.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { isAllowedRedirect, verifyState } from '../_shared/oauth-state.ts';
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
 const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
 const REDIRECT_URI = Deno.env.get('GMAIL_REDIRECT_URL')!;
+const STATE_SECRET = Deno.env.get('OAUTH_STATE_SECRET') || SERVICE_KEY;
+// Where to send the browser when state carries no (or a rejected) redirect.
+const FALLBACK_REDIRECT = 'https://getcym.app/gmail-connected';
 
 function back(redirect: string, status: string): Response {
-  const sep = redirect.includes('?') ? '&' : '?';
-  return Response.redirect(`${redirect}${sep}status=${status}`, 302);
+  const target = isAllowedRedirect(redirect) && redirect ? redirect : FALLBACK_REDIRECT;
+  const sep = target.includes('?') ? '&' : '?';
+  return Response.redirect(`${target}${sep}status=${status}`, 302);
 }
 
 Deno.serve(async (req) => {
@@ -21,15 +27,12 @@ Deno.serve(async (req) => {
   const stateRaw = url.searchParams.get('state');
   const oauthError = url.searchParams.get('error');
 
-  let uid = '';
-  let appRedirect = '';
-  try {
-    const state = JSON.parse(atob(stateRaw ?? ''));
-    uid = state.uid;
-    appRedirect = state.redirect ?? '';
-  } catch {
-    return new Response('bad state', { status: 400 });
-  }
+  // Reject forged/expired state: an unsigned uid here would let an attacker
+  // write their own Gmail tokens under a victim's account.
+  const state = await verifyState(stateRaw ?? '', STATE_SECRET);
+  if (!state) return new Response('bad state', { status: 400 });
+  const uid = state.uid;
+  const appRedirect = state.redirect;
 
   if (oauthError || !code) return back(appRedirect, 'error');
 

@@ -55,3 +55,6 @@ AGENTS.md
 supabase/.temp/
 .metro.log
 scripts/.nudges-bundle.js
+
+# Local snapshots, never shipped
+backups/

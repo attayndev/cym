@@ -51,10 +51,16 @@ export default function PaywallScreen() {
 
   const subscribe = async () => {
     if (!billing || !selectedPkg) {
-      // No store billing on this build/platform (dev, web, old binary):
-      // keep the local flip so the app remains testable end to end.
-      setPro(true);
-      router.back();
+      if (__DEV__) {
+        // No store billing in dev builds (simulator, Expo Go, web): flip the
+        // local flag so the app remains testable end to end.
+        setPro(true);
+        router.back();
+      } else {
+        // Production must never grant Plus without a store transaction —
+        // packages can be missing here when the store is unreachable.
+        notify(t('paywall.storeUnavailable'));
+      }
       return;
     }
     setBusy(true);

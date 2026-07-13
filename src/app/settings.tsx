@@ -120,7 +120,7 @@ export default function SettingsScreen() {
   };
 
   const emailAccounts = db.accounts.filter(
-    (a) => ['gmail', 'outlook', 'imap'].includes(a.provider) && a.status === 'connected',
+    (a) => ['gmail', 'imap'].includes(a.provider) && a.status === 'connected',
   );
 
   const handleConnectGmail = async () => {

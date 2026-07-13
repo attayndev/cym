@@ -81,7 +81,7 @@ export function buildSeedDB(now: Date): DB {
       contact: {
         firstName: 'James',
         lastName: 'Okafor',
-        email: 'jokafor@gmail.com',
+        email: 'james@meridiancap.example',
         company: 'Meridian Capital',
         role: 'Partner',
         city: 'New York',
@@ -229,11 +229,12 @@ export function buildSeedDB(now: Date): DB {
   }
 
   return {
+    // Only the relationship entities below are used (see sampleEntities); this
+    // profile is a neutral placeholder and never written to a real account.
     profile: {
-      name: 'Yan Tsirklin',
+      name: 'Sample',
       role: 'Founder',
       company: 'Call Your Mom',
-      email: 'ytsirklin@gmail.com',
       isPro: false,
       notificationsEnabled: false,
       defaultPersonaId: personaId,

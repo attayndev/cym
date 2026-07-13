@@ -31,21 +31,3 @@ export async function connectGmail(): Promise<ConnectResult> {
   const status = Linking.parse(result.url).queryParams?.status;
   return status === 'connected' ? 'connected' : 'error';
 }
-
-/** Trigger an immediate sync for the signed-in user; returns new interaction count. */
-export async function syncGmailNow(): Promise<number> {
-  const supabase = getSupabase();
-  if (!supabase) return 0;
-  const { data, error } = await supabase.functions.invoke('gmail-sync', { body: {} });
-  if (error) throw error;
-  return (data as { newInteractions?: number } | null)?.newInteractions ?? 0;
-}
-
-/** Disconnect one inbox (pass its email) or every connected inbox (omit). */
-export async function disconnectGmail(email?: string): Promise<void> {
-  const supabase = getSupabase();
-  if (!supabase) return;
-  await supabase.functions.invoke('gmail-sync', {
-    body: email ? { action: 'disconnect', email } : { action: 'disconnect' },
-  });
-}
