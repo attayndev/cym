@@ -375,6 +375,9 @@ export const en = {
     'No context captured. The next time you talk, jot down why this person matters — future-you will thank you.',
   'contact.history': 'History',
   'contact.noHistory': 'No interactions logged yet.',
+  'contact.threads.title': 'Recent threads',
+  'contact.threads.locked':
+    "Plus remembers every thread — what you talked about, what's coming up — so your next note picks up where you left off.",
   'contact.edit': 'Edit',
   'contact.remove': 'Remove from Call Your Mom',
   'contact.remove.confirm': 'Remove {name} from Call Your Mom?',
@@ -446,6 +449,8 @@ export const en = {
   'paywall.restore': 'Restore purchases',
   'paywall.restoreNone': 'No previous purchase found for this account.',
   'paywall.error': "The purchase didn't go through. You have not been charged — try again.",
+  'paywall.storeUnavailable':
+    "Can't reach the store right now. Check your connection and try again in a moment.",
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Welcome to Call Your Mom',

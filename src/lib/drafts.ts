@@ -36,6 +36,22 @@ export interface DraftInput {
    *  present it becomes the note's anchor; when blank the AI works from
    *  captured context alone. */
   userContext?: string;
+  /** Up to 3 most recent interaction notes for this contact, newest first —
+   *  Plus-only memory signal (Phase 0: verbatim notes, no extraction yet). */
+  recentNotes?: string[];
+}
+
+/** Phase 0 memory: what gets persisted onto the interaction at Mark sent.
+ *  The typed anchor is the strongest signal and wins verbatim; otherwise a
+ *  whitespace-collapsed, 200-char head of the sent draft stands in. */
+export function composerNote(
+  anchor: string | undefined,
+  draftText: string | undefined,
+): string | undefined {
+  const trimmedAnchor = anchor?.trim();
+  if (trimmedAnchor) return trimmedAnchor;
+  const collapsed = draftText?.replace(/\s+/g, ' ').trim();
+  return collapsed ? collapsed.slice(0, 200) : undefined;
 }
 
 export interface DraftResult {
@@ -81,7 +97,7 @@ export function draftSubject({ contact, context, nudge }: DraftInput): string {
     : t('draft.subj.checkin.pro');
 }
 
-function buildPrompt(input: DraftInput): string {
+export function buildPrompt(input: DraftInput): string {
   const { contact, context, nudge, channel, profile } = input;
   const language = LOCALES[getLocale()];
   const tone = input.tone ?? toneCycle(contact)[0];
@@ -96,6 +112,12 @@ function buildPrompt(input: DraftInput): string {
       : null,
     input.userContext?.trim()
       ? `What I want this note to be about (make this the anchor): ${input.userContext.trim()}`
+      : null,
+    input.recentNotes && input.recentNotes.length > 0
+      ? `Recent threads with this person, newest first — weave one in naturally only if it fits:\n${input.recentNotes
+          .slice(0, 3)
+          .map((n) => `- ${n.slice(0, 200)}`)
+          .join('\n')}`
       : null,
     `The occasion for reaching out: ${tx(nudge.reason)}`,
     `The move: ${tx(nudge.suggestedAction)}`,
@@ -132,7 +154,10 @@ interface AnthropicResponse {
  */
 export async function generateDraft(input: DraftInput): Promise<DraftResult> {
   const endpoint = process.env.EXPO_PUBLIC_DRAFTS_ENDPOINT;
-  const apiKey = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
+  // Direct API key is a DEV-ONLY convenience — never honored in a production
+  // build, so a leaked EXPO_PUBLIC_ANTHROPIC_API_KEY can't ship a live key to
+  // users. Production always routes through the JWT-authed proxy above.
+  const apiKey = __DEV__ ? process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY : undefined;
   const prompt = buildPrompt(input);
   const system =
     'You ghost-write brief, warm, personal outreach messages. You write only the message, nothing else.';

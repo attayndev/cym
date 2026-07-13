@@ -142,7 +142,7 @@ interface AppState {
   mergeContacts: (keeperId: string, dupeId: string) => void;
   updateContext: (contactId: string, patch: ContextPatch) => void;
   logInteraction: (contactId: string, type: InteractionType, note?: string) => void;
-  markNudgeActed: (nudgeId: string, channel: Channel) => void;
+  markNudgeActed: (nudgeId: string, channel: Channel, note?: string) => void;
   dismissNudge: (nudgeId: string) => void;
   celebrateRoleChange: (contactId: string) => void;
   snoozeNudge: (nudgeId: string, days?: number) => void;
@@ -809,7 +809,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const markNudgeActed = useCallback(
-    (nudgeId: string, channel: Channel) => {
+    (nudgeId: string, channel: Channel, note?: string) => {
       update((current) => {
         const nudge = current.nudges.find((n) => n.id === nudgeId);
         if (!nudge) return current;
@@ -827,6 +827,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               id: id('int'),
               contactId: nudge.contactId,
               type: channel === 'email' ? ('email' as const) : ('text' as const),
+              note,
               occurredAt: new Date().toISOString(),
               source: 'manual' as const,
             },

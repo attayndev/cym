@@ -18,9 +18,10 @@ import { Body, Button, Card, Chip, Display, Eyebrow, Row, Screen } from '@/compo
 import { colors, fonts } from '@/constants/theme';
 import { formatShortDate, relativeTime, useTranslation, type TKey } from '@/i18n';
 import { addDays, isoDate } from '@/lib/dates';
-import { draftSubject, generateDraft, toneCycle } from '@/lib/drafts';
+import { composerNote, draftSubject, generateDraft, toneCycle } from '@/lib/drafts';
 import { enrichFromHunter, hunterConflicts, hunterPatch } from '@/lib/enrich';
 import { applyCard, fetchCards, parseCardToken } from '@/lib/living-cards';
+import { diag } from '@/lib/log';
 import { addProposals, resolveProposals } from '@/lib/refresh';
 import { loadRefreshState, type UpdateProposal } from '@/lib/store';
 import { contactHealth, lastContactAt } from '@/lib/nudges';
@@ -141,11 +142,23 @@ export default function ContactScreen() {
     { label: t('contact.context.whyMatters'), value: context?.whyMatters },
   ].filter((row) => row.value);
 
+  // "Recent threads": the last few notes this person's interactions carry —
+  // Plus-gated display (Phase 0: verbatim notes, no extraction yet).
+  const threadNotes = interactions.filter((i) => i.note?.trim()).slice(0, 3);
+
   const canText = Boolean(contact.phone);
   const canEmail = Boolean(contact.email);
 
   const tones = toneCycle(contact);
   const tone = tones[toneIndex % tones.length];
+
+  // Plus-only memory signal (Phase 0): the last few notes this person's
+  // interactions carry, verbatim, newest first — `interactions` is already
+  // sorted that way above.
+  const recentNotes = interactions
+    .map((i) => i.note?.trim())
+    .filter((n): n is string => Boolean(n))
+    .slice(0, 3);
 
   const composeInput = (ch: ComposeChannel, toneIdx = toneIndex, variantN = variant) => ({
     contact,
@@ -157,6 +170,7 @@ export default function ContactScreen() {
     profile: db.profile,
     tone: tones[toneIdx % tones.length],
     variant: variantN,
+    ...(db.profile.isPro && recentNotes.length > 0 ? { recentNotes } : {}),
   });
 
   // One tap converts "I should reach out" into a dated promise the engine
@@ -224,7 +238,9 @@ export default function ContactScreen() {
 
   const markSent = () => {
     if (!channel) return;
-    logInteraction(contact.id, channel === 'email' ? 'email' : 'text');
+    const note = composerNote(noteContext, draft);
+    logInteraction(contact.id, channel === 'email' ? 'email' : 'text', note);
+    if (note) diag('composer-note', { contactId: contact.id, len: note.length });
     closeComposer();
   };
 
@@ -581,6 +597,28 @@ export default function ContactScreen() {
         </Row>
       </View>
 
+      {threadNotes.length > 0 &&
+        (db.profile.isPro ? (
+          <Card>
+            <Eyebrow>{t('contact.threads.title')}</Eyebrow>
+            {threadNotes.map((i) => (
+              <View key={i.id} style={{ gap: 2 }}>
+                <Text style={styles.ctxLabel}>{relativeTime(i.occurredAt, now)}</Text>
+                <Text style={styles.threadNote} numberOfLines={3}>
+                  {i.note}
+                </Text>
+              </View>
+            ))}
+          </Card>
+        ) : (
+          <Pressable
+            onPress={() => router.push('/paywall')}
+            style={({ pressed }) => [styles.lockedRow, pressed && { opacity: 0.8 }]}>
+            <Feather name="lock" size={13} color={colors.cherryDeep} />
+            <Text style={styles.lockedRowText}>{t('contact.threads.locked')}</Text>
+          </Pressable>
+        ))}
+
       {contextRows.length > 0 || context?.commitment ? (
         <Card>
           <Eyebrow>{t('contact.context.title')}</Eyebrow>
@@ -867,6 +905,28 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: 13.5,
     color: colors.muted,
+  },
+  threadNote: {
+    fontFamily: fonts.sans,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.ink,
+  },
+  lockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    backgroundColor: colors.butter,
+  },
+  lockedRowText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13.5,
+    color: colors.espresso,
   },
   deleteRow: {
     flexDirection: 'row',

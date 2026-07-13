@@ -15,7 +15,8 @@ import {
 import { Body, Button, Eyebrow, Heading, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { tx, useTranslation } from '@/i18n';
-import { draftSubject, generateDraft } from '@/lib/drafts';
+import { composerNote, draftSubject, generateDraft } from '@/lib/drafts';
+import { diag } from '@/lib/log';
 import type { Channel } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -41,6 +42,16 @@ export default function NudgeScreen() {
     if (!db || !nudge || !contact) return;
     let cancelled = false;
     setLoading(true);
+    // Plus-only memory signal (Phase 0): the last few notes this person's
+    // interactions carry, verbatim, newest first.
+    const recentNotes = db.profile.isPro
+      ? db.interactions
+          .filter((i) => i.contactId === contact.id)
+          .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))
+          .map((i) => i.note?.trim())
+          .filter((n): n is string => Boolean(n))
+          .slice(0, 3)
+      : [];
     generateDraft({
       contact,
       context,
@@ -49,6 +60,7 @@ export default function NudgeScreen() {
       profile: db.profile,
       userContext: noteContext,
       variant: regen,
+      ...(recentNotes.length > 0 ? { recentNotes } : {}),
     }).then(
       (result) => {
         if (!cancelled) {
@@ -93,7 +105,9 @@ export default function NudgeScreen() {
   };
 
   const markSent = () => {
-    markNudgeActed(nudge.id, channel);
+    const note = composerNote(noteContext, draft);
+    markNudgeActed(nudge.id, channel, note);
+    if (note) diag('composer-note', { contactId: contact.id, len: note.length });
     router.back();
   };
 

@@ -379,6 +379,9 @@ export const es: Partial<Dict> = {
     'Sin contexto capturado. La próxima vez que hablen, anota por qué importa esta persona — tu yo futuro lo agradecerá.',
   'contact.history': 'Historial',
   'contact.noHistory': 'Aún no hay interacciones registradas.',
+  'contact.threads.title': 'Hilos recientes',
+  'contact.threads.locked':
+    'Plus recuerda cada hilo — de qué hablaron, qué se viene — para que tu próxima nota siga justo donde la dejaste.',
   'contact.edit': 'Editar',
   'contact.remove': 'Quitar de Call Your Mom',
   'contact.remove.confirm': '¿Quitar a {name} de Call Your Mom?',
@@ -450,6 +453,8 @@ export const es: Partial<Dict> = {
   'paywall.restore': 'Restaurar compras',
   'paywall.restoreNone': 'No se encontró ninguna compra previa para esta cuenta.',
   'paywall.error': 'La compra no se completó. No se te cobró — inténtalo de nuevo.',
+  'paywall.storeUnavailable':
+    'No se puede conectar con la tienda en este momento. Revisa tu conexión e inténtalo de nuevo en un momento.',
 
   // Onboarding
   'onboarding.welcome.eyebrow': 'Bienvenido a Call Your Mom',

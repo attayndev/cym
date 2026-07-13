@@ -111,7 +111,21 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
    heavier privacy disclosure (the password grants full mailbox access; headers-only
    becomes our promise rather than a provider-enforced scope). Multi-inbox already
    covers iCloud users' secondary Gmail/work accounts in the meantime.
-9. **CRM integrations (Salesforce, HubSpot, Pipedrive)** — needs discussion + design
+9. **Relationship memory** — DESIGNED July 13, plan at `~/.claude/plans/relationship-memory.md`.
+   Per-contact memory (facts / open threads / life events) built ONLY from user-typed
+   or user-approved text (draft anchors, sent drafts, capture context, commitments,
+   living-card changes) — never email content. Haiku extraction with reinforcement +
+   expiry into a server-owned `contact_memory` table (outside whole-graph sync);
+   injected into draft prompts, nudge context lines, and a "What you know" contact
+   section; Phase 2 mints "ask how it went" hooks. Phase 0 (no AI) persists the
+   currently-ephemeral draft anchor onto interactions. Includes a new onboarding
+   explainer step ("It remembers, so you don't have to"). Ports Cosmiquee's
+   reading-memory/tarot-memory patterns. PLUS-ONLY (Yan, July 13): memory is the
+   headline why-you-pay feature — paywall/site/store-listing copy leads with it,
+   shipping WITH Phase 1 (never before; honesty guardrail). Free users' typed
+   notes persist but stay undistilled; upgrading unlocks memory retroactively.
+   Build after the release-audit checklist.
+10. **CRM integrations (Salesforce, HubSpot, Pipedrive)** — needs discussion + design
    before any build. Two pieces: (a) push CYM contacts into the connected CRM;
    (b) for contacts flagged "in CRM", also push email/text interactions into the
    CRM contact's activity record. Open questions for the design session: which
