@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -171,6 +172,17 @@ export function Chip({
   );
 }
 
+/** Shared quiet loading state for screens waiting on the local DB. */
+export function ScreenLoading() {
+  return (
+    <Screen scroll={false}>
+      <View style={styles.loading} accessibilityRole="progressbar">
+        <ActivityIndicator color={colors.ink} />
+      </View>
+    </Screen>
+  );
+}
+
 export function Row({
   children,
   style,
@@ -302,11 +314,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
   },
   chipSelected: {
     backgroundColor: colors.butter,
+    borderColor: colors.espresso,
   },
   chipText: {
     fontFamily: fonts.sansMedium,
@@ -318,5 +331,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flexWrap: 'wrap',
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

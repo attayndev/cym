@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ContactRow } from '@/components/contact-row';
-import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
-import { colors, fonts, hardShadow, healthColors } from '@/constants/theme';
+import { Body, Card, Display, Eyebrow, Screen, ScreenLoading } from '@/components/ui';
+import { colors, fonts, hardShadow, healthColors, radii } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { buildHealthIndex } from '@/lib/nudges';
 import { healthEligibleContacts } from '@/lib/tier';
@@ -29,7 +29,7 @@ export default function DashboardScreen() {
   // tapping it again returns to the default "bring back" view.
   const [selected, setSelected] = useState<Health | null>(null);
 
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  if (!db) return <ScreenLoading />;
 
   // Health is ungated for the beta (Yan, July 10) — restore the isPro gate
   // when RevenueCat billing goes live.
@@ -91,7 +91,7 @@ export default function DashboardScreen() {
             {t(BUCKET_LABEL[selected])} · {byHealth.get(selected)!.length}
           </Eyebrow>
           {byHealth.get(selected)!.length === 0 ? (
-            <Card>
+            <Card variant="quiet">
               <Body muted>{t('dashboard.bucketEmpty')}</Body>
             </Card>
           ) : (
@@ -116,7 +116,7 @@ export default function DashboardScreen() {
           )}
         </View>
       ) : personaContacts.length === 0 ? (
-        <Card>
+        <Card variant="quiet">
           <Body muted>{t('dashboard.emptyNoContacts')}</Body>
         </Card>
       ) : attention.length > 0 ? (
@@ -135,7 +135,7 @@ export default function DashboardScreen() {
           )}
         </View>
       ) : (
-        <Card>
+        <Card variant="quiet">
           <Body>{t('dashboard.empty')}</Body>
         </Card>
       )}
@@ -157,16 +157,15 @@ const styles = StyleSheet.create({
   bucket: {
     flexGrow: 1,
     flexBasis: '45%',
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: radii.card,
+    padding: 12,
     gap: 2,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    ...hardShadow(3, 'rgba(59,36,28,0.12)'),
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
   },
   bucketCount: {
     fontFamily: fonts.display,
-    fontSize: 34,
+    fontSize: 28,
   },
   bucketLabel: {
     fontFamily: fonts.sansBold,
@@ -175,31 +174,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   bucketSelected: {
-    ...hardShadow(5, 'rgba(59,36,28,0.3)'),
-    transform: [{ translateY: -2 }],
+    borderWidth: 2,
+    borderColor: colors.espresso,
+    ...hardShadow(3, 'rgba(59,36,28,0.25)'),
   },
   section: {
     gap: 10,
-  },
-  gateHeadline: {
-    fontFamily: fonts.displayMedium,
-    fontSize: 21,
-    lineHeight: 28,
-    color: colors.cardText,
-  },
-  gateBtn: {
-    backgroundColor: colors.cherry,
-    borderRadius: 999,
-    paddingVertical: 13,
-    alignItems: 'center',
-    marginTop: 6,
-    borderWidth: 2,
-    borderColor: colors.cream,
-    ...hardShadow(3, 'rgba(255,247,232,0.35)'),
-  },
-  gateBtnText: {
-    fontFamily: fonts.sansBold,
-    fontSize: 14.5,
-    color: colors.cream,
   },
 });

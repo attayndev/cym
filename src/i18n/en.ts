@@ -247,6 +247,7 @@ export const en = {
   'card.save': 'Save card',
   'card.wallet.apple': 'Add to Apple Wallet',
   'card.wallet.google': 'Save to Google Wallet',
+  'card.empty.name': 'Add your name — tap Edit details',
 
   // Personas
   'persona.title': 'Personas',
@@ -349,6 +350,7 @@ export const en = {
   // Contact detail
   'contact.notFound': 'Contact not found.',
   'contact.logTouchpoint': 'Log a touchpoint',
+  'contact.logHint': 'Already talked? Note it — it counts toward warm.',
   'contact.reachOut': 'Reach out',
   'contact.sendText': 'Send a text',
   'contact.sendEmail': 'Send an email',
@@ -393,6 +395,11 @@ export const en = {
   'edit.title': 'Edit contact',
   'edit.context.title': 'The context',
   'edit.save': 'Save changes',
+  'edit.section.who': 'Who they are',
+  'edit.section.reach': 'How to reach them',
+  'edit.section.work': 'Work & dates',
+  'edit.birthday.invalid': 'Use MM-DD, like 03-22 — no year needed',
+  'edit.birthday.hint': 'Month and day only — no year needed',
 
   // Nudge composer
   'compose.notFound': 'Nudge not found.',

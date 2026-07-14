@@ -14,7 +14,7 @@ import {
 import { notify } from '@/lib/alert';
 import { CONTACT_ROW_HEIGHT, ContactRow } from '@/components/contact-row';
 import { ExchangeInbox } from '@/components/exchange-inbox';
-import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
+import { Body, Card, Display, Eyebrow, Screen, ScreenLoading } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { isActiveContact } from '@/lib/classify';
@@ -82,7 +82,7 @@ export default function PeopleScreen() {
       }));
   }, [personaContacts, query]);
 
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  if (!db) return <ScreenLoading />;
 
   const handleSync = async () => {
     setSyncing(true);

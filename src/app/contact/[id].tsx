@@ -14,8 +14,8 @@ import {
 
 import { confirmAction, notify } from '@/lib/alert';
 import { HealthBadge } from '@/components/health-badge';
-import { Body, Button, Card, Chip, Display, Eyebrow, Row, Screen } from '@/components/ui';
-import { colors, fonts } from '@/constants/theme';
+import { Body, Button, Card, Display, Eyebrow, Row, Screen, ScreenLoading } from '@/components/ui';
+import { colors, fonts, radii } from '@/constants/theme';
 import { formatShortDate, relativeTime, useTranslation, type TKey } from '@/i18n';
 import { addDays, isoDate } from '@/lib/dates';
 import { composerNote, draftSubject, generateDraft, toneCycle } from '@/lib/drafts';
@@ -124,7 +124,7 @@ export default function ContactScreen() {
     };
   }, [id, isPro]);
 
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  if (!db) return <ScreenLoading />;
 
   const contact = db.contacts.find((c) => c.id === id);
   if (!contact || contact.status === 'archived') {
@@ -393,11 +393,15 @@ export default function ContactScreen() {
               : t('common.lastTouch', { when: relativeTime(last, now) })}
           </Text>
         </Row>
-        <Row>
-          <Chip label={t(`category.${contact.category}`)} />
-          <Chip label={t('contact.cadenceEvery', { n: contact.cadenceDays })} />
-          {contact.birthday && <Chip label={`🎂 ${contact.birthday}`} />}
-        </Row>
+        <Text style={styles.headerMeta}>
+          {[
+            t(`category.${contact.category}`),
+            t('contact.cadenceEvery', { n: contact.cadenceDays }),
+            contact.birthday && `🎂 ${contact.birthday}`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </Text>
         <Row style={{ marginTop: 2 }}>
           {contact.linkedin && (
             <Pressable
@@ -622,6 +626,9 @@ export default function ContactScreen() {
 
       <View style={{ gap: 8 }}>
         <Eyebrow>{t('contact.logTouchpoint')}</Eyebrow>
+        <Body muted style={{ fontSize: 13, lineHeight: 18 }}>
+          {t('contact.logHint')}
+        </Body>
         <Row>
           {LOG_TYPES.map((item) => (
             <Pressable
@@ -636,7 +643,7 @@ export default function ContactScreen() {
       </View>
 
       {isPro && memoryRows.length > 0 && (
-        <Card>
+        <Card variant="quiet">
           <Eyebrow>{t('contact.memory.title')}</Eyebrow>
           {memoryRows.map((m) => (
             <View key={m.id} style={styles.memoryRow}>
@@ -660,7 +667,7 @@ export default function ContactScreen() {
 
       {threadNotes.length > 0 &&
         (db.profile.isPro ? (
-          <Card>
+          <Card variant="quiet">
             <Eyebrow>{t('contact.threads.title')}</Eyebrow>
             {threadNotes.map((i) => (
               <View key={i.id} style={{ gap: 2 }}>
@@ -681,7 +688,7 @@ export default function ContactScreen() {
         ))}
 
       {contextRows.length > 0 || context?.commitment ? (
-        <Card>
+        <Card variant="quiet">
           <Eyebrow>{t('contact.context.title')}</Eyebrow>
           {contextRows.map((row) => (
             <View key={row.label} style={{ gap: 2 }}>
@@ -704,7 +711,7 @@ export default function ContactScreen() {
           )}
         </Card>
       ) : (
-        <Card>
+        <Card variant="quiet">
           <Eyebrow>{t('contact.context.title')}</Eyebrow>
           <Body muted>{t('contact.context.empty')}</Body>
         </Card>
@@ -743,14 +750,19 @@ const styles = StyleSheet.create({
   header: {
     gap: 6,
   },
+  headerMeta: {
+    fontFamily: fonts.sans,
+    fontSize: 13,
+    color: colors.muted,
+  },
   contextInput: {
     fontFamily: fonts.sans,
     fontSize: 14,
     color: colors.ink,
     backgroundColor: colors.white,
     borderWidth: 1.5,
-    borderColor: colors.line,
-    borderRadius: 12,
+    borderColor: colors.lineMid,
+    borderRadius: radii.control,
     paddingVertical: 9,
     paddingHorizontal: 12,
   },
@@ -763,7 +775,7 @@ const styles = StyleSheet.create({
   updateCard: {
     backgroundColor: colors.butter,
     borderRadius: 18,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
     padding: 16,
     gap: 5,
@@ -799,7 +811,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 15,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
   },
   updateApplyText: {
@@ -837,7 +849,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     backgroundColor: colors.white,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
     borderRadius: 999,
     paddingVertical: 10,
@@ -857,9 +869,9 @@ const styles = StyleSheet.create({
   composer: {
     gap: 10,
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: 14,
     padding: 14,
     marginTop: 4,
   },
@@ -883,14 +895,15 @@ const styles = StyleSheet.create({
   },
   toneChip: {
     borderRadius: 999,
-    borderWidth: 2,
-    borderColor: colors.espresso,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
     backgroundColor: colors.white,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
   toneChipActive: {
     backgroundColor: colors.butter,
+    borderColor: colors.espresso,
   },
   toneChipText: {
     fontFamily: fonts.sansMedium,
@@ -916,11 +929,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 999,
-    paddingVertical: 9,
+    backgroundColor: colors.blush,
+    borderWidth: 0,
+    borderRadius: radii.control,
+    paddingVertical: 8,
     paddingHorizontal: 14,
   },
   logBtnText: {
@@ -940,7 +952,7 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'flex-start',
     backgroundColor: colors.blush,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
     borderRadius: 12,
     padding: 12,
@@ -949,12 +961,11 @@ const styles = StyleSheet.create({
   historyRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.lineSoft,
   },
   historyType: {
     fontFamily: fonts.sansMedium,
@@ -996,7 +1007,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderRadius: 14,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
     backgroundColor: colors.butter,
   },

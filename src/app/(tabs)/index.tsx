@@ -8,7 +8,7 @@ import { MergeReview } from '@/components/merge-review';
 import { UpdatesDeck } from '@/components/updates-deck';
 import { GettingStarted } from '@/components/getting-started';
 import { NudgeCard } from '@/components/nudge-card';
-import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
+import { Body, Card, Display, Eyebrow, Screen, ScreenLoading } from '@/components/ui';
 import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
 import { formatDateline, useTranslation } from '@/i18n';
 import { pendingNudges } from '@/lib/nudges';
@@ -20,7 +20,7 @@ export default function TodayScreen() {
   const router = useRouter();
   const { t } = useTranslation();
 
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  if (!db) return <ScreenLoading />;
   if (!db.onboarded) return <Redirect href="/onboarding" />;
 
   const contactsById = new Map(db.contacts.map((c) => [c.id, c]));

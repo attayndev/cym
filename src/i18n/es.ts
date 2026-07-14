@@ -251,6 +251,7 @@ export const es: Partial<Dict> = {
   'card.save': 'Guardar tarjeta',
   'card.wallet.apple': 'Añadir a Apple Wallet',
   'card.wallet.google': 'Guardar en Google Wallet',
+  'card.empty.name': 'Añade tu nombre — toca Editar datos',
 
   // Personas
   'persona.title': 'Personas',
@@ -353,6 +354,7 @@ export const es: Partial<Dict> = {
   // Contact detail
   'contact.notFound': 'Contacto no encontrado.',
   'contact.logTouchpoint': 'Registrar un contacto',
+  'contact.logHint': '¿Ya hablaron? Anótalo — cuenta para mantener el vínculo.',
   'contact.reachOut': 'Escríbele',
   'contact.sendText': 'Enviar un mensaje',
   'contact.sendEmail': 'Enviar un correo',
@@ -397,6 +399,11 @@ export const es: Partial<Dict> = {
   'edit.title': 'Editar contacto',
   'edit.context.title': 'El contexto',
   'edit.save': 'Guardar cambios',
+  'edit.section.who': 'Quiénes son',
+  'edit.section.reach': 'Cómo contactarles',
+  'edit.section.work': 'Trabajo y fechas',
+  'edit.birthday.invalid': 'Usa MM-DD, como 03-22 — sin año',
+  'edit.birthday.hint': 'Solo mes y día — sin año',
 
   // Nudge composer
   'compose.notFound': 'Recordatorio no encontrado.',

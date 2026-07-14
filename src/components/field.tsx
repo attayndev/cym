@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, fonts } from '@/constants/theme';
+import { colors, fonts, radii } from '@/constants/theme';
 
 export function Field({
   label,
@@ -11,6 +11,8 @@ export function Field({
   autoCapitalize = 'sentences',
   keyboardType = 'default',
   secureTextEntry = false,
+  error,
+  hint,
 }: {
   label: string;
   value: string;
@@ -20,12 +22,14 @@ export function Field({
   autoCapitalize?: 'none' | 'sentences' | 'words';
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   secureTextEntry?: boolean;
+  error?: string;
+  hint?: string;
 }) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, multiline && styles.multiline]}
+        style={[styles.input, multiline && styles.multiline, error && styles.inputError]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -35,6 +39,11 @@ export function Field({
         keyboardType={keyboardType}
       secureTextEntry={secureTextEntry}
       />
+      {error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : hint ? (
+        <Text style={styles.hint}>{hint}</Text>
+      ) : null}
     </View>
   );
 }
@@ -55,14 +64,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: radii.control,
+    paddingVertical: 10,
     paddingHorizontal: 14,
+  },
+  inputError: {
+    borderColor: colors.danger,
   },
   multiline: {
     minHeight: 76,
     textAlignVertical: 'top',
+  },
+  error: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 12,
+    color: colors.danger,
+  },
+  hint: {
+    fontFamily: fonts.sans,
+    fontSize: 12,
+    color: colors.muted,
   },
 });

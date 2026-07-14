@@ -6,10 +6,11 @@ import QRCode from 'react-native-qrcode-svg';
 
 import { Field } from '@/components/field';
 import { PersonaSwitcher } from '@/components/persona-switcher';
-import { Body, Button, Display, Eyebrow, Row, Screen } from '@/components/ui';
+import { Body, Button, Display, Eyebrow, Row, Screen, ScreenLoading } from '@/components/ui';
 import { MARK_SVG } from '@/constants/mark-svg';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { formatPhone } from '@/lib/format';
 import { personaCardFields } from '@/lib/personas';
 import {
   buildShareUrl,
@@ -97,7 +98,7 @@ export default function CardScreen() {
     }
   };
 
-  if (!db) return <Screen scroll={false}>{null}</Screen>;
+  if (!db) return <ScreenLoading />;
 
   const { profile } = db;
   const activePersona = db.personas.find((p) => p.id === activePersonaId);
@@ -139,7 +140,11 @@ export default function CardScreen() {
       <Body muted>{shareUrl ? t('card.share.subtitle') : t('card.subtitle')}</Body>
 
       <View style={styles.card}>
-        <Text style={styles.cardName}>{card.name}</Text>
+        {card.name ? (
+          <Text style={styles.cardName}>{card.name}</Text>
+        ) : (
+          <Text style={styles.cardNameEmpty}>{t('card.empty.name')}</Text>
+        )}
         {(card.role || card.company) && (
           <Text style={styles.cardRole}>
             {[card.role, card.company].filter(Boolean).join(' · ')}
@@ -167,7 +172,7 @@ export default function CardScreen() {
           {shareUrl ? t('card.mode.link') : t('card.mode.vcard')}
         </Text>
         {card.email && <Text style={styles.cardMeta}>{card.email}</Text>}
-        {card.phone && <Text style={styles.cardMeta}>{card.phone}</Text>}
+        {card.phone && <Text style={styles.cardMeta}>{formatPhone(card.phone)}</Text>}
       </View>
 
       {shareUrl && !editing && (
@@ -263,10 +268,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 26,
-    padding: 28,
+    borderRadius: 24,
+    padding: 22,
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     borderWidth: 2,
     borderColor: colors.espresso,
     ...hardShadow(8, colors.cherry),
@@ -275,6 +280,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     fontSize: 28,
     color: colors.cardText,
+    textAlign: 'center',
+  },
+  cardNameEmpty: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 14,
+    color: colors.cardMuted,
+    fontStyle: 'italic',
     textAlign: 'center',
   },
   cardRole: {
@@ -290,7 +302,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.cardMuted,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 6,
   },
   modeHint: {
     fontFamily: fonts.sans,
@@ -301,9 +313,9 @@ const styles = StyleSheet.create({
   },
   qrWrap: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 14,
-    marginVertical: 14,
+    borderRadius: 14,
+    padding: 12,
+    marginVertical: 10,
   },
   cardMeta: {
     fontFamily: fonts.sans,
@@ -320,8 +332,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 999,
-    borderWidth: 2,
-    borderColor: colors.espresso,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
   },
   walletButtonDisabled: {
     opacity: 0.5,
