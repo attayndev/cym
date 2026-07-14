@@ -270,6 +270,9 @@ export const es: Partial<Dict> = {
   'persona.delete': 'Eliminar',
   'persona.deleteConfirm': '¿Eliminar de verdad?',
   'persona.deleteBody': 'Su gente pasa a tu persona predeterminada. Toca de nuevo para confirmar.',
+  'persona.deleteBodyLast':
+    'Es tu única tarjeta — al eliminarla empiezas con una en blanco. Tu gente se queda. Toca de nuevo para confirmar.',
+  'persona.blankName': 'Personal',
   'persona.contactCount': '{n} personas',
   'persona.displayName': 'Nombre en la tarjeta',
 

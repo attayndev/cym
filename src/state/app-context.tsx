@@ -11,6 +11,7 @@ import {
 
 import { AppState as RNAppState } from 'react-native';
 
+import { t } from '@/i18n';
 import { syncDeviceContacts, updateDeviceContacts } from '@/lib/contacts';
 import { id } from '@/lib/ids';
 import { syncScheduledNotifications } from '@/lib/notifications';
@@ -21,7 +22,7 @@ import { diag } from '@/lib/log';
 import { refreshLivingCards } from '@/lib/living-cards';
 import { extractMemory, purgeContactMemory } from '@/lib/memory';
 import { refreshEngine, roleChangeHook } from '@/lib/nudges';
-import { reassignContacts, resolveActivePersonaId } from '@/lib/personas';
+import { removePersona, resolveActivePersonaId } from '@/lib/personas';
 import { emptyDB, sampleEntities } from '@/lib/seed';
 import {
   addArchiveTombstones,
@@ -548,24 +549,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deletePersona = useCallback(
     (personaId: string) => {
+      const blank = { id: id('psn'), name: t('persona.blankName') };
+      let nextActive: string | null = null;
       update((current) => {
-        const persona = current.personas.find((p) => p.id === personaId);
-        // The default persona (and the last one standing) can't be deleted.
-        if (!persona || persona.isDefault || current.personas.length < 2) return current;
-        const fallbackId = current.profile.defaultPersonaId;
+        const result = removePersona(current, personaId, activePersonaIdRef.current, blank);
+        if (!result) return current;
+        nextActive = result.nextActiveId;
         return refreshEngine(
           {
             ...current,
-            personas: current.personas.filter((p) => p.id !== personaId),
-            contacts: reassignContacts(current.contacts, personaId, fallbackId),
+            profile: { ...current.profile, defaultPersonaId: result.defaultPersonaId },
+            personas: result.personas,
+            contacts: result.contacts,
           },
           new Date(),
         );
       });
-      if (activePersonaIdRef.current === personaId) {
-        const fallback = dbRef.current?.profile.defaultPersonaId;
-        if (fallback) setActivePersona(fallback);
-      }
+      if (nextActive) setActivePersona(nextActive);
     },
     [update, setActivePersona],
   );

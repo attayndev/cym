@@ -2,9 +2,10 @@ import {
   contactsForPersona,
   personaCardFields,
   reassignContacts,
+  removePersona,
   resolveActivePersonaId,
 } from '../personas';
-import type { Contact, Persona } from '../types';
+import type { Contact, DB, Persona } from '../types';
 
 const personas: Persona[] = [
   { id: 'psn_a', name: 'Personal', isDefault: true },
@@ -98,5 +99,111 @@ describe('reassignContacts', () => {
     const moved = reassignContacts(list, 'psn_b', 'psn_a');
     expect(moved.every((c) => c.personaId === 'psn_a')).toBe(true);
     expect(moved.find((c) => c.id === 'c1')).toBe(list[0]);
+  });
+});
+
+describe('removePersona', () => {
+  const db = (over: Partial<Pick<DB, 'personas' | 'contacts' | 'profile'>> = {}): Pick<
+    DB,
+    'personas' | 'contacts' | 'profile'
+  > => ({
+    personas: [
+      { id: 'psn_1', name: 'Default', isDefault: true },
+      { id: 'psn_2', name: 'Second', isDefault: false },
+      { id: 'psn_3', name: 'Third', isDefault: false },
+    ],
+    contacts: [contact('c1', 'psn_1'), contact('c2', 'psn_2'), contact('c3', 'psn_3')],
+    profile: {
+      name: 'Owner',
+      isPro: false,
+      notificationsEnabled: true,
+      defaultPersonaId: 'psn_1',
+    },
+    ...over,
+  });
+
+  const blank = { id: 'psn_blank', name: 'Personal' };
+
+  it('deleting a non-default card reassigns its contacts to the default', () => {
+    const result = removePersona(db(), 'psn_2', 'psn_2', blank);
+    expect(result).not.toBeNull();
+    expect(result!.defaultPersonaId).toBe('psn_1');
+    expect(result!.personas.map((p) => p.id)).toEqual(['psn_1', 'psn_3']);
+    expect(result!.personas.find((p) => p.id === 'psn_1')!.isDefault).toBe(true);
+    expect(result!.contacts.find((c) => c.id === 'c2')!.personaId).toBe('psn_1');
+  });
+
+  it('deleting the default promotes the active surviving card', () => {
+    const result = removePersona(db(), 'psn_1', 'psn_3', blank);
+    expect(result).not.toBeNull();
+    expect(result!.defaultPersonaId).toBe('psn_3');
+    expect(result!.personas.find((p) => p.id === 'psn_3')!.isDefault).toBe(true);
+    expect(result!.personas.find((p) => p.id === 'psn_2')!.isDefault).toBe(false);
+    expect(result!.contacts.find((c) => c.id === 'c1')!.personaId).toBe('psn_3');
+    expect(result!.nextActiveId).toBeNull();
+  });
+
+  it('deleting the default active card promotes the first remaining card', () => {
+    const result = removePersona(db(), 'psn_1', 'psn_1', blank);
+    expect(result).not.toBeNull();
+    expect(result!.defaultPersonaId).toBe('psn_2');
+    expect(result!.personas.find((p) => p.id === 'psn_2')!.isDefault).toBe(true);
+    expect(result!.nextActiveId).toBe('psn_2');
+  });
+
+  it('deleting the last card replaces it with a single blank default', () => {
+    const single = db({
+      personas: [{ id: 'psn_1', name: 'Default', isDefault: true }],
+      contacts: [contact('c1', 'psn_1')],
+      profile: {
+        name: 'Owner',
+        isPro: false,
+        notificationsEnabled: true,
+        defaultPersonaId: 'psn_1',
+      },
+    });
+    const result = removePersona(single, 'psn_1', 'psn_1', blank);
+    expect(result).toEqual({
+      personas: [{ id: 'psn_blank', name: 'Personal', isDefault: true }],
+      contacts: [{ ...single.contacts[0], personaId: 'psn_blank' }],
+      defaultPersonaId: 'psn_blank',
+      nextActiveId: 'psn_blank',
+    });
+  });
+
+  it('returns null for an unknown persona id', () => {
+    expect(removePersona(db(), 'psn_gone', 'psn_1', blank)).toBeNull();
+  });
+});
+
+describe('removePersona — stale ids never inherit', () => {
+  test('a stale active id (not in the roster) is never promoted', () => {
+    const personas = [
+      { id: 'p1', name: 'A', isDefault: true },
+      { id: 'p2', name: 'B', isDefault: false },
+    ];
+    const db = {
+      personas,
+      contacts: [],
+      profile: { name: '', isPro: false, notificationsEnabled: false, defaultPersonaId: 'p1' },
+    };
+    const result = removePersona(db, 'p1', 'p_ghost', { id: 'pb', name: 'Personal' });
+    expect(result?.defaultPersonaId).toBe('p2');
+    expect(result?.personas.every((p) => p.id !== 'p_ghost')).toBe(true);
+  });
+
+  test('a stale default id falls back to a surviving card on non-default delete', () => {
+    const personas = [
+      { id: 'p1', name: 'A', isDefault: false },
+      { id: 'p2', name: 'B', isDefault: false },
+    ];
+    const db = {
+      personas,
+      contacts: [{ id: 'c1', personaId: 'p2', firstName: 'X', category: 'other' as const, importance: 1 as const, cadenceDays: 30, source: 'manual' as const, createdAt: '2026-01-01T00:00:00Z' }],
+      profile: { name: '', isPro: false, notificationsEnabled: false, defaultPersonaId: 'p_gone' },
+    };
+    const result = removePersona(db, 'p2', 'p1', { id: 'pb', name: 'Personal' });
+    expect(result?.defaultPersonaId).toBe('p1');
+    expect(result?.contacts[0]?.personaId).toBe('p1');
   });
 });

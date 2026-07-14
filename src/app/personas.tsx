@@ -196,26 +196,28 @@ export default function PersonasScreen() {
                 <Text style={styles.actionText}>{t('persona.setDefault')}</Text>
               </Pressable>
             )}
-            {!p.isDefault &&
-              db.personas.length > 1 &&
-              (confirmDeleteId === p.id ? (
-                <Pressable
-                  onPress={() => {
-                    deletePersona(p.id);
-                    setConfirmDeleteId(null);
-                  }}
-                  style={styles.action}>
-                  <Text style={[styles.actionText, styles.danger]}>
-                    {t('persona.deleteConfirm')}
-                  </Text>
-                </Pressable>
-              ) : (
-                <Pressable onPress={() => setConfirmDeleteId(p.id)} style={styles.action}>
-                  <Text style={[styles.actionText, styles.danger]}>{t('persona.delete')}</Text>
-                </Pressable>
-              ))}
+            {confirmDeleteId === p.id ? (
+              <Pressable
+                onPress={() => {
+                  deletePersona(p.id);
+                  setConfirmDeleteId(null);
+                }}
+                style={styles.action}>
+                <Text style={[styles.actionText, styles.danger]}>
+                  {t('persona.deleteConfirm')}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => setConfirmDeleteId(p.id)} style={styles.action}>
+                <Text style={[styles.actionText, styles.danger]}>{t('persona.delete')}</Text>
+              </Pressable>
+            )}
           </View>
-          {confirmDeleteId === p.id && <Body muted>{t('persona.deleteBody')}</Body>}
+          {confirmDeleteId === p.id && (
+            <Body muted>
+              {db.personas.length > 1 ? t('persona.deleteBody') : t('persona.deleteBodyLast')}
+            </Body>
+          )}
         </Card>
       ))}
 

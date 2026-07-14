@@ -266,6 +266,9 @@ export const en = {
   'persona.delete': 'Delete',
   'persona.deleteConfirm': 'Really delete?',
   'persona.deleteBody': 'Its people move to your default persona. Tap again to confirm.',
+  'persona.deleteBodyLast':
+    'This is your only card — deleting it starts you fresh with a blank one. Your people stay. Tap again to confirm.',
+  'persona.blankName': 'Personal',
   'persona.contactCount': '{n} people',
   'persona.displayName': 'Card name',
 
