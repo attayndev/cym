@@ -285,3 +285,45 @@ describe('role-change hooks', () => {
     expect(roleChangeHook(makeDB([archived]), 'c2', NOW)).toBeNull();
   });
 });
+
+describe('engine health agrees with displayed health (the override-drift rules)', () => {
+  // Regression: the candidate filter used to re-derive health from the ratio
+  // alone, so a long-cadence contact past 180 days of silence displayed
+  // "cold" on Health but never earned a decay nudge from the engine.
+  test('180-day silence earns a decay nudge even when the cadence ratio still reads warm', () => {
+    const c = makeContact({ id: 'longcad', cadenceDays: 365 });
+    const touch: Interaction = {
+      id: 'i_longcad',
+      contactId: 'longcad',
+      type: 'call',
+      occurredAt: addDays(NOW, -200).toISOString(),
+      source: 'manual',
+    };
+    // Displayed health is cold via the silence override, not the ratio.
+    expect(contactHealth(c, [touch], NOW)).toBe('cold');
+    expect(healthOf(decayRatio(c, [touch], NOW))).toBe('warm');
+    const db = refreshEngine(makeDB([c], [], [touch]), NOW);
+    expect(db.nudges.filter((n) => n.kind === 'decay' && n.contactId === 'longcad')).toHaveLength(1);
+  });
+
+  test('reconnect-anniversary hooks respect tracking like the decay engine', () => {
+    const sixMonthsAgo = new Date(Date.UTC(2025, 11, 13, 12)).toISOString(); // NOW minus 6 months
+    const touch = (contactId: string): Interaction => ({
+      id: `i_${contactId}`,
+      contactId,
+      type: 'text',
+      occurredAt: addDays(NOW, -100).toISOString(), // drifting, not 'never'
+      source: 'manual',
+    });
+    const untracked = makeContact({ id: 'u', source: 'import', createdAt: sixMonthsAgo });
+    const tracked = makeContact({
+      id: 't',
+      source: 'import',
+      evaluatedAt: addDays(NOW, -10).toISOString(),
+      createdAt: sixMonthsAgo,
+    });
+    const db = refreshEngine(makeDB([untracked, tracked], [], [touch('u'), touch('t')]), NOW);
+    const anniversaries = db.hooks.filter((h) => h.type === 'reconnect-anniversary');
+    expect(anniversaries.map((h) => h.contactId)).toEqual(['t']);
+  });
+});

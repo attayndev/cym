@@ -66,9 +66,9 @@ export const shadows = {
 export const healthColors = {
   // 'never' = no logged touch, ever (fresh imports, uncontacted captures):
   // deliberately neutral so it reads as "no data", not as a good or bad state.
-  never: { fg: colors.muted, bg: colors.white, label: 'Never touched' },
-  warm: { fg: colors.warm, bg: colors.warmSoft, label: 'Warm' },
-  cooling: { fg: colors.cooling, bg: colors.coolingSoft, label: 'Cooling' },
-  'at-risk': { fg: colors.atRisk, bg: colors.atRiskSoft, label: 'At risk' },
-  cold: { fg: colors.cold, bg: colors.coldSoft, label: 'Cold' },
+  never: { fg: colors.muted, bg: colors.white },
+  warm: { fg: colors.warm, bg: colors.warmSoft },
+  cooling: { fg: colors.cooling, bg: colors.coolingSoft },
+  'at-risk': { fg: colors.atRisk, bg: colors.atRiskSoft },
+  cold: { fg: colors.cold, bg: colors.coldSoft },
 } as const;

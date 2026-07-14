@@ -165,11 +165,14 @@ function computeHooks(db: DB, now: Date): Hook[] {
       }
     }
 
-    // "It's been exactly N months since you met" — every 6 months, only if drifting.
+    // "It's been exactly N months since you met" — every 6 months, only if
+    // drifting. Unlike birthday/commitment hooks (explicit user data), this
+    // one is derived and decay-flavored, so it respects tracking like the
+    // decay engine does.
     const met = new Date(contact.createdAt);
     const monthsSince =
       (now.getFullYear() - met.getFullYear()) * 12 + (now.getMonth() - met.getMonth());
-    if (monthsSince >= 6 && monthsSince % 6 === 0) {
+    if (monthsSince >= 6 && monthsSince % 6 === 0 && isTracked(contact)) {
       const anniversary = new Date(now.getFullYear(), now.getMonth(), met.getDate());
       const health = contactHealth(contact, db.interactions, now);
       if (
@@ -383,6 +386,11 @@ export function refreshEngine(db: DB, now: Date): DB {
   // contacts with at least one logged interaction (imports start with none).
   const touched = new Set(db.interactions.map((i) => i.contactId));
 
+  // The engine must see the same health the Health tab shows — including the
+  // 180-day cold override — so it goes through the shared index, never a
+  // private recomputation of the ratio rule alone.
+  const healthIndex = buildHealthIndex(db.contacts, db.interactions, now);
+
   const candidates = db.contacts
     .filter(
       (c) =>
@@ -390,15 +398,16 @@ export function refreshEngine(db: DB, now: Date): DB {
         // Untracked contacts (undecided imports, businesses) never get
         // "keep warm"/reconnect decay nudges, even on Pro — tracking is an
         // explicit choice, not something the decay engine should nudge you
-        // into. Hook nudges (birthday/commitment/etc.) are unaffected: they
-        // come from explicit user data, not decay.
+        // into. Birthday/commitment hooks are unaffected: they come from
+        // explicit user data, not decay (reconnect-anniversary hooks are
+        // decay-flavored and tracked-gated in computeHooks).
         isTracked(c) &&
         touched.has(c.id) &&
         !activeNudgeContactIds.has(c.id) &&
         !recentlyHandled.has(c.id),
     )
-    .map((c) => ({ contact: c, ratio: decayRatio(c, db.interactions, now) }))
-    .filter(({ ratio }) => healthOf(ratio) === 'at-risk' || healthOf(ratio) === 'cold')
+    .map((c) => ({ contact: c, ...healthIndex.get(c.id)! }))
+    .filter(({ health }) => health === 'at-risk' || health === 'cold')
     .sort((a, b) => b.ratio * b.contact.importance - a.ratio * a.contact.importance)
     .slice(0, Math.max(0, MAX_DECAY_NUDGES - liveDecayCount));
 
