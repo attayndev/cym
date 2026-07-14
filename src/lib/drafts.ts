@@ -140,7 +140,7 @@ export function buildPrompt(input: DraftInput): string {
 
 ${lines.join('\n')}
 
-Write the message in ${language}. Requirements: warm and specific, sounds like a real person, references our shared context naturally, 2-4 sentences for text / 3-5 for email, no placeholder brackets, no exclamation overload. Break it into short paragraphs with a blank line between them — never one solid block (a one-or-two-sentence text can stay a single paragraph). Output the message only.`;
+Write the message in ${language}. Structure it so they have a reason to respond: (1) warm greeting using their first name; (2) an opener that says why I'm reaching out right now and what's in it for them; (3) shared background woven in naturally — where we met, what we discussed, a thread I remember; (4) a closing with ONE specific, easy-to-answer question or concrete suggestion — that's the reason to reply; (5) for email, sign off with my first name; a text needs no signature. Keep it tight: 2-4 sentences for a text, 4-6 for an email. Break it into short paragraphs with a blank line between them — never one solid block (a one-or-two-sentence text can stay a single paragraph). Warm and specific, sounds like a real person, no placeholder brackets, no exclamation overload. Output the message only.`;
 }
 
 interface AnthropicTextBlock {
