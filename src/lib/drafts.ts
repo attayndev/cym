@@ -140,7 +140,7 @@ export function buildPrompt(input: DraftInput): string {
 
 ${lines.join('\n')}
 
-Write the message in ${language}. Requirements: warm and specific, sounds like a real person, references our shared context naturally, 2-4 sentences for text / 3-5 for email, no placeholder brackets, no exclamation overload. Output the message only.`;
+Write the message in ${language}. Requirements: warm and specific, sounds like a real person, references our shared context naturally, 2-4 sentences for text / 3-5 for email, no placeholder brackets, no exclamation overload. Break it into short paragraphs with a blank line between them — never one solid block (a one-or-two-sentence text can stay a single paragraph). Output the message only.`;
 }
 
 interface AnthropicTextBlock {
