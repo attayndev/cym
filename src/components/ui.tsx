@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
+import { colors, fonts, hardShadow, radii, shadows } from '@/constants/theme';
 
 export function Screen({
   children,
@@ -31,8 +31,8 @@ export function Screen({
           <View style={styles.scrollContent}>{children}</View>
         </ScrollView>
       ) : (
-        <View style={styles.scrollOuter}>
-          <View style={styles.scrollContent}>{children}</View>
+        <View style={styles.scrollOuterFixed}>
+          <View style={styles.scrollContentFixed}>{children}</View>
         </View>
       )}
     </SafeAreaView>
@@ -89,13 +89,25 @@ export function Kicker({ children }: { children: ReactNode }) {
 export function Card({
   children,
   dark = false,
+  variant = 'hero',
   style,
 }: {
   children: ReactNode;
   dark?: boolean;
+  variant?: 'hero' | 'quiet';
   style?: StyleProp<ViewStyle>;
 }) {
-  return <View style={[styles.card, dark && styles.cardDark, style]}>{children}</View>;
+  return (
+    <View
+      style={[
+        styles.card,
+        dark && styles.cardDark,
+        variant === 'quiet' && styles.cardQuiet,
+        style,
+      ]}>
+      {children}
+    </View>
+  );
 }
 
 export function Button({
@@ -186,10 +198,24 @@ const styles = StyleSheet.create({
     gap: 16,
     flexGrow: 1,
   },
+  scrollOuterFixed: {
+    alignItems: 'center',
+    flex: 1,
+    minHeight: 0,
+  },
+  scrollContentFixed: {
+    width: '100%',
+    maxWidth: 560,
+    padding: 20,
+    paddingBottom: 12,
+    gap: 16,
+    flex: 1,
+    minHeight: 0,
+  },
   display: {
     fontFamily: fonts.display,
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 30,
+    lineHeight: 36,
     letterSpacing: -0.3,
     color: colors.ink,
   },
@@ -240,6 +266,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderColor: colors.espresso,
     ...hardShadow(6, 'rgba(59,36,28,0.25)'),
+  },
+  cardQuiet: {
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: radii.card,
+    padding: 16,
+    boxShadow: 'none',
   },
   button: {
     backgroundColor: colors.espresso,

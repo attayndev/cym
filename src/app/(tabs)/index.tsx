@@ -37,6 +37,9 @@ export default function TodayScreen() {
   // The keep-warm deck: every live decay nudge (the engine caps them at 10).
   const decayNudges = nudges.filter((n) => n.kind === 'decay');
   const hasContacts = db.contacts.some((c) => c.personaId === activePersonaId);
+  // Exactly one card wears the hero treatment: the first hook if any exist,
+  // else the first decay card. Every other nudge renders standard.
+  const heroNudgeId = (hookNudges[0] ?? decayNudges[0])?.id;
 
   // The remembered fact that makes the nudge feel personal: where you met
   // beats what you discussed beats title/company.
@@ -108,6 +111,7 @@ export default function TodayScreen() {
                     contextLine={contextLineFor(nudge.contactId)}
                     onSnooze={() => snoozeNudge(nudge.id)}
                     onDismiss={() => dismissNudge(nudge.id)}
+                    emphasis={nudge.id === heroNudgeId ? 'hero' : 'standard'}
                   />
                 );
               })}
@@ -127,6 +131,7 @@ export default function TodayScreen() {
                     contextLine={contextLineFor(nudge.contactId)}
                     onSnooze={() => snoozeNudge(nudge.id)}
                     onDismiss={() => dismissNudge(nudge.id)}
+                    emphasis={nudge.id === heroNudgeId ? 'hero' : 'standard'}
                   />
                 );
               })}
@@ -248,7 +253,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: colors.espresso,
     borderRadius: 999,
-    paddingVertical: 15,
+    paddingVertical: 12,
     marginTop: 8,
     borderWidth: 2,
     borderColor: colors.espresso,

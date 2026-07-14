@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, shadows } from '@/constants/theme';
+import { colors, fonts } from '@/constants/theme';
 import { useTranslation, type TKey } from '@/i18n';
 import { isActiveContact } from '@/lib/classify';
 import { loadChecklistPrefs, saveChecklistPrefs, type ChecklistPrefs } from '@/lib/store';
@@ -20,13 +20,13 @@ export function GettingStarted() {
   const { db } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
-  const [prefs, setPrefs] = useState<ChecklistPrefs | null>(null);
+  const [prefs, setPrefs] = useState<ChecklistPrefs | null | undefined>(undefined);
 
   useEffect(() => {
     void loadChecklistPrefs().then(setPrefs);
   }, []);
 
-  if (!db || !prefs || prefs.dismissed) return null;
+  if (!db || prefs === undefined) return null;
 
   const hasImports = db.contacts.some((c) => c.source === 'import');
   const sweepPending = db.contacts.some((c) => c.kind === 'business' && isActiveContact(c));
@@ -73,6 +73,13 @@ export function GettingStarted() {
   ];
 
   const doneCount = items.filter((i) => i.done).length;
+
+  // Returning users who've made real progress default to the collapsed,
+  // one-line header; a brand-new user sees the checklist expanded.
+  const collapsed = prefs ? prefs.collapsed : doneCount >= 3;
+  const dismissed = prefs?.dismissed ?? false;
+
+  if (dismissed) return null;
   if (doneCount === items.length) return null;
 
   const setAndSave = (next: ChecklistPrefs) => {
@@ -83,7 +90,7 @@ export function GettingStarted() {
   return (
     <View style={styles.card}>
       <Pressable
-        onPress={() => setAndSave({ ...prefs, collapsed: !prefs.collapsed })}
+        onPress={() => setAndSave({ collapsed: !collapsed, dismissed })}
         style={styles.headerRow}>
         <Feather name="map" size={15} color={colors.espresso} />
         <Text style={styles.title}>{t('checklist.title')}</Text>
@@ -91,13 +98,13 @@ export function GettingStarted() {
           {t('checklist.progress', { done: doneCount, total: items.length })}
         </Text>
         <Feather
-          name={prefs.collapsed ? 'chevron-down' : 'chevron-up'}
+          name={collapsed ? 'chevron-down' : 'chevron-up'}
           size={18}
           color={colors.espresso}
         />
       </Pressable>
 
-      {!prefs.collapsed && (
+      {!collapsed && (
         <>
           {items.map((item) => (
             <Pressable
@@ -122,7 +129,7 @@ export function GettingStarted() {
             </Pressable>
           ))}
           <Pressable
-            onPress={() => setAndSave({ ...prefs, dismissed: true })}
+            onPress={() => setAndSave({ collapsed, dismissed: true })}
             hitSlop={6}
             style={styles.hide}>
             <Text style={styles.hideText}>{t('checklist.hide')}</Text>
@@ -136,12 +143,12 @@ export function GettingStarted() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 18,
-    padding: 16,
-    gap: 12,
-    ...shadows.nudge,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: 14,
+    padding: 14,
+    gap: 9,
+    boxShadow: 'none',
   },
   headerRow: {
     flexDirection: 'row',
@@ -150,7 +157,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.sansBold,
-    fontSize: 14.5,
+    fontSize: 13.5,
     color: colors.ink,
   },
   progress: {
@@ -164,7 +171,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 7,
   },
   itemText: {
     flex: 1,

@@ -123,7 +123,7 @@ export const es: Partial<Dict> = {
 
   // Mazos diarios (Hoy)
   'deck.keepWarm.title': 'Mantener cerca',
-  'deck.evaluate.title': '¿Vale la pena seguir?',
+  'deck.evaluate.title': 'Decide quién pertenece',
   'deck.evaluate.sub': 'Unas cuantas personas de tu agenda cada día — decide quién pertenece.',
   'deck.signal.emails': '{count} correos · último {when}',
   'deck.signal.imported': 'sin contacto aún · importado {when}',
@@ -164,9 +164,9 @@ export const es: Partial<Dict> = {
   'contact.promiseWeek.done': 'Anotado. Nos aseguraremos de que lo hagas.',
   'nudge.kind.moment': 'El momento',
   'nudge.kind.drifting': 'Distanciándose',
-  'nudge.writeIt': 'Escribir',
+  'nudge.draft': 'Redacta un mensaje',
   'nudge.snooze': 'Posponer',
-  'nudge.notNow': 'Ahora no',
+  'nudge.dismiss': 'Descartar',
 
   // Nudge content
   'nudgec.birthday.headline': 'Es el cumpleaños de {name} 🎂',

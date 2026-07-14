@@ -21,6 +21,8 @@ export const colors = {
   inkSoft: 'rgba(59,36,28,0.9)',
   muted: '#766359',
   line: '#3B241C',
+  lineMid: 'rgba(59,36,28,0.45)',
+  lineSoft: 'rgba(59,36,28,0.16)',
   card: '#3B241C',
   cardText: '#FFF7E8',
   cardMuted: 'rgba(255,247,232,0.8)',
@@ -48,6 +50,9 @@ export const fonts = {
   sansMedium: 'Karla_500Medium',
   sansBold: 'Karla_700Bold',
 } as const;
+
+/** Corner radii by emphasis: hero moments wear the biggest rounds. */
+export const radii = { hero: 20, card: 14, control: 10 } as const;
 
 /** Brand hard offset shadow. RN 0.85's boxShadow style works on iOS,
  *  Android 9+, and web — blur stays 0 by design. */

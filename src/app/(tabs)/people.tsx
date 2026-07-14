@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { notify } from '@/lib/alert';
-import { ContactRow } from '@/components/contact-row';
+import { CONTACT_ROW_HEIGHT, ContactRow } from '@/components/contact-row';
 import { ExchangeInbox } from '@/components/exchange-inbox';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
@@ -28,12 +28,13 @@ import type { Contact } from '@/lib/types';
  * section. Triage lives on the Health tab; this list is for finding people.
  */
 
-// getItemLayout arithmetic: every row is exactly ROW_H inside an ITEM_H
-// wrapper (ROW_H + gap), and headers are exactly HEADER_H. The jump rail
-// depends on these being true — ContactRow pins its height to match.
-const ROW_H = 74;
-const ITEM_H = ROW_H + 10;
-const HEADER_H = 34;
+// getItemLayout arithmetic: every row is exactly ROW_H, and rows now abut —
+// the bottom hairline divider replaces the old inter-row gap. Headers are
+// exactly HEADER_H. The jump rail depends on these being true — ContactRow
+// pins its height to match.
+const ROW_H = CONTACT_ROW_HEIGHT;
+const ITEM_H = ROW_H;
+const HEADER_H = 30;
 
 type LetterSection = { key: string; data: Contact[] };
 
@@ -221,7 +222,12 @@ export default function PeopleScreen() {
             {sections.length > 1 && (
               <View style={styles.rail} pointerEvents="box-none">
                 {sections.map((s, si) => (
-                  <Pressable key={s.key} onPress={() => jumpTo(si)} hitSlop={5}>
+                  <Pressable
+                    key={s.key}
+                    onPress={() => jumpTo(si)}
+                    hitSlop={{ left: 12, right: 12, top: 1, bottom: 1 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Jump to ${s.key}`}>
                     <Text style={styles.railLetter}>{s.key}</Text>
                   </Pressable>
                 ))}
@@ -261,9 +267,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: 10,
     paddingHorizontal: 12,
   },
   search: {
@@ -271,7 +277,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sans,
     fontSize: 15,
     color: colors.ink,
-    paddingVertical: 11,
+    paddingVertical: 9,
   },
   importRow: {
     flexDirection: 'row',
@@ -288,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: colors.butter,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.espresso,
     borderRadius: 12,
     paddingVertical: 10,
@@ -310,22 +316,20 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 32,
-    // Rows carry 3px hard offset shadows; keep them from clipping at the edge.
-    paddingRight: 3,
   },
   itemWrap: {
     height: ITEM_H,
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
   sectionHeader: {
     height: HEADER_H,
     justifyContent: 'flex-end',
-    paddingBottom: 6,
+    paddingBottom: 4,
     backgroundColor: colors.cream,
   },
   sectionLetter: {
     fontFamily: fonts.displayMedium,
-    fontSize: 16,
+    fontSize: 14,
     color: colors.cherryDeep,
   },
   rail: {
@@ -339,5 +343,6 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: colors.cherryDeep,
     paddingVertical: 0.5,
+    minHeight: 13,
   },
 });

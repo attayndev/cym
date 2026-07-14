@@ -62,14 +62,14 @@ export interface ChecklistPrefs {
   dismissed: boolean;
 }
 
-export async function loadChecklistPrefs(): Promise<ChecklistPrefs> {
+export async function loadChecklistPrefs(): Promise<ChecklistPrefs | null> {
   try {
     const raw = await AsyncStorage.getItem(CHECKLIST_KEY);
     if (raw) return JSON.parse(raw) as ChecklistPrefs;
   } catch {
-    // fall through to defaults
+    // fall through to null
   }
-  return { collapsed: false, dismissed: false };
+  return null;
 }
 
 export async function saveChecklistPrefs(prefs: ChecklistPrefs): Promise<void> {

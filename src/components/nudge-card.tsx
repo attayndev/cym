@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
+import { colors, fonts, hardShadow, radii, shadows } from '@/constants/theme';
 import { tx, useTranslation } from '@/i18n';
 import type { Contact, Nudge } from '@/lib/types';
 
@@ -12,6 +12,7 @@ export function NudgeCard({
   contextLine,
   onSnooze,
   onDismiss,
+  emphasis = 'standard',
 }: {
   nudge: Nudge;
   contact: Contact;
@@ -20,12 +21,15 @@ export function NudgeCard({
   contextLine?: string;
   onSnooze: () => void;
   onDismiss: () => void;
+  /** hero = today's single dressed-up card; standard = every other nudge. */
+  emphasis?: 'hero' | 'standard';
 }) {
   const router = useRouter();
   const { t } = useTranslation();
   const isHook = nudge.kind === 'hook';
   // A promise coming due is the product's hero moment — dress it apart.
   const isPromise = nudge.reason.key.startsWith('nudgec.commitment');
+  const isStandard = emphasis === 'standard';
 
   return (
     <View
@@ -33,6 +37,7 @@ export function NudgeCard({
         styles.card,
         isHook ? styles.cardHook : styles.cardQuiet,
         isPromise && styles.cardPromise,
+        isStandard && styles.cardStandard,
       ]}>
       <View style={styles.header}>
         <View
@@ -40,11 +45,14 @@ export function NudgeCard({
             styles.kindBadge,
             !isHook && styles.kindBadgeQuiet,
             isPromise && styles.kindBadgePromise,
+            isStandard && !isPromise && styles.kindBadgeNaked,
           ]}>
           <Feather
             name={isPromise ? 'bookmark' : isHook ? 'gift' : 'wind'}
             size={11}
-            color={isPromise ? colors.cream : isHook ? colors.butter : colors.inkSoft}
+            color={
+              isPromise ? colors.cream : isStandard || !isHook ? colors.inkSoft : colors.butter
+            }
           />
           <Text
             style={[
@@ -59,28 +67,46 @@ export function NudgeCard({
                 : t('nudge.kind.drifting')}
           </Text>
         </View>
+        <Pressable
+          onPress={onDismiss}
+          hitSlop={14}
+          accessibilityRole="button"
+          accessibilityLabel={t('nudge.dismiss')}>
+          <Feather name="x" size={16} color={colors.muted} />
+        </Pressable>
       </View>
-      <Text style={styles.headline}>{tx(nudge.headline)}</Text>
+      <Text style={[styles.headline, isStandard && styles.headlineStandard]}>
+        {tx(nudge.headline)}
+      </Text>
       {contextLine ? (
         <Text style={styles.context} numberOfLines={1}>
           {contextLine}
         </Text>
       ) : null}
-      <Text style={styles.reason}>{tx(nudge.reason)}</Text>
+      <Text style={[styles.reason, isStandard && styles.reasonStandard]}>
+        {tx(nudge.reason)}
+      </Text>
       <View style={styles.actionRow}>
-        <Text style={styles.action}>{tx(nudge.suggestedAction)}</Text>
+        {isStandard ? (
+          <Text style={styles.actionPlain}>→ {tx(nudge.suggestedAction)}</Text>
+        ) : (
+          <Text style={styles.action}>{tx(nudge.suggestedAction)}</Text>
+        )}
       </View>
       <View style={styles.buttons}>
         <Pressable
           onPress={() => router.push(`/nudge/${nudge.id}`)}
-          style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.7 }]}>
-          <Text style={styles.primaryBtnText}>{t('nudge.writeIt')}</Text>
+          style={({ pressed }) => [
+            styles.primaryBtn,
+            isStandard && styles.primaryBtnStandard,
+            pressed && { opacity: 0.7 },
+          ]}>
+          <Text style={[styles.primaryBtnText, isStandard && styles.primaryBtnTextStandard]}>
+            {t('nudge.draft')}
+          </Text>
         </Pressable>
-        <Pressable onPress={onSnooze} hitSlop={8}>
+        <Pressable onPress={onSnooze} hitSlop={12}>
           <Text style={styles.quietBtn}>{t('nudge.snooze')}</Text>
-        </Pressable>
-        <Pressable onPress={onDismiss} hitSlop={8}>
-          <Text style={styles.quietBtn}>{t('nudge.notNow')}</Text>
         </Pressable>
       </View>
     </View>
@@ -107,8 +133,20 @@ const styles = StyleSheet.create({
   cardPromise: {
     backgroundColor: colors.creamDeep,
   },
+  cardStandard: {
+    borderWidth: 1.5,
+    borderColor: colors.lineMid,
+    borderRadius: radii.card,
+    boxShadow: 'none',
+    padding: 14,
+    gap: 6,
+  },
   kindBadgePromise: {
     backgroundColor: colors.cherry,
+  },
+  kindBadgeNaked: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
   },
   context: {
     fontFamily: fonts.sansMedium,
@@ -144,11 +182,19 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     color: colors.ink,
   },
+  headlineStandard: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
   reason: {
     fontFamily: fonts.sans,
     fontSize: 14,
     lineHeight: 20,
     color: colors.inkSoft,
+  },
+  reasonStandard: {
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   actionRow: {
     marginTop: 2,
@@ -156,15 +202,19 @@ const styles = StyleSheet.create({
   },
   action: {
     fontFamily: fonts.sansBold,
-    fontSize: 12.5,
+    fontSize: 13,
     color: colors.espresso,
     backgroundColor: colors.butter,
-    borderWidth: 2,
-    borderColor: colors.espresso,
-    borderRadius: 999,
-    paddingVertical: 5,
+    borderWidth: 0,
+    borderRadius: 10,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     overflow: 'hidden',
+  },
+  actionPlain: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 13,
+    color: colors.espresso,
   },
   buttons: {
     flexDirection: 'row',
@@ -181,10 +231,18 @@ const styles = StyleSheet.create({
     borderColor: colors.espresso,
     ...hardShadow(2),
   },
+  primaryBtnStandard: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    boxShadow: 'none',
+  },
   primaryBtnText: {
     fontFamily: fonts.sansBold,
     fontSize: 13.5,
     color: colors.cream,
+  },
+  primaryBtnTextStandard: {
+    fontSize: 13,
   },
   quietBtn: {
     fontFamily: fonts.sansMedium,
