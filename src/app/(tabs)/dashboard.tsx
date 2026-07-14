@@ -7,14 +7,14 @@ import { ContactRow } from '@/components/contact-row';
 import { Body, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts, hardShadow, healthColors } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
-import { isActiveContact } from '@/lib/classify';
 import { buildHealthIndex } from '@/lib/nudges';
+import { healthEligibleContacts } from '@/lib/tier';
 import type { Health } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
-const BUCKETS: Health[] = ['warm', 'cooling', 'at-risk', 'cold', 'new'];
+const BUCKETS: Health[] = ['warm', 'cooling', 'at-risk', 'cold', 'never'];
 const BUCKET_LABEL = {
-  new: 'health.new',
+  never: 'health.never',
   warm: 'health.warm',
   cooling: 'health.cooling',
   'at-risk': 'health.atRisk',
@@ -36,8 +36,10 @@ export default function DashboardScreen() {
 
   const now = new Date();
   // One relationship graph: personas are cards you present, not partitions
-  // of who you know. Health always sees everyone.
-  const personaContacts = db.contacts.filter(isActiveContact);
+  // of who you know. Health only counts tracked relationships — untracked
+  // imports/businesses aren't being managed yet, so they leave the Health
+  // counts entirely (eligibility lives in tier.ts, not decided here).
+  const personaContacts = healthEligibleContacts(db);
   const index = buildHealthIndex(personaContacts, db.interactions, now);
   const byHealth = new Map<Health, typeof db.contacts>(BUCKETS.map((b) => [b, []]));
   for (const contact of personaContacts) {

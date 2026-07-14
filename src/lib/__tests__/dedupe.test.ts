@@ -1,4 +1,5 @@
 import { dedupeImports, findMergeCandidates, mergePair } from '@/lib/dedupe';
+import { contactHealth, lastTouchAt } from '@/lib/nudges';
 import type { Contact, DB, Interaction } from '@/lib/types';
 
 const contact = (over: Partial<Contact>): Contact => ({
@@ -131,5 +132,40 @@ describe('dedupeImports', () => {
       contact({ id: 'g2', firstName: 'Giora', lastName: undefined, phone: '+1 555 111 2222' }),
     ]);
     expect(dedupeImports(d).contacts).toHaveLength(1);
+  });
+});
+
+describe('mergePair — health/interactions resolve to the keeper', () => {
+  test('a real touch logged against the dupe resolves under the keeper id, and keeper health reflects it', () => {
+    const NOW = new Date('2026-07-13T12:00:00Z');
+    const ints: Interaction[] = [
+      {
+        id: 'touch1',
+        contactId: 'dupe',
+        type: 'call',
+        occurredAt: '2026-07-10T00:00:00.000Z', // 3 days before NOW
+        source: 'manual',
+      },
+    ];
+    const d = db(
+      [
+        contact({ id: 'keeper', firstName: 'Robin', lastName: 'Voss', cadenceDays: 30 }),
+        contact({ id: 'dupe', firstName: 'Robin', lastName: 'Voss', source: 'manual', cadenceDays: 30 }),
+      ],
+      ints,
+    );
+    // Before the merge, the keeper has never been touched.
+    const keeperBefore = d.contacts.find((c) => c.id === 'keeper')!;
+    expect(contactHealth(keeperBefore, d.interactions, NOW)).toBe('never');
+
+    const merged = mergePair(d, 'keeper', 'dupe');
+    expect(merged.contacts).toHaveLength(1);
+    expect(merged.contacts[0].id).toBe('keeper');
+    // The interaction now resolves to the keeper id, not the dupe's.
+    expect(merged.interactions).toHaveLength(1);
+    expect(merged.interactions[0].contactId).toBe('keeper');
+    expect(lastTouchAt(merged.contacts[0], merged.interactions)).toBe(ints[0].occurredAt);
+    // And the keeper's health reflects the absorbed touch instead of 'never'.
+    expect(contactHealth(merged.contacts[0], merged.interactions, NOW)).toBe('warm');
   });
 });

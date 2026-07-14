@@ -21,6 +21,12 @@ export function trackedContacts(db: DB): Contact[] {
   return db.contacts.filter(isTracked);
 }
 
+/** The single eligibility source for the Health screen: presentation must
+ *  not decide who counts, so it just asks for the tracked set. */
+export function healthEligibleContacts(db: DB): Contact[] {
+  return trackedContacts(db);
+}
+
 /** Whether a free user may track one more (Plus is always yes). */
 export function canTrackMore(db: DB): boolean {
   if (db.profile.isPro) return true;

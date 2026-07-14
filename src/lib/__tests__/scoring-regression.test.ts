@@ -3,7 +3,7 @@ import {
   buildHealthIndex,
   contactHealth,
   decayRatio,
-  lastContactAt,
+  lastTouchAt,
 } from '@/lib/nudges';
 import { observedGapDays, suggestedCadence } from '@/lib/rhythm';
 import type { Contact, Interaction } from '@/lib/types';
@@ -68,29 +68,31 @@ describe('rhythm.observedGapDays — same-day dedupe', () => {
 });
 
 describe('backdated interactions do not resurrect a stale contact', () => {
-  test('lastContactAt uses the max occurredAt — a backdated-only touch on a cold contact stays cold', () => {
+  test('lastTouchAt uses the max occurredAt — a backdated-only touch on a cold contact stays cold', () => {
     const c = makeContact({ id: 'c1', cadenceDays: 30, createdAt: addDays(NOW, -400).toISOString() });
     const staleTouch = touch('stale', 'c1', 200, { source: 'email-sync', type: 'email' });
     expect(contactHealth(c, [staleTouch], NOW)).toBe('cold');
 
     // Now log an interaction with an occurredAt further in the past than the
-    // existing touch — it must not move lastContactAt backwards or forwards.
+    // existing touch — it must not move lastTouchAt backwards or forwards.
     const backdated = touch('backdated', 'c1', 300, { source: 'manual' });
     const withBackdated = [staleTouch, backdated];
-    expect(lastContactAt(c, withBackdated)).toBe(staleTouch.occurredAt);
+    expect(lastTouchAt(c, withBackdated)).toBe(staleTouch.occurredAt);
     expect(contactHealth(c, withBackdated, NOW)).toBe('cold');
   });
 });
 
 describe('buildHealthIndex parity with per-contact contactHealth/decayRatio', () => {
-  test('agrees across contacts spanning new, warm, cooling, at-risk, and cold', () => {
-    const untouchedNew = makeContact({ id: 'new', source: 'manual', createdAt: addDays(NOW, -3).toISOString() });
+  test('agrees across contacts spanning never, warm, cooling, at-risk, and cold', () => {
+    // Zero interactions is 'never' unconditionally (Phase 4) — even a decided
+    // (manual) contact created recently, which used to read 'new'.
+    const neverTouched = makeContact({ id: 'never', source: 'manual', createdAt: addDays(NOW, -3).toISOString() });
     const warm = makeContact({ id: 'warm', cadenceDays: 30 });
     const cooling = makeContact({ id: 'cooling', cadenceDays: 30 });
     const atRisk = makeContact({ id: 'at-risk', cadenceDays: 30 });
     const cold = makeContact({ id: 'cold', cadenceDays: 30 });
 
-    const contacts = [untouchedNew, warm, cooling, atRisk, cold];
+    const contacts = [neverTouched, warm, cooling, atRisk, cold];
     const interactions: Interaction[] = [
       touch('i_warm', 'warm', 5),
       touch('i_cooling', 'cooling', 40),
@@ -104,7 +106,7 @@ describe('buildHealthIndex parity with per-contact contactHealth/decayRatio', ()
       expect(index.get(c.id)!.ratio).toBeCloseTo(decayRatio(c, interactions, NOW), 5);
     }
     // sanity: the fixture actually spans every bucket, so parity is meaningful
-    expect(index.get('new')!.health).toBe('new');
+    expect(index.get('never')!.health).toBe('never');
     expect(index.get('warm')!.health).toBe('warm');
     expect(index.get('cooling')!.health).toBe('cooling');
     expect(index.get('at-risk')!.health).toBe('at-risk');

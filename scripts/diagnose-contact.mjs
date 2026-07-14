@@ -49,12 +49,12 @@ for (const c of contacts) {
   const appInts = (ints ?? []).map((i) => ({ id: i.id, contactId: i.contact_id,
     type: i.type, occurredAt: i.occurred_at, source: i.source }));
   const now = new Date();
-  const last = nudges.lastContactAt(contact, appInts);
+  const last = nudges.lastTouchAt(contact, appInts);
   const ratio = nudges.decayRatio(contact, appInts, now);
   const health = nudges.contactHealth(contact, appInts, now);
-  const days = Math.floor((now - new Date(last)) / 86400000);
+  const days = last ? Math.floor((now - new Date(last)) / 86400000) : null;
   console.log(`HEALTH: ${health.toUpperCase()}`);
-  console.log(`  reason: last meaningful interaction ${last} (${days}d ago); cadence ${c.cadence_days}d; ratio ${ratio.toFixed(2)} (warm≤1.25, cooling≤2, at-risk≤3.5, cold>3.5)`);
+  console.log(`  reason: last touch ${last ?? "NONE (never touched)"} ${days === null ? "" : `(${days}d ago)`}; cadence ${c.cadence_days}d; ratio ${ratio.toFixed(2)} (warm≤1.25, cooling≤2, at-risk≤3.5, cold>3.5)`);
   console.log(`  tz note: occurred_at stored UTC; day math is ms-elapsed based (tz-safe)`);
   console.log(`  writeback: enrichment lives in-app only; device book only via explicit "Update phone contacts"`);
 }

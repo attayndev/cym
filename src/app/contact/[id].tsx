@@ -25,7 +25,7 @@ import { diag } from '@/lib/log';
 import { dismissMemory, extractMemory, fetchContactMemory, liveMemory, memoryLines } from '@/lib/memory';
 import { addProposals, resolveProposals } from '@/lib/refresh';
 import { loadRefreshState, type UpdateProposal } from '@/lib/store';
-import { contactHealth, lastContactAt } from '@/lib/nudges';
+import { contactHealth, lastTouchAt } from '@/lib/nudges';
 import type { Channel, Contact, ContactMemory, InteractionType, Nudge } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -140,7 +140,7 @@ export default function ContactScreen() {
   const interactions = db.interactions
     .filter((i) => i.contactId === contact.id)
     .sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1));
-  const last = lastContactAt(contact, db.interactions);
+  const last = lastTouchAt(contact, db.interactions);
   const health = contactHealth(contact, db.interactions, now);
 
   const activeProposals = proposals.filter(
@@ -388,7 +388,7 @@ export default function ContactScreen() {
         <Row style={{ marginTop: 4 }}>
           <HealthBadge health={health} />
           <Text style={styles.meta}>
-            {health === 'new'
+            {last === null
               ? t('common.noTouchYet')
               : t('common.lastTouch', { when: relativeTime(last, now) })}
           </Text>

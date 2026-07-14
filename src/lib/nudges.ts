@@ -1,6 +1,7 @@
 import { isActiveContact } from '@/lib/classify';
 import { daysBetween, isoDate, nextOccurrence } from '@/lib/dates';
 import { id } from '@/lib/ids';
+import { isTracked } from '@/lib/tier';
 import type {
   LocalizedText,
   Contact,
@@ -19,26 +20,30 @@ const HOOK_NUDGE_WINDOW_PAST_DAYS = 14;
 // The keep-warm deck: up to 10 live decay nudges (was 3 pre-deck).
 const MAX_DECAY_NUDGES = 10;
 const DECAY_COOLDOWN_DAYS = 14;
-// Six months of silence is cold no matter how relaxed the cadence — and an
-// undecided import with no history has, by definition, been silent at least
-// that long (importing is not meeting).
+// Six months of silence is cold no matter how relaxed the cadence. Note: the
+// July-10 "importing is not meeting" rule — treating an unevaluated import
+// with zero history as cold outright — is repealed as of Phase 4. Never
+// touched is now its own product status ('never'), not a flavor of cold.
 const COLD_SILENCE_DAYS = 180;
 
-export function lastContactAt(
+/**
+ * The single source of truth for "has this contact ever been touched, and
+ * when." Real touches only — max occurredAt over that contact's own
+ * interactions. Returns null when there are none; there is deliberately no
+ * createdAt fallback anywhere (that conflated "added" with "touched", the
+ * root cause of Phase 3's contradictory strings).
+ */
+export function lastTouchAt(
   contact: Contact,
   interactions: Interaction[],
-): string {
-  // Real touches only: when any interaction exists, createdAt must not mask
-  // an old history (a contact added yesterday with 6-month-old emails is
-  // at-risk, not warm). createdAt remains the fallback for zero-history
-  // contacts, which the engine already treats as 'new'.
-  let latest = '';
+): string | null {
+  let latest: string | null = null;
   for (const i of interactions) {
-    if (i.contactId === contact.id && i.occurredAt > latest) {
+    if (i.contactId === contact.id && (latest === null || i.occurredAt > latest)) {
       latest = i.occurredAt;
     }
   }
-  return latest || contact.createdAt;
+  return latest;
 }
 
 export function decayRatio(
@@ -46,7 +51,11 @@ export function decayRatio(
   interactions: Interaction[],
   now: Date,
 ): number {
-  const days = Math.max(0, daysBetween(new Date(lastContactAt(contact, interactions)), now));
+  const touchedAt = lastTouchAt(contact, interactions);
+  // The engine only consults ratio for touched contacts; untouched ones
+  // aren't decay candidates (see refreshEngine), so 0 is a safe non-value.
+  if (touchedAt === null) return 0;
+  const days = Math.max(0, daysBetween(new Date(touchedAt), now));
   return days / Math.max(1, contact.cadenceDays);
 }
 
@@ -57,13 +66,22 @@ export function healthOf(ratio: number): Health {
   return 'cold';
 }
 
-function untouchedHealth(contact: Contact, now: Date): Health {
-  // Undecided imports with no history: you never reached out inside the
-  // email lookback, so the silence is already six months or more — cold.
-  if (contact.source === 'import' && !contact.evaluatedAt) return 'cold';
-  // Decided people (captured or tracked) get the meeting itself as the
-  // starting touch; they turn cold when even that is six months stale.
-  return daysBetween(new Date(contact.createdAt), now) >= COLD_SILENCE_DAYS ? 'cold' : 'new';
+/**
+ * One core, two thin wrappers (contactHealth, buildHealthIndex) — so the
+ * per-contact and batch calculations can never diverge again. Null touch →
+ * 'never' unconditionally, regardless of source/import/evaluatedAt/createdAt
+ * age. Otherwise: >=180 days silent is cold no matter the cadence; else the
+ * existing ratio buckets (healthOf) apply unchanged.
+ */
+function healthFromTouch(
+  touchedAt: string | null,
+  cadenceDays: number,
+  now: Date,
+): { health: Health; ratio: number } {
+  if (touchedAt === null) return { health: 'never', ratio: 0 };
+  const days = Math.max(0, daysBetween(new Date(touchedAt), now));
+  const ratio = days / Math.max(1, cadenceDays);
+  return { health: days >= COLD_SILENCE_DAYS ? 'cold' : healthOf(ratio), ratio };
 }
 
 export function contactHealth(
@@ -71,12 +89,7 @@ export function contactHealth(
   interactions: Interaction[],
   now: Date,
 ): Health {
-  if (!interactions.some((i) => i.contactId === contact.id)) {
-    return untouchedHealth(contact, now);
-  }
-  const days = Math.max(0, daysBetween(new Date(lastContactAt(contact, interactions)), now));
-  if (days >= COLD_SILENCE_DAYS) return 'cold';
-  return healthOf(decayRatio(contact, interactions, now));
+  return healthFromTouch(lastTouchAt(contact, interactions), contact.cadenceDays, now).health;
 }
 
 /**
@@ -96,15 +109,7 @@ export function buildHealthIndex(
   }
   const index = new Map<string, { health: Health; ratio: number }>();
   for (const c of contacts) {
-    const touchedAt = latest.get(c.id);
-    const days = Math.max(0, daysBetween(new Date(touchedAt ?? c.createdAt), now));
-    const ratio = days / Math.max(1, c.cadenceDays);
-    const health = touchedAt
-      ? days >= COLD_SILENCE_DAYS
-        ? 'cold'
-        : healthOf(ratio)
-      : untouchedHealth(c, now);
-    index.set(c.id, { health, ratio });
+    index.set(c.id, healthFromTouch(latest.get(c.id) ?? null, c.cadenceDays, now));
   }
   return index;
 }
@@ -170,7 +175,7 @@ function computeHooks(db: DB, now: Date): Hook[] {
       if (
         Math.abs(daysBetween(anniversary, now)) <= ANNIVERSARY_WINDOW_DAYS &&
         health !== 'warm' &&
-        health !== 'new'
+        health !== 'never'
       ) {
         push({
           contactId: contact.id,
@@ -285,7 +290,10 @@ function decayNudgeContent(
   now: Date,
 ): Pick<Nudge, 'headline' | 'reason' | 'suggestedAction'> {
   const name = contact.firstName;
-  const days = daysBetween(new Date(lastContactAt(contact, interactions)), now);
+  // Only called for contacts with a logged touch (refreshEngine pre-filters
+  // decay candidates to `touched`), so lastTouchAt is never null here.
+  const touchedAt = lastTouchAt(contact, interactions)!;
+  const days = daysBetween(new Date(touchedAt), now);
   const actionKey =
     contact.category === 'family'
       ? 'nudgec.decay.action.family'
@@ -379,6 +387,12 @@ export function refreshEngine(db: DB, now: Date): DB {
     .filter(
       (c) =>
         isActiveContact(c) &&
+        // Untracked contacts (undecided imports, businesses) never get
+        // "keep warm"/reconnect decay nudges, even on Pro — tracking is an
+        // explicit choice, not something the decay engine should nudge you
+        // into. Hook nudges (birthday/commitment/etc.) are unaffected: they
+        // come from explicit user data, not decay.
+        isTracked(c) &&
         touched.has(c.id) &&
         !activeNudgeContactIds.has(c.id) &&
         !recentlyHandled.has(c.id),

@@ -9,7 +9,7 @@ export const es: Partial<Dict> = {
   'tab.settings': 'Ajustes',
 
   // Health labels
-  'health.new': 'Nueva',
+  'health.never': 'Sin contacto aún',
   'health.warm': 'Cercana',
   'health.cooling': 'Enfriándose',
   'health.atRisk': 'Quedando en silencio',

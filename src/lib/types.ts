@@ -26,7 +26,7 @@ export type NudgeState = 'pending' | 'acted' | 'dismissed' | 'snoozed';
 
 export type Channel = 'email' | 'text';
 
-export type Health = 'new' | 'warm' | 'cooling' | 'at-risk' | 'cold';
+export type Health = 'never' | 'warm' | 'cooling' | 'at-risk' | 'cold';
 
 export interface UserProfile {
   name: string;

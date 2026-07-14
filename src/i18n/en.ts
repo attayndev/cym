@@ -7,7 +7,7 @@ export const en = {
   'tab.settings': 'Settings',
 
   // Health labels
-  'health.new': 'New',
+  'health.never': 'Never touched',
   'health.warm': 'Warm',
   'health.cooling': 'Cooling',
   'health.atRisk': 'Going quiet',

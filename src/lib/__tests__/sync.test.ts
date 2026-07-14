@@ -228,6 +228,22 @@ describe('mergeGraphs — interaction preservation (the data-loss bug)', () => {
   });
 });
 
+describe('mergeGraphs — relationship-status inputs survive a merge (Phase 4 safety)', () => {
+  test('a manual interaction and its contact cadence_days both survive, from either side', () => {
+    const local = baseDB({
+      contacts: [contact({ id: 'c1', cadenceDays: 45, updatedAt: T2 })],
+      interactions: [interaction('int_manual_touch')],
+    });
+    const remote = baseRemote({ contacts: [contact({ id: 'c1', cadenceDays: 90, updatedAt: T1 })] });
+    const merged = mergeGraphs(local, remote);
+    expect(merged.interactions.map((i) => i.id)).toContain('int_manual_touch');
+    // Local is newer here, so local's cadence wins — the point is that
+    // cadenceDays is carried through the merge like any other contact field,
+    // not dropped or reset to an import default.
+    expect(merged.contacts.find((c) => c.id === 'c1')!.cadenceDays).toBe(45);
+  });
+});
+
 describe('mergeGraphs — idempotency', () => {
   test('merging an already-merged graph against the same remote is a no-op', () => {
     const local = baseDB({

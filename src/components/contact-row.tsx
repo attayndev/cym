@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { HealthBadge } from '@/components/health-badge';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { relativeTime, t } from '@/i18n';
-import { contactHealth, lastContactAt } from '@/lib/nudges';
+import { contactHealth, lastTouchAt } from '@/lib/nudges';
 import type { Contact, Health, Interaction } from '@/lib/types';
 
 // Site avatars: solid brand circles with contrasting initials, picked
@@ -35,8 +35,8 @@ export function ContactRow({
   const router = useRouter();
   const now = new Date();
   const health = healthProp ?? contactHealth(contact, interactions, now);
-  const touched = interactions.some((i) => i.contactId === contact.id);
-  const last = lastContactAt(contact, interactions);
+  const last = lastTouchAt(contact, interactions);
+  const touched = last !== null;
   const subtitle = [contact.role, contact.company].filter(Boolean).join(' · ');
   const palette = avatarPalette(contact.id);
 
@@ -56,7 +56,7 @@ export function ContactRow({
         </Text>
         <Text style={styles.meta} numberOfLines={1}>
           {subtitle ? `${subtitle} · ` : ''}
-          {touched ? t('common.lastTouch', { when: relativeTime(last, now) }) : t('common.noTouchYet')}
+          {touched && last ? t('common.lastTouch', { when: relativeTime(last, now) }) : t('common.noTouchYet')}
         </Text>
       </View>
       <HealthBadge health={health} />
