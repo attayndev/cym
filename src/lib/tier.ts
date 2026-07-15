@@ -12,6 +12,12 @@ import type { Contact, DB } from '@/lib/types';
 export const FREE_TRACK_LIMIT = 10;
 export const FREE_DRAFTS_PER_MONTH = 3;
 
+// Client-side visibility only — a cosmetic convenience so the link doesn't
+// show for obviously-non-admin accounts. The real gate is server-side: the
+// admin-stats edge function checks its own ADMIN_EMAILS allowlist and
+// returns 403 for anyone not on it, regardless of what the client shows.
+export const ADMIN_EMAILS = ['yan@attayn.com', 'ytsirklin@gmail.com', 'yan@admedia.com'];
+
 export function isTracked(c: Contact): boolean {
   if (!isActiveContact(c) || c.kind === 'business') return false;
   return Boolean(c.evaluatedAt) || c.source !== 'import';

@@ -516,6 +516,7 @@ export const es: Partial<Dict> = {
   'settings.account.delete.error': 'No se pudo eliminar tu cuenta. Revisa tu conexión e inténtalo de nuevo.',
   'settings.account.deleting': 'Eliminando…',
   'settings.personas': 'Gestionar personas',
+  'settings.admin': 'Administración',
   'settings.section.profile': 'Tu perfil',
   'settings.section.notifications': 'Notificaciones',
   'settings.section.subscription': 'Suscripción',
@@ -581,4 +582,16 @@ export const es: Partial<Dict> = {
   'gmail.error': 'No se pudo conectar Gmail. Inténtalo de nuevo.',
   'gmail.needsAccount': 'Inicia sesión primero para conectar Gmail.',
   'gmail.mobileOnly': 'La sincronización de correo funciona en la app móvil.',
+
+  // Admin
+  'admin.title': 'Pulso beta',
+  'admin.totals': '{users} usuarios · {contacts} contactos · {interactions} toques',
+  'admin.lastSignIn': 'Último inicio de sesión: {when}',
+  'admin.never': 'nunca',
+  'admin.error': 'No se pudo cargar el pulso beta.',
+  'admin.retry': 'Reintentar',
+  'admin.contacts': '{n} contactos',
+  'admin.touches': '{n} toques',
+  'admin.plus': 'Plus',
+  'admin.inboxes': '{n} bandejas',
 };

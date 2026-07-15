@@ -14,6 +14,7 @@ import { connectImap, disconnectEmail, IMAP_PRESETS, syncAllEmail } from '@/lib/
 import { connectGmail } from '@/lib/gmail';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { getSupabase } from '@/lib/supabase';
+import { ADMIN_EMAILS } from '@/lib/tier';
 import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
 
@@ -220,6 +221,11 @@ export default function SettingsScreen() {
           <Pressable onPress={() => router.push('/personas')} hitSlop={6}>
             <Text style={styles.link}>{t('settings.personas')}</Text>
           </Pressable>
+          {user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase()) && (
+            <Pressable onPress={() => router.push('/admin')} hitSlop={6}>
+              <Text style={styles.link}>{t('settings.admin')}</Text>
+            </Pressable>
+          )}
         </Card>
       </View>
 

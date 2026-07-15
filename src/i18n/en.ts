@@ -512,6 +512,7 @@ export const en = {
   'settings.account.delete.error': "Couldn't delete your account. Check your connection and try again.",
   'settings.account.deleting': 'Deleting…',
   'settings.personas': 'Manage personas',
+  'settings.admin': 'Admin',
   'settings.section.profile': 'Your profile',
   'settings.section.notifications': 'Notifications',
   'settings.section.subscription': 'Subscription',
@@ -573,4 +574,16 @@ export const en = {
   'gmail.error': "Couldn't connect Gmail. Try again.",
   'gmail.needsAccount': 'Sign in first to connect Gmail.',
   'gmail.mobileOnly': 'Email sync runs in the mobile app.',
+
+  // Admin
+  'admin.title': 'Beta pulse',
+  'admin.totals': '{users} users · {contacts} contacts · {interactions} touches',
+  'admin.lastSignIn': 'Last sign-in: {when}',
+  'admin.never': 'never',
+  'admin.error': "Couldn't load the beta pulse.",
+  'admin.retry': 'Retry',
+  'admin.contacts': '{n} contacts',
+  'admin.touches': '{n} touches',
+  'admin.plus': 'Plus',
+  'admin.inboxes': '{n} inboxes',
 } as const;
