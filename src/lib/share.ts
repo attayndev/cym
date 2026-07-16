@@ -19,6 +19,7 @@ export interface ExchangeSubmission {
   company?: string;
   role?: string;
   note?: string;
+  birthday?: string;
   createdAt: string;
 }
 
@@ -76,7 +77,9 @@ export async function listPendingSubmissions(): Promise<ExchangeSubmission[]> {
   if (!supabase) return [];
   const { data } = await supabase
     .from('exchange_submissions')
-    .select('id, persona_id, first_name, last_name, email, phone, company, role, note, created_at')
+    .select(
+      'id, persona_id, first_name, last_name, email, phone, company, role, note, birthday, created_at',
+    )
     .eq('status', 'pending')
     .order('created_at', { ascending: true });
   return (data ?? []).map((r) => ({
@@ -89,6 +92,7 @@ export async function listPendingSubmissions(): Promise<ExchangeSubmission[]> {
     company: r.company ?? undefined,
     role: r.role ?? undefined,
     note: r.note ?? undefined,
+    birthday: r.birthday ?? undefined,
     createdAt: r.created_at,
   }));
 }

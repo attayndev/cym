@@ -131,6 +131,12 @@ export const es: Partial<Dict> = {
   'deck.skip': 'Saltar',
   'deck.never': 'Nunca',
   'deck.track.confirm': 'Empezar a seguir',
+
+  // Mazo de cumpleaños (Hoy)
+  'bday.deck.title': 'Cumpleaños que conoces',
+  'bday.deck.sub': 'Añade los que te sabes de memoria — nunca dejaremos que se te pasen.',
+  'bday.deck.skip': 'Omitir',
+
   'contact.card.link': 'Vincular su tarjeta',
   'contact.card.placeholder': 'Pega el enlace de su tarjeta — getcym.app/c/…',
   'contact.card.linked': '● Tarjeta viva',

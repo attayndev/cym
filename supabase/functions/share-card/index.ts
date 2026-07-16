@@ -22,11 +22,20 @@ function json(body: unknown, status = 200): Response {
 
 const FIELD_CAP = 200;
 const NOTE_CAP = 1000;
+const BIRTHDAY_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
 function clean(value: unknown, cap = FIELD_CAP): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed ? trimmed.slice(0, cap) : null;
+}
+
+// Self-reported MM-DD, no year. A malformed birthday is never worth losing a
+// lead over — on mismatch we just drop the field, we don't reject the
+// submission.
+function cleanBirthday(value: unknown): string | null {
+  const trimmed = clean(value);
+  return trimmed && BIRTHDAY_RE.test(trimmed) ? trimmed : null;
 }
 
 // Per-IP submission limiter for the public POST. Per-isolate memory (resets on
@@ -123,6 +132,7 @@ Deno.serve(async (req) => {
       company: clean(body.company),
       role: clean(body.role),
       note: clean(body.note, NOTE_CAP),
+      birthday: cleanBirthday(body.birthday),
     });
     if (error) return json({ error: 'failed' }, 500);
 

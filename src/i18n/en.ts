@@ -129,6 +129,12 @@ export const en = {
   'deck.skip': 'Skip',
   'deck.never': 'Never',
   'deck.track.confirm': 'Start tracking',
+
+  // Birthday sweep deck (Today)
+  'bday.deck.title': 'Birthdays you know',
+  'bday.deck.sub': "Add the ones you know by heart — we'll never let you miss them.",
+  'bday.deck.skip': 'Skip',
+
   'contact.card.link': 'Link their card',
   'contact.card.placeholder': 'Paste their card link — getcym.app/c/…',
   'contact.card.linked': '● Living card',

@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { BirthdayDeck } from '@/components/birthday-deck';
 import { DialMark } from '@/components/dial-mark';
 import { EvaluateDeck } from '@/components/evaluate-deck';
 import { MergeReview } from '@/components/merge-review';
@@ -155,6 +156,8 @@ export default function TodayScreen() {
       <UpdatesDeck />
 
       <EvaluateDeck />
+
+      <BirthdayDeck />
 
       <Pressable
         onPress={() => router.push('/capture')}

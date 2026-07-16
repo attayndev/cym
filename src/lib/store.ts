@@ -31,6 +31,7 @@ export async function clearDB(): Promise<void> {
     REFRESH_KEY,
     MERGE_KEEPS_KEY,
     ARCHIVE_TOMBSTONES_KEY,
+    BIRTHDAY_SKIPS_KEY,
   ]);
 }
 
@@ -92,6 +93,24 @@ export async function loadMergeKeeps(): Promise<Record<string, string>> {
 
 export async function saveMergeKeeps(keeps: Record<string, string>): Promise<void> {
   await AsyncStorage.setItem(MERGE_KEEPS_KEY, JSON.stringify(keeps));
+}
+
+// Birthday-sweep "Skip" verdicts — contactId -> skipped-at ISO. Device-local:
+// worst case another device re-asks once. Re-eligible after BDAY_SKIP_DAYS.
+const BIRTHDAY_SKIPS_KEY = 'cym.birthdaySweep.v1';
+
+export async function loadBirthdaySkips(): Promise<Record<string, string>> {
+  try {
+    const raw = await AsyncStorage.getItem(BIRTHDAY_SKIPS_KEY);
+    if (raw) return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    // fall through
+  }
+  return {};
+}
+
+export async function saveBirthdaySkips(skips: Record<string, string>): Promise<void> {
+  await AsyncStorage.setItem(BIRTHDAY_SKIPS_KEY, JSON.stringify(skips));
 }
 
 // Device-contact ids the user archived/removed — imports must never

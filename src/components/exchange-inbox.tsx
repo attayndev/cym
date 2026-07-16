@@ -9,6 +9,8 @@ import { useTranslation } from '@/i18n';
 import { listPendingSubmissions, markSubmission, type ExchangeSubmission } from '@/lib/share';
 import { useAuth } from '@/state/auth-context';
 
+const BIRTHDAY_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
 /** People whose details arrived through your card's landing page, waiting for
  *  review. Accepting one runs the normal capture ritual, prefilled. */
 export function ExchangeInbox() {
@@ -42,6 +44,11 @@ export function ExchangeInbox() {
   if (!userId || pending.length === 0) return null;
 
   const accept = (s: ExchangeSubmission) => {
+    // The fn already validates on the way in, but a submission can outlive a
+    // schema/regex change — guard again client-side so a malformed value
+    // never reaches capture's prefill.
+    const birthday =
+      s.birthday && BIRTHDAY_RE.test(s.birthday) ? s.birthday : '';
     router.push({
       pathname: '/capture',
       params: {
@@ -52,6 +59,7 @@ export function ExchangeInbox() {
         company: s.company ?? '',
         role: s.role ?? '',
         note: s.note ?? '',
+        birthday,
         source: 'qr',
         submissionId: s.id,
       },

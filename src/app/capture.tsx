@@ -51,6 +51,7 @@ type CaptureParams = Partial<
     | 'company'
     | 'role'
     | 'note'
+    | 'birthday'
     | 'source'
     | 'submissionId',
     string
@@ -71,7 +72,7 @@ export default function CaptureScreen() {
   const [phone, setPhone] = useState(params.phone ?? '');
   const [company, setCompany] = useState(params.company ?? '');
   const [role, setRole] = useState(params.role ?? '');
-  const [birthday, setBirthday] = useState('');
+  const [birthday, setBirthday] = useState(params.birthday ?? '');
   const [scanning, setScanning] = useState(false);
 
   const [whereMet, setWhereMet] = useState('');
@@ -85,6 +86,9 @@ export default function CaptureScreen() {
   const [cadenceDays, setCadenceDays] = useState<number | null>(null);
 
   const effectiveCadence = cadenceDays ?? SUGGESTED_CADENCE[category];
+
+  const birthdayValid =
+    birthday === '' || /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(birthday);
 
   const cadenceLabel = (days: number) =>
     days < 30
@@ -125,6 +129,7 @@ export default function CaptureScreen() {
   };
 
   const save = () => {
+    if (!birthdayValid) return;
     if (db && !canTrackMore(db)) {
       router.push('/paywall');
       return;
@@ -136,7 +141,7 @@ export default function CaptureScreen() {
       phone,
       company,
       role,
-      birthday: /^\d{2}-\d{2}$/.test(birthday) ? birthday : undefined,
+      birthday: birthday === '' ? undefined : birthday,
       category,
       importance,
       cadenceDays: effectiveCadence,
@@ -231,11 +236,13 @@ export default function CaptureScreen() {
             value={birthday}
             onChangeText={setBirthday}
             placeholder="06-14"
+            error={birthdayValid ? undefined : t('edit.birthday.invalid')}
+            hint={t('edit.birthday.hint')}
           />
           <Button
             title={t('capture.next.context')}
             onPress={() => setStep(1)}
-            disabled={!firstName.trim()}
+            disabled={!firstName.trim() || !birthdayValid}
           />
         </>
       )}
@@ -336,7 +343,7 @@ export default function CaptureScreen() {
               })}
             </Text>
           </View>
-          <Button title={t('capture.save')} onPress={save} />
+          <Button title={t('capture.save')} onPress={save} disabled={!birthdayValid} />
           <Button title={t('common.back')} variant="ghost" onPress={() => setStep(1)} />
         </>
       )}
