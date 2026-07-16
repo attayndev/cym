@@ -16,7 +16,7 @@ import { visibleNudgeContactIds } from '@/lib/tier';
 import { useApp } from '@/state/app-context';
 
 export default function TodayScreen() {
-  const { db, activePersonaId, snoozeNudge, dismissNudge } = useApp();
+  const { db, snoozeNudge, dismissNudge } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -24,10 +24,11 @@ export default function TodayScreen() {
   if (!db.onboarded) return <Redirect href="/onboarding" />;
 
   const contactsById = new Map(db.contacts.map((c) => [c.id, c]));
-  // The engine stays persona-global; Today just presents the active persona's slice.
-  const allNudges = pendingNudges(db).filter(
-    (n) => contactsById.get(n.contactId)?.personaId === activePersonaId,
-  );
+  // One relationship graph: personas are cards you present, not partitions of
+  // who you know (July 12 decision) — Today shows every persona's moments,
+  // matching People and Health. The old active-persona filter here silently
+  // hid birthdays for contacts living on a non-active card.
+  const allNudges = pendingNudges(db);
   // Free keeps FREE_TRACK_LIMIT relationships warm with real nudges; the
   // rest of the engine's output stays behind the upgrade row below.
   const visibleIds = visibleNudgeContactIds(db);
@@ -36,7 +37,7 @@ export default function TodayScreen() {
   const hookNudges = nudges.filter((n) => n.kind === 'hook');
   // The keep-warm deck: every live decay nudge (the engine caps them at 10).
   const decayNudges = nudges.filter((n) => n.kind === 'decay');
-  const hasContacts = db.contacts.some((c) => c.personaId === activePersonaId);
+  const hasContacts = db.contacts.length > 0;
   // Exactly one card wears the hero treatment: the first hook if any exist,
   // else the first decay card. Every other nudge renders standard.
   const heroNudgeId = (hookNudges[0] ?? decayNudges[0])?.id;
