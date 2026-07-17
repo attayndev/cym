@@ -7,12 +7,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 
 import { Field } from '@/components/field';
 import { Body, Button, Chip, Eyebrow, Heading, Row, Screen, ScreenLoading } from '@/components/ui';
-import { colors } from '@/constants/theme';
+import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import type { Category, Contact, ContextEntry, Importance } from '@/lib/types';
 import { maskBirthday, maskPhone } from '@/lib/format';
@@ -70,6 +71,10 @@ function EditContactForm({
   const [phone, setPhone] = useState(contact.phone ?? '');
   const [workEmail, setWorkEmail] = useState(contact.workEmail ?? '');
   const [workPhone, setWorkPhone] = useState(contact.workPhone ?? '');
+  // Apple-style progressive disclosure: work fields appear only when they
+  // hold a value or the user asks for them — no empty boxes padding the form.
+  const [showWorkEmail, setShowWorkEmail] = useState(Boolean(contact.workEmail));
+  const [showWorkPhone, setShowWorkPhone] = useState(Boolean(contact.workPhone));
   const [company, setCompany] = useState(contact.company ?? '');
   const [role, setRole] = useState(contact.role ?? '');
   const [birthday, setBirthday] = useState(contact.birthday ?? '');
@@ -148,8 +153,20 @@ function EditContactForm({
             <Eyebrow>{t('edit.section.reach')}</Eyebrow>
             <Field label={t('field.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
             <Field label={t('field.phone')} value={phone} onChangeText={(v) => setPhone(maskPhone(v))} keyboardType="phone-pad" />
-            <Field label={t('field.workEmail')} value={workEmail} onChangeText={setWorkEmail} autoCapitalize="none" keyboardType="email-address" />
-            <Field label={t('field.workPhone')} value={workPhone} onChangeText={(v) => setWorkPhone(maskPhone(v))} keyboardType="phone-pad" />
+            {showWorkEmail ? (
+              <Field label={t('field.workEmail')} value={workEmail} onChangeText={setWorkEmail} autoCapitalize="none" keyboardType="email-address" />
+            ) : (
+              <Pressable onPress={() => setShowWorkEmail(true)} hitSlop={6} style={styles.addRow}>
+                <Text style={styles.addRowText}>+ {t('field.workEmail')}</Text>
+              </Pressable>
+            )}
+            {showWorkPhone ? (
+              <Field label={t('field.workPhone')} value={workPhone} onChangeText={(v) => setWorkPhone(maskPhone(v))} keyboardType="phone-pad" />
+            ) : (
+              <Pressable onPress={() => setShowWorkPhone(true)} hitSlop={6} style={styles.addRow}>
+                <Text style={styles.addRowText}>+ {t('field.workPhone')}</Text>
+              </Pressable>
+            )}
           </View>
 
           <View style={{ gap: 12 }}>
@@ -229,6 +246,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     gap: 16,
     paddingBottom: 16,
+  },
+  addRow: {
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+  },
+  addRowText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13.5,
+    color: colors.cherryDeep,
   },
   footer: {
     paddingTop: 10,
