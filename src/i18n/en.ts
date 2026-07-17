@@ -221,6 +221,7 @@ export const en = {
     'Hi {name} — it has been a while and I wanted to check in. How have things been on your end? Would be great to catch up soon.',
 
   // Email subject lines (deterministic; mirror the template branches)
+  'draft.poweredBy': 'Powered by Call Your Mom',
   'draft.subj.birthday': 'Happy birthday, {name}!',
   'draft.subj.commitment': 'Following up on my promise',
   'draft.subj.checkin.casual': 'Thinking of you',

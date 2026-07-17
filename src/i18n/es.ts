@@ -224,6 +224,7 @@ export const es: Partial<Dict> = {
     'Hola {name} — ha pasado un tiempo y quería saludarte. ¿Cómo va todo por tu lado? Sería genial ponernos al día pronto.',
 
   // Asuntos de correo (deterministas; reflejan las ramas de plantillas)
+  'draft.poweredBy': 'Creado con Call Your Mom',
   'draft.subj.birthday': '¡Feliz cumpleaños, {name}!',
   'draft.subj.commitment': 'Sobre lo que te prometí',
   'draft.subj.checkin.casual': 'Pensando en ti',

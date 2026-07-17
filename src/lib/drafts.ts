@@ -161,7 +161,15 @@ interface AnthropicResponse {
  *    because that SDK imports node:fs and won't bundle for React Native/web.
  *  - Else fall back to context-aware templates.
  */
+/** Free-plan drafts carry a small brand line the user can simply delete —
+ *  the growth loop is opt-out-per-message, never forced on paying users. */
 export async function generateDraft(input: DraftInput): Promise<DraftResult> {
+  const result = await generateDraftInner(input);
+  if (input.profile.isPro) return result;
+  return { ...result, text: `${result.text}\n\n${t('draft.poweredBy')}` };
+}
+
+async function generateDraftInner(input: DraftInput): Promise<DraftResult> {
   const endpoint = process.env.EXPO_PUBLIC_DRAFTS_ENDPOINT;
   // Direct API key is a DEV-ONLY convenience — never honored in a production
   // build, so a leaked EXPO_PUBLIC_ANTHROPIC_API_KEY can't ship a live key to
