@@ -206,11 +206,25 @@ export async function syncDeviceContacts(
       email: deviceEmails[0],
       company: dc.company ?? undefined,
     };
+    // A device email/phone explicitly labeled "work" — separate from
+    // whichever address won the (unchanged) primary-slot selection above.
+    const workEmailEntry = (dc.emails ?? []).find((e) => e.label === 'work' && e.email);
+    const workPhoneEntry = (dc.phoneNumbers ?? []).find((p) => p.label === 'work' && p.number);
+    const workEmail =
+      workEmailEntry && workEmailEntry.email !== fields.email
+        ? workEmailEntry.email
+        : undefined;
+    const workPhone =
+      workPhoneEntry && workPhoneEntry.number !== devicePhones[0]
+        ? workPhoneEntry.number
+        : undefined;
     newContacts.push({
       id: newId,
       personaId,
       ...fields,
       phone: devicePhones[0],
+      workEmail,
+      workPhone,
       altEmails: deviceEmails.length > 1 ? [...new Set(deviceEmails.slice(1))] : undefined,
       altPhones: devicePhones.length > 1 ? devicePhones.slice(1) : undefined,
       role: dc.jobTitle ?? undefined,

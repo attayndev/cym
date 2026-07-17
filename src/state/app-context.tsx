@@ -56,6 +56,8 @@ export interface ContactPatch {
   lastName?: string;
   email?: string;
   phone?: string;
+  workEmail?: string;
+  workPhone?: string;
   company?: string;
   role?: string;
   city?: string;

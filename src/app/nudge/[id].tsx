@@ -109,20 +109,23 @@ export default function NudgeScreen() {
     );
   }
 
-  const canEmail = Boolean(contact.email);
-  const canText = Boolean(contact.phone);
+  // Personal wins over work when both exist — see contact/[id].tsx.
+  const bestEmail = contact.email || contact.workEmail;
+  const bestPhone = contact.phone || contact.workPhone;
+  const canEmail = Boolean(bestEmail);
+  const canText = Boolean(bestPhone);
 
   const openInApp = () => {
     const encoded = encodeURIComponent(draft);
-    if (channel === 'email' && contact.email) {
+    if (channel === 'email' && bestEmail) {
       const subject = encodeURIComponent(
         draftSubject({ contact, context, nudge, channel, profile: db.profile }),
       );
-      Linking.openURL(`mailto:${contact.email}?subject=${subject}&body=${encoded}`);
-    } else if (contact.phone) {
+      Linking.openURL(`mailto:${bestEmail}?subject=${subject}&body=${encoded}`);
+    } else if (bestPhone) {
       // iOS's sms: handler stopped percent-decoding the legacy `&body=` form;
       // the query form decodes correctly on current iOS and Android alike.
-      Linking.openURL(`sms:${contact.phone}?body=${encoded}`);
+      Linking.openURL(`sms:${bestPhone}?body=${encoded}`);
     }
   };
 

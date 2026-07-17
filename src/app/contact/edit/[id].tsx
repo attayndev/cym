@@ -68,6 +68,8 @@ function EditContactForm({
   const [lastName, setLastName] = useState(contact.lastName ?? '');
   const [email, setEmail] = useState(contact.email ?? '');
   const [phone, setPhone] = useState(contact.phone ?? '');
+  const [workEmail, setWorkEmail] = useState(contact.workEmail ?? '');
+  const [workPhone, setWorkPhone] = useState(contact.workPhone ?? '');
   const [company, setCompany] = useState(contact.company ?? '');
   const [role, setRole] = useState(contact.role ?? '');
   const [birthday, setBirthday] = useState(contact.birthday ?? '');
@@ -103,6 +105,8 @@ function EditContactForm({
       lastName,
       email,
       phone,
+      workEmail,
+      workPhone,
       company,
       role,
       birthday: /^\d{2}-\d{2}$/.test(birthday) ? birthday : undefined,
@@ -144,6 +148,8 @@ function EditContactForm({
             <Eyebrow>{t('edit.section.reach')}</Eyebrow>
             <Field label={t('field.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
             <Field label={t('field.phone')} value={phone} onChangeText={(v) => setPhone(maskPhone(v))} keyboardType="phone-pad" />
+            <Field label={t('field.workEmail')} value={workEmail} onChangeText={setWorkEmail} autoCapitalize="none" keyboardType="email-address" />
+            <Field label={t('field.workPhone')} value={workPhone} onChangeText={(v) => setWorkPhone(maskPhone(v))} keyboardType="phone-pad" />
           </View>
 
           <View style={{ gap: 12 }}>

@@ -161,12 +161,13 @@ async function syncAccount(
 
   const { data: contacts } = await admin
     .from('contacts')
-    .select('id,email,alt_emails,first_name,last_name')
+    .select('id,email,work_email,alt_emails,first_name,last_name')
     .eq('user_id', cred.user_id);
   const byEmail = new Map<string, string>();
   const knownNames = new Set<string>();
   for (const c of contacts ?? []) {
     if (c.email) byEmail.set(String(c.email).toLowerCase(), c.id);
+    if (c.work_email) byEmail.set(String(c.work_email).toLowerCase(), c.id);
     for (const alt of (c.alt_emails as string[] | null) ?? []) {
       if (alt) byEmail.set(String(alt).toLowerCase(), c.id);
     }

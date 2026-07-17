@@ -309,6 +309,8 @@ export const es: Partial<Dict> = {
   'field.lastName': 'Apellido',
   'field.email': 'Correo',
   'field.phone': 'Teléfono',
+  'field.workEmail': 'Email de trabajo',
+  'field.workPhone': 'Teléfono de trabajo',
   'field.company': 'Empresa',
   'field.role': 'Cargo',
   'field.cadenceDays': 'Ritmo',

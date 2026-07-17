@@ -437,6 +437,8 @@ describe('pullGraph', () => {
           last_name: null,
           email: null,
           phone: null,
+          work_email: 'a.work@example.com',
+          work_phone: '555-0100',
           company: null,
           role: null,
           city: null,
@@ -470,7 +472,14 @@ describe('pullGraph', () => {
     expect(data.onboarded).toBe(true);
     expect(data.profile).toMatchObject({ name: 'Remote Name', isPro: true, timezone: 'UTC' });
     expect(data.personas[0]).toMatchObject({ id: 'p1', name: 'P', isDefault: true });
-    expect(data.contacts[0]).toMatchObject({ id: 'c1', firstName: 'A', cadenceDays: 30, category: 'friend' });
+    expect(data.contacts[0]).toMatchObject({
+      id: 'c1',
+      firstName: 'A',
+      cadenceDays: 30,
+      category: 'friend',
+      workEmail: 'a.work@example.com',
+      workPhone: '555-0100',
+    });
     expect(data.interactions[0]).toMatchObject({ id: 'int1', contactId: 'c1', occurredAt: T1, source: 'manual' });
   });
 
@@ -605,5 +614,37 @@ describe('pushGraph — replaces client tables (upsert + delete-missing)', () =>
     await pushGraph(client, 'u1', db, 0);
 
     expect(tables.contacts.map((r) => r.id)).toEqual(['kept']);
+  });
+
+  test('work_email/work_phone round-trip through toContactRow, and are null (not omitted) when unset', async () => {
+    const { client, tables } = createMockClient({
+      profiles: [
+        {
+          user_id: 'u1',
+          graph_version: 0,
+          name: 'X',
+          is_pro: false,
+          notifications_enabled: false,
+          default_persona_id: 'p1',
+          onboarded: false,
+        },
+      ],
+    });
+    const db = baseDB({
+      contacts: [
+        contact({ id: 'has-work', workEmail: 'w@example.com', workPhone: '555-0100' }),
+        contact({ id: 'no-work' }),
+      ],
+    });
+
+    await pushGraph(client, 'u1', db, 0);
+
+    const withWork = tables.contacts.find((r) => r.id === 'has-work');
+    expect(withWork).toMatchObject({ work_email: 'w@example.com', work_phone: '555-0100' });
+    const withoutWork = tables.contacts.find((r) => r.id === 'no-work');
+    // Every row in a push payload must have uniform keys (PostgREST) — the
+    // key must be present with a null value, not missing.
+    expect(withoutWork).toHaveProperty('work_email', null);
+    expect(withoutWork).toHaveProperty('work_phone', null);
   });
 });

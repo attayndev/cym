@@ -305,6 +305,8 @@ export const en = {
   'field.lastName': 'Last name',
   'field.email': 'Email',
   'field.phone': 'Phone',
+  'field.workEmail': 'Work email',
+  'field.workPhone': 'Work phone',
   'field.company': 'Company',
   'field.role': 'Role',
   'field.cadenceDays': 'Rhythm',

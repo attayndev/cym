@@ -70,6 +70,9 @@ export interface Contact {
   lastName?: string;
   email?: string;
   phone?: string;
+  /** Work-labeled address/number — optional, alongside the (personal) email/phone above. */
+  workEmail?: string;
+  workPhone?: string;
   company?: string;
   role?: string;
   city?: string;

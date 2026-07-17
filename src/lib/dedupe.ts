@@ -25,9 +25,11 @@ export function looseNameKey(first?: string, last?: string): string | null {
 /** Emails+phones of a contact, normalized — the corroboration evidence. */
 function contactEvidence(c: Contact): { emails: Set<string>; phones: Set<string> } {
   return {
-    emails: new Set([c.email, ...(c.altEmails ?? [])].filter(Boolean).map((e) => norm(e!))),
+    emails: new Set(
+      [c.email, c.workEmail, ...(c.altEmails ?? [])].filter(Boolean).map((e) => norm(e!)),
+    ),
     phones: new Set(
-      [c.phone, ...(c.altPhones ?? [])].filter(Boolean).map((p) => phoneDigits(p!)),
+      [c.phone, c.workPhone, ...(c.altPhones ?? [])].filter(Boolean).map((p) => phoneDigits(p!)),
     ),
   };
 }
@@ -61,11 +63,16 @@ function fieldScore(c: Contact): number {
 
 /** Keeper absorbs the duplicate's data, additively. */
 function absorb(keeper: Contact, dupe: Contact): Contact {
+  // Work address/number are resolved first (keeper wins) so they're excluded
+  // from the alt-email/alt-phone sweep below like email/phone are.
+  const workEmail = keeper.workEmail ?? dupe.workEmail;
+  const workPhone = keeper.workPhone ?? dupe.workPhone;
+
   const emails = new Set(
-    [keeper.email, ...(keeper.altEmails ?? [])].filter(Boolean).map((e) => e!.toLowerCase()),
+    [keeper.email, workEmail, ...(keeper.altEmails ?? [])].filter(Boolean).map((e) => e!.toLowerCase()),
   );
   const altEmails = [...(keeper.altEmails ?? [])];
-  for (const e of [dupe.email, ...(dupe.altEmails ?? [])]) {
+  for (const e of [dupe.email, dupe.workEmail, ...(dupe.altEmails ?? [])]) {
     if (e && !emails.has(e.toLowerCase())) {
       emails.add(e.toLowerCase());
       altEmails.push(e);
@@ -73,10 +80,10 @@ function absorb(keeper: Contact, dupe: Contact): Contact {
   }
   const digits = (s: string) => s.replace(/\D/g, '');
   const phones = new Set(
-    [keeper.phone, ...(keeper.altPhones ?? [])].filter(Boolean).map((p) => digits(p!)),
+    [keeper.phone, workPhone, ...(keeper.altPhones ?? [])].filter(Boolean).map((p) => digits(p!)),
   );
   const altPhones = [...(keeper.altPhones ?? [])];
-  for (const p of [dupe.phone, ...(dupe.altPhones ?? [])]) {
+  for (const p of [dupe.phone, dupe.workPhone, ...(dupe.altPhones ?? [])]) {
     if (p && !phones.has(digits(p))) {
       phones.add(digits(p));
       altPhones.push(p);
@@ -87,6 +94,8 @@ function absorb(keeper: Contact, dupe: Contact): Contact {
     lastName: keeper.lastName ?? dupe.lastName,
     email: keeper.email ?? dupe.email,
     phone: keeper.phone ?? dupe.phone,
+    workEmail,
+    workPhone,
     company: keeper.company ?? dupe.company,
     role: keeper.role ?? dupe.role,
     city: keeper.city ?? dupe.city,

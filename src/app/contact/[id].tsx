@@ -164,8 +164,13 @@ export default function ContactScreen() {
   // Plus-gated display (Phase 0: verbatim notes, no extraction yet).
   const threadNotes = interactions.filter((i) => i.note?.trim()).slice(0, 3);
 
-  const canText = Boolean(contact.phone);
-  const canEmail = Boolean(contact.email);
+  // Personal wins over work when both exist — contact.email/phone stay the
+  // primary; workEmail/workPhone are only a fallback for reaching someone
+  // who's only given us their work address.
+  const bestEmail = contact.email || contact.workEmail;
+  const bestPhone = contact.phone || contact.workPhone;
+  const canText = Boolean(bestPhone);
+  const canEmail = Boolean(bestEmail);
 
   const tones = toneCycle(contact);
   const tone = tones[toneIndex % tones.length];
@@ -232,7 +237,7 @@ export default function ContactScreen() {
 
   // E.164-ish digits for messenger links (bare 10-digit numbers assume US).
   const msgrDigits = () => {
-    let d = (contact.phone ?? '').replace(/\D/g, '');
+    let d = (bestPhone ?? '').replace(/\D/g, '');
     if (d.length === 10) d = `1${d}`;
     return d;
   };
@@ -240,23 +245,23 @@ export default function ContactScreen() {
   const openInApp = () => {
     if (!channel) return;
     const encoded = encodeURIComponent(draft);
-    if (channel === 'email' && contact.email) {
+    if (channel === 'email' && bestEmail) {
       const subject = encodeURIComponent(draftSubject(composeInput(channel)));
-      Linking.openURL(`mailto:${contact.email}?subject=${subject}&body=${encoded}`);
-    } else if (channel === 'whatsapp' && contact.phone) {
+      Linking.openURL(`mailto:${bestEmail}?subject=${subject}&body=${encoded}`);
+    } else if (channel === 'whatsapp' && bestPhone) {
       Linking.openURL(`https://wa.me/${msgrDigits()}?text=${encoded}`);
-    } else if (channel === 'telegram' && contact.phone) {
+    } else if (channel === 'telegram' && bestPhone) {
       // No prefill support — carry the draft on the clipboard.
       void Clipboard.setStringAsync(draft);
       setCopied(true);
       Linking.openURL(`https://t.me/+${msgrDigits()}`);
-    } else if (channel === 'signal' && contact.phone) {
+    } else if (channel === 'signal' && bestPhone) {
       void Clipboard.setStringAsync(draft);
       setCopied(true);
       Linking.openURL(`https://signal.me/#p/+${msgrDigits()}`);
-    } else if (contact.phone) {
+    } else if (bestPhone) {
       // Query form — current iOS stopped percent-decoding the legacy `&body=`.
-      Linking.openURL(`sms:${contact.phone}?body=${encoded}`);
+      Linking.openURL(`sms:${bestPhone}?body=${encoded}`);
     }
   };
 
