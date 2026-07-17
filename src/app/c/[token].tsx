@@ -6,6 +6,7 @@ import { Field } from '@/components/field';
 import { Body, Button, Card, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { formatPhone, maskPhone } from '@/lib/format';
 import { buildVCard } from '@/lib/vcard';
 
 /**
@@ -156,7 +157,7 @@ export default function ShareLandingScreen() {
         )}
         {card.tagline ? <Text style={styles.cardTagline}>{card.tagline}</Text> : null}
         {card.email ? <Text style={styles.cardMeta}>{card.email}</Text> : null}
-        {card.phone ? <Text style={styles.cardMeta}>{card.phone}</Text> : null}
+        {card.phone ? <Text style={styles.cardMeta}>{formatPhone(card.phone)}</Text> : null}
       </View>
 
       {Platform.OS === 'web' && (
@@ -194,7 +195,7 @@ export default function ShareLandingScreen() {
           <Field
             label={t('field.phone')}
             value={form.phone}
-            onChangeText={(phone) => setForm((f) => ({ ...f, phone }))}
+            onChangeText={(phone) => setForm((f) => ({ ...f, phone: maskPhone(phone) }))}
             keyboardType="phone-pad"
           />
           <Field

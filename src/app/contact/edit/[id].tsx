@@ -15,7 +15,7 @@ import { Body, Button, Chip, Eyebrow, Heading, Row, Screen, ScreenLoading } from
 import { colors } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import type { Category, Contact, ContextEntry, Importance } from '@/lib/types';
-import { maskBirthday } from '@/lib/format';
+import { maskBirthday, maskPhone } from '@/lib/format';
 import { useApp } from '@/state/app-context';
 
 const CATEGORIES: Category[] = [
@@ -143,7 +143,7 @@ function EditContactForm({
           <View style={{ gap: 12 }}>
             <Eyebrow>{t('edit.section.reach')}</Eyebrow>
             <Field label={t('field.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-            <Field label={t('field.phone')} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <Field label={t('field.phone')} value={phone} onChangeText={(v) => setPhone(maskPhone(v))} keyboardType="phone-pad" />
           </View>
 
           <View style={{ gap: 12 }}>

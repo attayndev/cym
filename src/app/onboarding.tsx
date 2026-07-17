@@ -7,6 +7,7 @@ import { Field } from '@/components/field';
 import { DialMark } from '@/components/dial-mark';
 import { Body, Button, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
+import { maskPhone } from '@/lib/format';
 import { useTranslation } from '@/i18n';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { getSupabase } from '@/lib/supabase';
@@ -146,7 +147,7 @@ export default function OnboardingScreen() {
             <Field
               label={t('field.phone')}
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(v) => setPhone(maskPhone(v))}
               keyboardType="phone-pad"
             />
             <Field

@@ -7,6 +7,7 @@ import { Field } from '@/components/field';
 import { Body, Button, Card, Eyebrow, Heading, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
+import { maskPhone } from '@/lib/format';
 import type { Persona } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -136,7 +137,7 @@ export default function PersonasScreen() {
       <Field
         label={t('field.phone')}
         value={draft.phone}
-        onChangeText={(phone) => setDraft((d) => ({ ...d, phone }))}
+        onChangeText={(phone) => setDraft((d) => ({ ...d, phone: maskPhone(phone) }))}
         keyboardType="phone-pad"
       />
       <View style={styles.formActions}>

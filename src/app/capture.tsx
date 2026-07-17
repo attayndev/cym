@@ -14,7 +14,7 @@ import { extractMemory } from '@/lib/memory';
 import { runCardScan } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
 import type { Category, Importance } from '@/lib/types';
-import { maskBirthday } from '@/lib/format';
+import { maskBirthday, maskPhone } from '@/lib/format';
 import { useApp } from '@/state/app-context';
 
 const CATEGORIES: Category[] = [
@@ -217,7 +217,7 @@ export default function CaptureScreen() {
           <Field
             label={t('field.phone')}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(text) => setPhone(maskPhone(text))}
             keyboardType="phone-pad"
           />
           <Field

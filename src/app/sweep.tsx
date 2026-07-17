@@ -8,6 +8,7 @@ import { Body, Button, Display, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { isActiveContact } from '@/lib/classify';
+import { formatPhone } from '@/lib/format';
 import { getSupabase } from '@/lib/supabase';
 import type { Contact, ContactKind } from '@/lib/types';
 import { useApp } from '@/state/app-context';
@@ -73,7 +74,7 @@ export default function SweepScreen() {
   };
 
   const detail = (c: Contact) =>
-    [c.company, c.email, c.phone].filter(Boolean).join(' · ');
+    [c.company, c.email, c.phone && formatPhone(c.phone)].filter(Boolean).join(' · ');
 
   return (
     <Screen scroll={false}>

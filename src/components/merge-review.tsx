@@ -5,6 +5,7 @@ import { Body, Eyebrow } from '@/components/ui';
 import { colors, fonts, shadows } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { findMergeCandidates } from '@/lib/dedupe';
+import { formatPhone } from '@/lib/format';
 import { loadMergeKeeps, saveMergeKeeps } from '@/lib/store';
 import type { Contact } from '@/lib/types';
 import { useApp } from '@/state/app-context';
@@ -12,7 +13,7 @@ import { useApp } from '@/state/app-context';
 const MAX_CARDS = 3;
 
 function line(c: Contact): string {
-  return [c.email, c.phone, c.company].filter(Boolean).join(' · ') || '—';
+  return [c.email, c.phone && formatPhone(c.phone), c.company].filter(Boolean).join(' · ') || '—';
 }
 
 /**

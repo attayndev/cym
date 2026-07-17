@@ -16,7 +16,7 @@ import { confirmAction, notify } from '@/lib/alert';
 import { HealthBadge } from '@/components/health-badge';
 import { Body, Button, Card, Display, Eyebrow, Row, Screen, ScreenLoading } from '@/components/ui';
 import { colors, fonts, radii } from '@/constants/theme';
-import { formatShortDate, relativeTime, useTranslation, type TKey } from '@/i18n';
+import { formatMonthDay, formatShortDate, relativeTime, useTranslation, type TKey } from '@/i18n';
 import { addDays, isoDate } from '@/lib/dates';
 import { composerNote, draftSubject, generateDraft, toneCycle } from '@/lib/drafts';
 import { enrichFromHunter, hunterConflicts, hunterPatch } from '@/lib/enrich';
@@ -397,7 +397,7 @@ export default function ContactScreen() {
           {[
             t(`category.${contact.category}`),
             t('contact.cadenceEvery', { n: contact.cadenceDays }),
-            contact.birthday && `🎂 ${contact.birthday}`,
+            contact.birthday && `🎂 ${formatMonthDay(contact.birthday)}`,
           ]
             .filter(Boolean)
             .join(' · ')}

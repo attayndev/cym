@@ -135,6 +135,20 @@ export function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString(current, { month: 'short', day: 'numeric' });
 }
 
+const MMDD_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+/** MM-DD (no year) → localized "Mar 22" / "22 mar". Invalid input echoes back. */
+export function formatMonthDay(mmdd: string): string {
+  const m = MMDD_RE.exec(mmdd);
+  if (!m) return mmdd;
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+  return new Date(2000, month - 1, day).toLocaleDateString(current, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 export function formatDateline(date: Date): string {
   return date.toLocaleDateString(current, {
     weekday: 'long',

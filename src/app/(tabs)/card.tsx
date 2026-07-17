@@ -10,7 +10,7 @@ import { Body, Button, Display, Eyebrow, Row, Screen, ScreenLoading } from '@/co
 import { MARK_SVG } from '@/constants/mark-svg';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
-import { formatPhone } from '@/lib/format';
+import { formatPhone, maskPhone } from '@/lib/format';
 import { personaCardFields } from '@/lib/personas';
 import {
   buildShareUrl,
@@ -241,7 +241,7 @@ export default function CardScreen() {
           <Field
             label={t('field.phone')}
             value={draft.phone}
-            onChangeText={(phone) => setDraft((d) => ({ ...d, phone }))}
+            onChangeText={(phone) => setDraft((d) => ({ ...d, phone: maskPhone(phone) }))}
             keyboardType="phone-pad"
           />
           <Button title={t('card.save')} onPress={save} />
