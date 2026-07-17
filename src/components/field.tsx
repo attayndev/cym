@@ -20,7 +20,7 @@ export function Field({
   placeholder?: string;
   multiline?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words';
-  keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'number-pad';
   secureTextEntry?: boolean;
   error?: string;
   hint?: string;

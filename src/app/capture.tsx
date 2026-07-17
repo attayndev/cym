@@ -14,6 +14,7 @@ import { extractMemory } from '@/lib/memory';
 import { runCardScan } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
 import type { Category, Importance } from '@/lib/types';
+import { maskBirthday } from '@/lib/format';
 import { useApp } from '@/state/app-context';
 
 const CATEGORIES: Category[] = [
@@ -234,7 +235,8 @@ export default function CaptureScreen() {
           <Field
             label={t('field.birthday')}
             value={birthday}
-            onChangeText={setBirthday}
+            onChangeText={(v) => setBirthday(maskBirthday(v))}
+            keyboardType="number-pad"
             placeholder="06-14"
             error={birthdayValid ? undefined : t('edit.birthday.invalid')}
             hint={t('edit.birthday.hint')}

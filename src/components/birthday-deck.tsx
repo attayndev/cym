@@ -6,6 +6,7 @@ import { colors, fonts, radii } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { birthdaySweepCandidates } from '@/lib/birthday-sweep';
 import { loadBirthdaySkips, saveBirthdaySkips } from '@/lib/store';
+import { maskBirthday } from '@/lib/format';
 import { useApp } from '@/state/app-context';
 
 const BIRTHDAY_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
@@ -74,8 +75,9 @@ export function BirthdayDeck() {
                 <TextInput
                   style={[styles.input, !valid && styles.inputError]}
                   value={draft}
-                  onChangeText={(text) => onChangeDraft(c.id, text)}
+                  onChangeText={(text) => onChangeDraft(c.id, maskBirthday(text))}
                   placeholder="MM-DD"
+                  keyboardType="number-pad"
                   placeholderTextColor={colors.muted}
                   maxLength={5}
                 />

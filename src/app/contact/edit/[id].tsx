@@ -15,6 +15,7 @@ import { Body, Button, Chip, Eyebrow, Heading, Row, Screen, ScreenLoading } from
 import { colors } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import type { Category, Contact, ContextEntry, Importance } from '@/lib/types';
+import { maskBirthday } from '@/lib/format';
 import { useApp } from '@/state/app-context';
 
 const CATEGORIES: Category[] = [
@@ -152,7 +153,7 @@ function EditContactForm({
             <Field
               label={t('field.birthday')}
               value={birthday}
-              onChangeText={setBirthday}
+              onChangeText={(v) => setBirthday(maskBirthday(v))} keyboardType="number-pad"
               placeholder="06-14"
               error={birthdayValid ? undefined : t('edit.birthday.invalid')}
               hint={t('edit.birthday.hint')}
