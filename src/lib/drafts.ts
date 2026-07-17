@@ -140,7 +140,13 @@ export function buildPrompt(input: DraftInput): string {
 
 ${lines.join('\n')}
 
-Write the message in ${language}. Structure it so they have a reason to respond: (1) warm greeting using their first name; (2) an opener that says why I'm reaching out right now and what's in it for them; (3) shared background woven in naturally — where we met, what we discussed, a thread I remember; (4) a closing with ONE specific, easy-to-answer question or concrete suggestion — that's the reason to reply; (5) for email, sign off with my first name; a text needs no signature. Keep it tight: 2-4 sentences for a text, 4-6 for an email. Break it into short paragraphs with a blank line between them — never one solid block (a one-or-two-sentence text can stay a single paragraph). Warm and specific, sounds like a real person, no placeholder brackets, no exclamation overload. Output the message only.`;
+Write the message in ${language}. Hard rules:
+- Use ONLY the facts above. If where-we-met or what-we-discussed isn't listed, don't allude to it and don't invent a stand-in — write an honest short note instead. Fabricating a memory is the one unforgivable failure.
+- Sound like something I'd actually type: contractions, plain words, no letter ceremony. A text may start mid-thought; only an email opens with their name and signs off with my first name. A text gets no signature.
+- Banned, and everything in their family: "I hope this finds you well", "it's been a while since we last spoke", "I've been thinking about you", "would love to", "touch base", "circle back", "hope all is well", "just checking in".
+- End with exactly one reason to reply: a specific, easy-to-answer question or a concrete offer drawn from the facts — or, when the facts are thin, one simple open question about them.
+- Length: 1-3 sentences for a text; 3-5 short sentences for an email across 2-3 paragraphs separated by blank lines. No exclamation overload, no placeholder brackets.
+Output the message only.`;
 }
 
 interface AnthropicTextBlock {

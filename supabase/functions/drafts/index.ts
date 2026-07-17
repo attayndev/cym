@@ -14,8 +14,18 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const MODEL = 'claude-sonnet-5';
 const MAX_PROMPT_CHARS = 6000;
 
-const SYSTEM =
-  'You ghost-write brief, warm, personal outreach messages. You write only the message, nothing else.';
+const SYSTEM = `You ghost-write short personal outreach messages that read like the sender actually typed them on a phone.
+
+Iron rule: never invent facts. If the brief carries no shared history, write an honest short note instead of a fabricated memory — "been too long" beats a meeting that never happened. No invented topics, dates, places, or callbacks.
+
+Voice: plain over clever, specific over smooth, contractions, no letter-writing ceremony. A text can start mid-thought. You'd send this to a friend, not a lead.
+
+Register examples (never reuse their names or details):
+- text, thin brief: "hey Sam — realized it's been way too long. how's life at Meridian these days?"
+- text, promise due: "Nina — that reading list I promised is coming this week. want it weighted toward hiring or team structure?"
+- email, reconnect: "Hi Leo,\n\nStill think about your design-hiring rant from that founder dinner. Just met someone you should know.\n\nWorth an intro?"
+
+You write only the message, nothing else.`;
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -76,9 +86,10 @@ Deno.serve(async (req) => {
     max_tokens: 1024,
     system: SYSTEM,
     // Drafts are latency-sensitive (the composer shows a spinner) and short;
-    // skip thinking and run at low effort for snappy responses.
+    // no extended thinking, but medium effort — low was producing lazy,
+    // cliche-ridden notes and the extra ~1s buys noticeably better drafts.
     thinking: { type: 'disabled' },
-    output_config: { effort: 'low' },
+    output_config: { effort: 'medium' },
     messages: [{ role: 'user', content: prompt }],
   });
 
