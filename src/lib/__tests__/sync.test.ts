@@ -647,4 +647,40 @@ describe('pushGraph — replaces client tables (upsert + delete-missing)', () =>
     expect(withoutWork).toHaveProperty('work_email', null);
     expect(withoutWork).toHaveProperty('work_phone', null);
   });
+
+  test('draftMeta/draft_meta round-trips through toInteractionRow, and is null (not omitted) when unset', async () => {
+    const { client, tables } = createMockClient({
+      profiles: [
+        {
+          user_id: 'u1',
+          graph_version: 0,
+          name: 'X',
+          is_pro: false,
+          notifications_enabled: false,
+          default_persona_id: 'p1',
+          onboarded: false,
+        },
+      ],
+    });
+    const db = baseDB({
+      contacts: [contact({ id: 'c1' })],
+      interactions: [
+        interaction('int-with-meta', {
+          draftMeta: { tone: 'sincere', channel: 'text', edited: true },
+        }),
+        interaction('int-without-meta'),
+      ],
+    });
+
+    await pushGraph(client, 'u1', db, 0);
+
+    const withMeta = tables.interactions.find((r) => r.id === 'int-with-meta');
+    expect(withMeta).toMatchObject({
+      draft_meta: { tone: 'sincere', channel: 'text', edited: true },
+    });
+    const withoutMeta = tables.interactions.find((r) => r.id === 'int-without-meta');
+    // Every row in a push payload must have uniform keys (PostgREST) — the
+    // key must be present with a null value, not missing.
+    expect(withoutMeta).toHaveProperty('draft_meta', null);
+  });
 });

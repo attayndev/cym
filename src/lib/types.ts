@@ -136,6 +136,9 @@ export interface Interaction {
   occurredAt: string;
   note?: string;
   source: InteractionSource;
+  /** Tone/channel/edited stamp captured at Mark sent — content-free signal
+   *  feeding on-device user-voice distillation (Phase A). Never message text. */
+  draftMeta?: { tone?: string; channel?: string; edited?: boolean };
 }
 
 export interface Hook {

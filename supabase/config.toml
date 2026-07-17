@@ -75,6 +75,12 @@ verify_jwt = false
 [functions.memory-extract]
 verify_jwt = false
 
+# user-voice (stateless style distiller) authenticates manually: user JWT
+# only. Persists nothing server-side — the resulting profile is stored only
+# on the device that requested it.
+[functions.user-voice]
+verify_jwt = false
+
 # admin-stats authenticates manually: user JWT only, then an ADMIN_EMAILS
 # allowlist gate inside the function (fail-closed if unset). Returns account
 # metadata and aggregate counts only — never contact/note/draft content.

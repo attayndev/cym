@@ -1,18 +1,19 @@
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { confirmAction, notify } from '@/lib/alert';
 import { Field } from '@/components/field';
 import { Body, Button, Card, Display, Eyebrow, Screen } from '@/components/ui';
 import { colors, fonts } from '@/constants/theme';
-import { LOCALES, useTranslation, type Locale } from '@/i18n';
+import { LOCALES, formatShortDate, useTranslation, type Locale } from '@/i18n';
 import { deleteAccount } from '@/lib/account';
 import { connectImap, disconnectEmail, IMAP_PRESETS, syncAllEmail } from '@/lib/email';
 import { connectGmail } from '@/lib/gmail';
 import { requestNotificationPermission } from '@/lib/notifications';
+import { loadUserVoice, saveUserVoice, type UserVoice } from '@/lib/store';
 import { getSupabase } from '@/lib/supabase';
 import { ADMIN_EMAILS } from '@/lib/tier';
 import { useApp } from '@/state/app-context';
@@ -34,6 +35,26 @@ export default function SettingsScreen() {
   const [deleteWord, setDeleteWord] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
+  const [voice, setVoice] = useState<UserVoice | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadUserVoice().then((v) => {
+      if (!cancelled) setVoice(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const removeVoiceRow = (rowId: string) => {
+    setVoice((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, rows: prev.rows.filter((r) => r.id !== rowId) };
+      void saveUserVoice(next);
+      return next;
+    });
+  };
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
@@ -418,6 +439,28 @@ export default function SettingsScreen() {
         </Card>
       </View>
 
+      {profile.isPro && voice && voice.rows.length > 0 && (
+        <View style={styles.section}>
+          <Eyebrow>{t('voice.title')}</Eyebrow>
+          <Body muted>{t('voice.sub')}</Body>
+          <Card style={{ gap: 0, paddingVertical: 6 }}>
+            {voice.rows.map((row, idx) => (
+              <View
+                key={row.id}
+                style={[styles.voiceRow, idx > 0 && styles.voiceRowDivider]}>
+                <Text style={styles.voiceRowText}>{row.content}</Text>
+                <Pressable onPress={() => removeVoiceRow(row.id)} hitSlop={8}>
+                  <Feather name="x" size={14} color={colors.inkSoft} />
+                </Pressable>
+              </View>
+            ))}
+          </Card>
+          <Body muted style={{ fontSize: 12 }}>
+            {t('voice.updated', { date: formatShortDate(voice.distilledAt) })}
+          </Body>
+        </View>
+      )}
+
       {/* Privacy */}
       <View style={styles.section}>
         <Eyebrow>{t('settings.section.privacy')}</Eyebrow>
@@ -577,6 +620,23 @@ const styles = StyleSheet.create({
   dataLabel: {
     fontFamily: fonts.sansMedium,
     fontSize: 15,
+    color: colors.ink,
+  },
+  voiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    paddingVertical: 10,
+  },
+  voiceRowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.lineSoft,
+  },
+  voiceRowText: {
+    flex: 1,
+    fontFamily: fonts.sans,
+    fontSize: 13,
     color: colors.ink,
   },
 });

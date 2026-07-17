@@ -156,6 +156,7 @@ const toInteractionRow = (i: Interaction, userId: string) => ({
   occurred_at: i.occurredAt,
   note: i.note ?? null,
   source: i.source,
+  draft_meta: i.draftMeta ?? null,
 });
 const fromInteractionRow = (r: any): Interaction => ({
   id: r.id,
@@ -164,6 +165,7 @@ const fromInteractionRow = (r: any): Interaction => ({
   occurredAt: r.occurred_at,
   note: r.note ?? undefined,
   source: r.source,
+  draftMeta: r.draft_meta ?? undefined,
 });
 
 const toHookRow = (h: Hook, userId: string) => ({

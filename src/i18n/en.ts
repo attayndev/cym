@@ -392,6 +392,9 @@ export const en = {
   'contact.noHistory': 'No interactions logged yet.',
   'contact.memory.title': 'What you know',
   'contact.memory.until': 'until {date}',
+  'voice.title': 'How CYM hears you',
+  'voice.sub': 'Learned from messages you actually sent — stored only on this phone.',
+  'voice.updated': 'Updated {date}',
   'contact.threads.title': 'Recent threads',
   'contact.threads.locked':
     "Plus remembers every thread — what you talked about, what's coming up — so your next note picks up where you left off.",
@@ -453,6 +456,9 @@ export const en = {
   'paywall.feature.drafts.title': 'Messages, half-written',
   'paywall.feature.drafts.body':
     'Unlimited notes in your voice, context worked in. Free includes 3 a month.',
+  'paywall.feature.voice.title': 'It learns how you write',
+  'paywall.feature.voice.body':
+    'Drafts sound like your voice — greetings, sign-offs, and all.',
   'paywall.feature.dashboard.title': 'See who’s going quiet',
   'paywall.feature.dashboard.body':
     'Every relationship at a glance — warm, cooling, or going quiet — before it matters.',

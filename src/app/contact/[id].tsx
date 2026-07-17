@@ -26,6 +26,7 @@ import { dismissMemory, extractMemory, fetchContactMemory, liveMemory, memoryLin
 import { addProposals, resolveProposals } from '@/lib/refresh';
 import { loadRefreshState, type UpdateProposal } from '@/lib/store';
 import { contactHealth, lastTouchAt } from '@/lib/nudges';
+import { loadVoiceLines } from '@/lib/user-memory';
 import type { Channel, Contact, ContactMemory, InteractionType, Nudge } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -86,6 +87,7 @@ export default function ContactScreen() {
   const [cardUrl, setCardUrl] = useState('');
   const [cardBusy, setCardBusy] = useState(false);
   const [draft, setDraft] = useState('');
+  const [originalDraft, setOriginalDraft] = useState('');
   const [source, setSource] = useState<'ai' | 'template' | null>(null);
   const [writing, setWriting] = useState(false);
   // Tone is chosen via the chips and STAYS PUT; refresh regenerates a fresh
@@ -98,6 +100,7 @@ export default function ContactScreen() {
   const [proposals, setProposals] = useState<UpdateProposal[]>([]);
   // Relationship Memory (Plus): per-contact facts/threads fetched on mount.
   const [memory, setMemory] = useState<ContactMemory[]>([]);
+  const [voiceLines, setVoiceLines] = useState<string[]>([]);
   const isPro = db?.profile.isPro ?? false;
 
   useEffect(() => {
@@ -123,6 +126,16 @@ export default function ContactScreen() {
       cancelled = true;
     };
   }, [id, isPro]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (isPro ? loadVoiceLines() : Promise.resolve<string[]>([])).then((lines) => {
+      if (!cancelled) setVoiceLines(lines);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isPro]);
 
   if (!db) return <ScreenLoading />;
 
@@ -202,6 +215,7 @@ export default function ContactScreen() {
     variant: variantN,
     ...(db.profile.isPro && recentNotes.length > 0 ? { recentNotes } : {}),
     ...(memLines.length > 0 ? { memoryLines: memLines } : {}),
+    ...(voiceLines.length > 0 ? { voiceLines } : {}),
   });
 
   // One tap converts "I should reach out" into a dated promise the engine
@@ -231,6 +245,7 @@ export default function ContactScreen() {
     setWriting(true);
     const result = await generateDraft(composeInput(ch, toneIdx, variantN));
     setDraft(result.text);
+    setOriginalDraft(result.text);
     setSource(result.source);
     setDraftLimited(Boolean(result.limitReached));
     setWriting(false);
@@ -241,6 +256,7 @@ export default function ContactScreen() {
   const openComposer = (ch: ComposeChannel) => {
     setChannel(ch);
     setDraft('');
+    setOriginalDraft('');
     setSource(null);
     setCopied(false);
     setToneIndex(0);
@@ -282,6 +298,7 @@ export default function ContactScreen() {
     setCopied(false);
     setNoteContext('');
     setDraft('');
+    setOriginalDraft('');
     setSource(null);
     setToneIndex(0);
     setVariant(0);
@@ -290,7 +307,12 @@ export default function ContactScreen() {
   const markSent = () => {
     if (!channel) return;
     const note = composerNote(noteContext, draft);
-    logInteraction(contact.id, channel === 'email' ? 'email' : 'text', note);
+    const edited = draft.trim() !== originalDraft.trim();
+    logInteraction(contact.id, channel === 'email' ? 'email' : 'text', note, {
+      tone,
+      channel,
+      edited,
+    });
     if (note) diag('composer-note', { contactId: contact.id, len: note.length });
     if (db.profile.isPro) {
       const text = [noteContext, draft].filter(Boolean).join('\n');

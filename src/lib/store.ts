@@ -32,6 +32,7 @@ export async function clearDB(): Promise<void> {
     MERGE_KEEPS_KEY,
     ARCHIVE_TOMBSTONES_KEY,
     BIRTHDAY_SKIPS_KEY,
+    USER_VOICE_KEY,
   ]);
 }
 
@@ -221,4 +222,31 @@ export async function loadActivePersonaId(): Promise<string | null> {
 
 export async function saveActivePersonaId(personaId: string): Promise<void> {
   await AsyncStorage.setItem(ACTIVE_PERSONA_KEY, personaId);
+}
+
+// User Voice (Phase A, Plus): a distilled style profile — how this person
+// writes, learned from their own sent notes. DEVICE-LOCAL ONLY, deliberately
+// outside the whole-graph sync (a profile derived on one phone should never
+// silently apply to another). The server distiller is stateless; this is the
+// only place the result is ever stored.
+const USER_VOICE_KEY = 'cym.userVoice.v1';
+
+export interface UserVoice {
+  rows: { id: string; kind: 'voice' | 'preference'; content: string }[];
+  distilledAt: string;
+  noteCount: number;
+}
+
+export async function loadUserVoice(): Promise<UserVoice | null> {
+  try {
+    const raw = await AsyncStorage.getItem(USER_VOICE_KEY);
+    if (raw) return JSON.parse(raw) as UserVoice;
+  } catch {
+    // fall through to null
+  }
+  return null;
+}
+
+export async function saveUserVoice(v: UserVoice): Promise<void> {
+  await AsyncStorage.setItem(USER_VOICE_KEY, JSON.stringify(v));
 }

@@ -42,6 +42,10 @@ export interface DraftInput {
   /** Distilled Relationship Memory (Phase 1) — top facts/events then live
    *  threads, already ordered by liveMemory + memoryLines. Plus-only. */
   memoryLines?: string[];
+  /** Device-local voice profile lines (Phase A) — how this person writes,
+   *  distilled from their own sent notes. Never leaves the phone except via
+   *  the stateless distiller that produced it; injected here read-only. Plus-only. */
+  voiceLines?: string[];
 }
 
 /** Phase 0 memory: what gets persisted onto the interaction at Mark sent.
@@ -126,6 +130,12 @@ export function buildPrompt(input: DraftInput): string {
       ? `Recent threads with this person, newest first — weave one in naturally only if it fits:\n${input.recentNotes
           .slice(0, 3)
           .map((n) => `- ${n.slice(0, 200)}`)
+          .join('\n')}`
+      : null,
+    input.voiceLines && input.voiceLines.length > 0
+      ? `How I actually write — match this voice (learned from my own sent notes):\n${input.voiceLines
+          .slice(0, 6)
+          .map((l) => `- ${l}`)
           .join('\n')}`
       : null,
     `The occasion for reaching out: ${tx(nudge.reason)}`,

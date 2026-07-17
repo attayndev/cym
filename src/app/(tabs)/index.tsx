@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { Redirect, useRouter } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BirthdayDeck } from '@/components/birthday-deck';
@@ -14,12 +15,21 @@ import { colors, fonts, hardShadow, shadows } from '@/constants/theme';
 import { formatDateline, useTranslation } from '@/i18n';
 import { pendingNudges } from '@/lib/nudges';
 import { visibleNudgeContactIds } from '@/lib/tier';
+import { maybeDistillVoice } from '@/lib/user-memory';
 import { useApp } from '@/state/app-context';
 
 export default function TodayScreen() {
   const { db, snoozeNudge, dismissNudge } = useApp();
   const router = useRouter();
   const { t } = useTranslation();
+
+  const voiceAttempted = useRef(false);
+  useEffect(() => {
+    if (db && !voiceAttempted.current) {
+      voiceAttempted.current = true;
+      void maybeDistillVoice(db);
+    }
+  }, [db]);
 
   if (!db) return <ScreenLoading />;
   if (!db.onboarded) return <Redirect href="/onboarding" />;

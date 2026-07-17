@@ -46,6 +46,7 @@ import type {
   ContextEntry,
   DB,
   Importance,
+  Interaction,
   InteractionType,
   Persona,
   UserProfile,
@@ -145,8 +146,18 @@ interface AppState {
   /** Human-approved merge from the possible-duplicates review. */
   mergeContacts: (keeperId: string, dupeId: string) => void;
   updateContext: (contactId: string, patch: ContextPatch) => void;
-  logInteraction: (contactId: string, type: InteractionType, note?: string) => void;
-  markNudgeActed: (nudgeId: string, channel: Channel, note?: string) => void;
+  logInteraction: (
+    contactId: string,
+    type: InteractionType,
+    note?: string,
+    draftMeta?: Interaction['draftMeta'],
+  ) => void;
+  markNudgeActed: (
+    nudgeId: string,
+    channel: Channel,
+    note?: string,
+    draftMeta?: Interaction['draftMeta'],
+  ) => void;
   dismissNudge: (nudgeId: string) => void;
   celebrateRoleChange: (contactId: string) => void;
   snoozeNudge: (nudgeId: string, days?: number) => void;
@@ -796,7 +807,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const logInteraction = useCallback(
-    (contactId: string, type: InteractionType, note?: string) => {
+    (contactId: string, type: InteractionType, note?: string, draftMeta?: Interaction['draftMeta']) => {
       diag('interaction', { type, contactId });
       update((current) =>
         refreshEngine(
@@ -811,6 +822,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 note,
                 occurredAt: new Date().toISOString(),
                 source: 'manual',
+                draftMeta,
               },
             ],
           },
@@ -822,7 +834,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const markNudgeActed = useCallback(
-    (nudgeId: string, channel: Channel, note?: string) => {
+    (nudgeId: string, channel: Channel, note?: string, draftMeta?: Interaction['draftMeta']) => {
       update((current) => {
         const nudge = current.nudges.find((n) => n.id === nudgeId);
         if (!nudge) return current;
@@ -843,6 +855,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               note,
               occurredAt: new Date().toISOString(),
               source: 'manual' as const,
+              draftMeta,
             },
           ],
         };

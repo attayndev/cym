@@ -396,6 +396,9 @@ export const es: Partial<Dict> = {
   'contact.noHistory': 'Aún no hay interacciones registradas.',
   'contact.memory.title': 'Lo que sabes',
   'contact.memory.until': 'hasta {date}',
+  'voice.title': 'Cómo te escucha CYM',
+  'voice.sub': 'Aprendido de mensajes que enviaste — guardado solo en este teléfono.',
+  'voice.updated': 'Actualizado {date}',
   'contact.threads.title': 'Hilos recientes',
   'contact.threads.locked':
     'Plus recuerda cada hilo — de qué hablaron, qué se viene — para que tu próxima nota siga justo donde la dejaste.',
@@ -457,6 +460,9 @@ export const es: Partial<Dict> = {
   'paywall.feature.drafts.title': 'Mensajes, ya empezados',
   'paywall.feature.drafts.body':
     'Notas ilimitadas con tu voz y tu contexto. Gratis incluye 3 al mes.',
+  'paywall.feature.voice.title': 'Aprende cómo escribes',
+  'paywall.feature.voice.body':
+    'Los borradores suenan con tu voz — saludos, despedidas y todo.',
   'paywall.feature.dashboard.title': 'Mira quién se está quedando en silencio',
   'paywall.feature.dashboard.body':
     'Cada relación de un vistazo — cálida, enfriándose o en silencio — antes de que importe.',

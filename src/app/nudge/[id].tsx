@@ -18,6 +18,7 @@ import { tx, useTranslation } from '@/i18n';
 import { composerNote, draftSubject, generateDraft } from '@/lib/drafts';
 import { diag } from '@/lib/log';
 import { extractMemory, fetchContactMemory, liveMemory, memoryLines } from '@/lib/memory';
+import { loadVoiceLines } from '@/lib/user-memory';
 import type { Channel, ContactMemory } from '@/lib/types';
 import { useApp } from '@/state/app-context';
 
@@ -29,6 +30,7 @@ export default function NudgeScreen() {
 
   const [channel, setChannel] = useState<Channel>('text');
   const [draft, setDraft] = useState('');
+  const [originalDraft, setOriginalDraft] = useState('');
   const [source, setSource] = useState<'ai' | 'template' | null>(null);
   const [loading, setLoading] = useState(false);
   const [noteContext, setNoteContext] = useState('');
@@ -37,6 +39,7 @@ export default function NudgeScreen() {
   // Relationship Memory (Plus): fetched independently of the contact screen's
   // own state — this composer can be reached without ever visiting it.
   const [memory, setMemory] = useState<ContactMemory[]>([]);
+  const [voiceLines, setVoiceLines] = useState<string[]>([]);
 
   const nudge = db?.nudges.find((n) => n.id === id);
   const contact = db?.contacts.find((c) => c.id === nudge?.contactId);
@@ -56,6 +59,16 @@ export default function NudgeScreen() {
       cancelled = true;
     };
   }, [isPro, contact?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (isPro ? loadVoiceLines() : Promise.resolve<string[]>([])).then((lines) => {
+      if (!cancelled) setVoiceLines(lines);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isPro]);
 
   useEffect(() => {
     if (!db || !nudge || !contact) return;
@@ -82,10 +95,12 @@ export default function NudgeScreen() {
       variant: regen,
       ...(recentNotes.length > 0 ? { recentNotes } : {}),
       ...(memLines.length > 0 ? { memoryLines: memLines } : {}),
+      ...(voiceLines.length > 0 ? { voiceLines } : {}),
     }).then(
       (result) => {
         if (!cancelled) {
           setDraft(result.text);
+          setOriginalDraft(result.text);
           setSource(result.source);
           setDraftLimited(Boolean(result.limitReached));
           setLoading(false);
@@ -96,10 +111,10 @@ export default function NudgeScreen() {
       cancelled = true;
     };
     // Regenerate when the channel/language flips, the user asks for a
-    // rewrite (regen bumps after adding context), or memory finishes loading
-    // after the initial draft already went out; nudge/contact are stable.
+    // rewrite (regen bumps after adding context), or memory/voice finish
+    // loading after the initial draft already went out; nudge/contact are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel, id, locale, db === null, regen, memory]);
+  }, [channel, id, locale, db === null, regen, memory, voiceLines]);
 
   if (!db || !nudge || !contact) {
     return (
@@ -131,7 +146,8 @@ export default function NudgeScreen() {
 
   const markSent = () => {
     const note = composerNote(noteContext, draft);
-    markNudgeActed(nudge.id, channel, note);
+    const edited = draft.trim() !== originalDraft.trim();
+    markNudgeActed(nudge.id, channel, note, { channel, edited });
     if (note) diag('composer-note', { contactId: contact.id, len: note.length });
     if (db.profile.isPro) {
       const text = [noteContext, draft].filter(Boolean).join('\n');
