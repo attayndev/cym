@@ -174,6 +174,7 @@ export default function ContactScreen() {
 
   const tones = toneCycle(contact);
   const tone = tones[toneIndex % tones.length];
+  const hasDraft = draft !== '' || source !== null;
 
   // Plus-only memory signal (Phase 0): the last few notes this person's
   // interactions carry, verbatim, newest first — `interactions` is already
@@ -233,6 +234,17 @@ export default function ContactScreen() {
     setSource(result.source);
     setDraftLimited(Boolean(result.limitReached));
     setWriting(false);
+  };
+
+  // Opening (or switching) the composer never generates — the person hits
+  // the generate button when they're ready.
+  const openComposer = (ch: ComposeChannel) => {
+    setChannel(ch);
+    setDraft('');
+    setSource(null);
+    setCopied(false);
+    setToneIndex(0);
+    setVariant(0);
   };
 
   // E.164-ish digits for messenger links (bare 10-digit numbers assume US).
@@ -475,7 +487,7 @@ export default function ContactScreen() {
         <Eyebrow>{t('contact.reachOut')}</Eyebrow>
         <Row>
           <Pressable
-            onPress={() => void writeDraft('text')}
+            onPress={() => openComposer('text')}
             disabled={!canText || writing}
             style={({ pressed }) => [
               styles.reachBtn,
@@ -492,7 +504,7 @@ export default function ContactScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => void writeDraft('email')}
+            onPress={() => openComposer('email')}
             disabled={!canEmail || writing}
             style={({ pressed }) => [
               styles.reachBtn,
@@ -523,7 +535,7 @@ export default function ContactScreen() {
             ).map(({ ch, icon, label }) => (
               <Pressable
                 key={ch}
-                onPress={() => void writeDraft(ch)}
+                onPress={() => openComposer(ch)}
                 disabled={writing}
                 style={({ pressed }) => [
                   styles.reachBtn,
@@ -542,33 +554,30 @@ export default function ContactScreen() {
         {channel && (
           <View style={styles.composer}>
             <View style={styles.composerHeader}>
-              <Text style={styles.sourceTag}>
-                {writing
-                  ? t('compose.writing')
-                  : source === 'ai'
-                    ? t('compose.source.ai')
-                    : t('compose.source.template')}
-              </Text>
-              <Row>
-                <Pressable
-                  onPress={() => void writeDraft(channel, toneIndex, variant + 1)}
-                  disabled={writing}
-                  hitSlop={8}>
-                  <Feather name="refresh-cw" size={15} color={colors.inkSoft} />
-                </Pressable>
-                <Pressable onPress={closeComposer} hitSlop={8}>
-                  <Feather name="x" size={17} color={colors.inkSoft} />
-                </Pressable>
-              </Row>
+              <View style={{ flex: 1 }}>
+                {(writing || source !== null) && (
+                  <Text style={styles.sourceTag}>
+                    {writing
+                      ? t('compose.writing')
+                      : source === 'ai'
+                        ? t('compose.source.ai')
+                        : t('compose.source.template')}
+                  </Text>
+                )}
+              </View>
+              <Pressable onPress={closeComposer} hitSlop={8}>
+                <Feather name="x" size={17} color={colors.inkSoft} />
+              </Pressable>
             </View>
+            <Text style={styles.ctxLabel}>{t('compose.context.label')}</Text>
             <TextInput
-              style={styles.contextInput}
+              style={[styles.contextInput, styles.composerContextBox]}
               value={noteContext}
               onChangeText={setNoteContext}
-              placeholder={t('compose.context.placeholder')}
+              placeholder={t('compose.context.hint')}
               placeholderTextColor={colors.muted}
-              returnKeyType="done"
-              onSubmitEditing={() => void writeDraft(channel, toneIndex, variant + 1)}
+              multiline
+              textAlignVertical="top"
             />
             <View style={styles.toneRow}>
               {tones.map((tn, i) => {
@@ -576,7 +585,7 @@ export default function ContactScreen() {
                 return (
                   <Pressable
                     key={tn}
-                    onPress={() => void writeDraft(channel, i)}
+                    onPress={() => (hasDraft ? void writeDraft(channel, i) : setToneIndex(i))}
                     disabled={writing}
                     style={[styles.toneChip, active && styles.toneChipActive]}>
                     <Text style={[styles.toneChipText, active && styles.toneChipTextActive]}>
@@ -586,11 +595,21 @@ export default function ContactScreen() {
                 );
               })}
             </View>
-            {writing ? (
+            <Pressable
+              onPress={() => void writeDraft(channel, toneIndex, hasDraft ? variant + 1 : 0)}
+              disabled={writing}
+              style={({ pressed }) => [styles.generateBtn, pressed && { opacity: 0.85 }]}>
+              <Feather name={hasDraft ? 'refresh-cw' : 'feather'} size={15} color={colors.cream} />
+              <Text style={styles.generateBtnText}>
+                {hasDraft ? t('compose.regen') : t('compose.generate')}
+              </Text>
+            </Pressable>
+            {writing && (
               <View style={styles.writingBox}>
                 <ActivityIndicator color={colors.ink} />
               </View>
-            ) : (
+            )}
+            {!writing && hasDraft && (
               <TextInput
                 style={styles.draftInput}
                 value={draft}
@@ -598,33 +617,37 @@ export default function ContactScreen() {
                 multiline
               />
             )}
-            <Button
-              title={
-                channel === 'email'
-                  ? t('compose.openMail')
-                  : channel === 'whatsapp'
-                    ? t('compose.openWhatsApp')
-                    : channel === 'telegram'
-                      ? t('compose.openTelegram')
-                      : channel === 'signal'
-                        ? t('compose.openSignal')
-                        : t('compose.openMessages')
-              }
-              onPress={openInApp}
-              disabled={writing}
-            />
+            {hasDraft && (
+              <Button
+                title={
+                  channel === 'email'
+                    ? t('compose.openMail')
+                    : channel === 'whatsapp'
+                      ? t('compose.openWhatsApp')
+                      : channel === 'telegram'
+                        ? t('compose.openTelegram')
+                        : channel === 'signal'
+                          ? t('compose.openSignal')
+                          : t('compose.openMessages')
+                }
+                onPress={openInApp}
+                disabled={writing}
+              />
+            )}
             {draftLimited && (
               <Pressable onPress={() => router.push('/paywall')} hitSlop={6}>
                 <Text style={styles.copiedHint}>{t('compose.draftLimit')}</Text>
               </Pressable>
             )}
             {copied && <Text style={styles.copiedHint}>{t('compose.copiedHint')}</Text>}
-            <Button
-              title={t('compose.markSent')}
-              variant="ghost"
-              onPress={markSent}
-              disabled={writing}
-            />
+            {hasDraft && (
+              <Button
+                title={t('compose.markSent')}
+                variant="ghost"
+                onPress={markSent}
+                disabled={writing}
+              />
+            )}
           </View>
         )}
       </View>
@@ -770,6 +793,27 @@ const styles = StyleSheet.create({
     borderRadius: radii.control,
     paddingVertical: 9,
     paddingHorizontal: 12,
+  },
+  composerContextBox: {
+    minHeight: 76,
+    textAlignVertical: 'top',
+  },
+  generateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    alignSelf: 'stretch',
+    backgroundColor: colors.cherry,
+    borderWidth: 1.5,
+    borderColor: colors.espresso,
+    borderRadius: 999,
+    paddingVertical: 10,
+  },
+  generateBtnText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 13.5,
+    color: colors.cream,
   },
   copiedHint: {
     fontFamily: fonts.sansMedium,
