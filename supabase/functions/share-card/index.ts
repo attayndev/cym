@@ -3,7 +3,7 @@
 //   POST {token, firstName, ...} → reciprocal exchange submission (pending)
 // Unauthenticated by design (verify_jwt=false); everything is validated here
 // and the inbox review step in the app keeps spam out of the graph.
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -58,6 +58,65 @@ function rateLimited(req: Request): boolean {
   // Cap the map so a scan across many IPs can't grow memory unboundedly.
   if (submissions.size > 10_000) submissions.clear();
   return false;
+}
+
+type Locale = 'en' | 'es';
+const PUSH_COPY: Record<Locale, { title: (n: string) => string; body: string }> = {
+  en: {
+    title: (n) => `${n} shared their details`,
+    body: 'In your inbox — add them while the conversation is fresh.',
+  },
+  es: {
+    // No gendered object pronoun: the sharer's name is all we know about them.
+    title: (n) => `${n} compartió sus datos`,
+    body: 'Está en tu bandeja — añade mientras la conversación sigue fresca.',
+  },
+};
+
+/**
+ * Tells the card's owner, right now, that someone filled in the share-back
+ * form. This is the ONLY live signal these submissions have — there's no cron
+ * covering them — so it fires on the event rather than on a daily schedule.
+ *
+ * Deliberately never throws and never fails the submission: the scanner has
+ * already done their part, and losing their details because a push failed
+ * would be the worse bug. The exp.host call is time-boxed so a slow push
+ * can't leave them staring at a spinner.
+ */
+async function notifyOwner(
+  admin: SupabaseClient,
+  userId: string,
+  firstName: string,
+): Promise<void> {
+  const [{ data: profile }, { data: tokens }] = await Promise.all([
+    admin
+      .from('profiles')
+      .select('notifications_enabled, locale')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    admin.from('push_tokens').select('token').eq('user_id', userId),
+  ]);
+
+  // One notifications toggle governs the whole app — respect it here too.
+  if (!profile?.notifications_enabled) return;
+  if (!tokens?.length) return;
+
+  const copy = PUSH_COPY[profile.locale === 'es' ? 'es' : 'en'];
+  const messages = tokens.slice(0, 100).map((t) => ({
+    to: t.token,
+    title: copy.title(firstName),
+    body: copy.body,
+    sound: 'default',
+    // For a future tap-to-Inbox handler; today's builds just open the app.
+    data: { route: '/inbox' },
+  }));
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(messages),
+    signal: AbortSignal.timeout(5000),
+  });
 }
 
 Deno.serve(async (req) => {
@@ -135,6 +194,12 @@ Deno.serve(async (req) => {
       birthday: cleanBirthday(body.birthday),
     });
     if (error) return json({ error: 'failed' }, 500);
+
+    try {
+      await notifyOwner(admin, link.user_id, firstName);
+    } catch {
+      // The row is saved; a missed push is recoverable, a lost lead isn't.
+    }
 
     return json({ ok: true });
   }
