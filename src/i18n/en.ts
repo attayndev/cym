@@ -4,6 +4,7 @@ export const en = {
   'tab.people': 'People',
   'tab.health': 'Health',
   'tab.card': 'My Card',
+  'tab.inbox': 'Inbox',
   'tab.settings': 'Settings',
 
   // Health labels
@@ -280,9 +281,25 @@ export const en = {
   'persona.displayName': 'Card name',
 
   // Exchange inbox
-  'inbox.title': 'From your card · {n}',
+  'inbox.screen.title': 'Inbox',
   'inbox.accept': 'Add',
+  'inbox.restore': 'Restore',
   'inbox.viaCard': 'Shared their details via your QR',
+  'inbox.filter.pending': 'Pending',
+  'inbox.filter.accepted': 'Added',
+  'inbox.filter.dismissed': 'Dismissed',
+  'inbox.empty.pending.title': 'Nobody waiting',
+  'inbox.empty.pending.body':
+    'When someone scans your card and shares their details back, they land here first — never straight in your contacts.',
+  'inbox.empty.accepted.title': 'Nobody added yet',
+  'inbox.empty.accepted.body':
+    'People you add from this inbox stay listed here, so you can tell a scan actually came through.',
+  'inbox.empty.dismissed.title': 'Nothing dismissed',
+  'inbox.empty.dismissed.body':
+    "Anyone you wave off shows up here. Nothing is deleted — you can bring them back whenever you'd like.",
+  'inbox.signedOut.title': 'Sign in to collect',
+  'inbox.signedOut.body':
+    'Your card can still be scanned offline, but share-backs need an account to land in.',
 
   // Share landing page (public)
   'share.brand': 'Call Your Mom',

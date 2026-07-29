@@ -6,6 +6,7 @@ export const es: Partial<Dict> = {
   'tab.people': 'Personas',
   'tab.health': 'Salud',
   'tab.card': 'Mi tarjeta',
+  'tab.inbox': 'Bandeja',
   'tab.settings': 'Ajustes',
 
   // Health labels
@@ -284,9 +285,25 @@ export const es: Partial<Dict> = {
   'persona.displayName': 'Nombre en la tarjeta',
 
   // Exchange inbox
-  'inbox.title': 'Desde tu tarjeta · {n}',
+  'inbox.screen.title': 'Bandeja',
   'inbox.accept': 'Añadir',
+  'inbox.restore': 'Restaurar',
   'inbox.viaCard': 'Compartió sus datos con tu QR',
+  'inbox.filter.pending': 'Pendientes',
+  'inbox.filter.accepted': 'Añadidos',
+  'inbox.filter.dismissed': 'Descartados',
+  'inbox.empty.pending.title': 'Nadie esperando',
+  'inbox.empty.pending.body':
+    'Cuando alguien escanee tu tarjeta y comparta sus datos, llegará aquí primero — nunca directo a tus contactos.',
+  'inbox.empty.accepted.title': 'Nadie añadido todavía',
+  'inbox.empty.accepted.body':
+    'Las personas que añadas desde esta bandeja siguen listadas aquí, para confirmar que un escaneo sí llegó.',
+  'inbox.empty.dismissed.title': 'Nada descartado',
+  'inbox.empty.dismissed.body':
+    'Quien descartes aparecerá aquí. No se borra nada — puedes recuperarlo cuando quieras.',
+  'inbox.signedOut.title': 'Inicia sesión para recibir',
+  'inbox.signedOut.body':
+    'Tu tarjeta se puede escanear sin conexión, pero los datos compartidos necesitan una cuenta donde llegar.',
 
   // Share landing page (public)
   'share.brand': 'Call Your Mom',

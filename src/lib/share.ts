@@ -9,6 +9,8 @@ import { getSupabase } from '@/lib/supabase';
  * falls back to the offline vCard QR.
  */
 
+export type SubmissionStatus = 'pending' | 'accepted' | 'dismissed';
+
 export interface ExchangeSubmission {
   id: string;
   personaId?: string;
@@ -20,6 +22,7 @@ export interface ExchangeSubmission {
   role?: string;
   note?: string;
   birthday?: string;
+  status: SubmissionStatus;
   createdAt: string;
 }
 
@@ -72,16 +75,21 @@ export async function rotateShareToken(personaId: string): Promise<string | null
   return getOrCreateShareToken(personaId);
 }
 
-export async function listPendingSubmissions(): Promise<ExchangeSubmission[]> {
+/**
+ * Every submission the user has ever received, newest first — the Inbox tab
+ * buckets them by status itself. Capped because history only grows: 200 is
+ * far past what anyone scrolls, and the pending queue is never near it.
+ */
+export async function listSubmissions(): Promise<ExchangeSubmission[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
   const { data } = await supabase
     .from('exchange_submissions')
     .select(
-      'id, persona_id, first_name, last_name, email, phone, company, role, note, birthday, created_at',
+      'id, persona_id, first_name, last_name, email, phone, company, role, note, birthday, status, created_at',
     )
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(200);
   return (data ?? []).map((r) => ({
     id: r.id,
     personaId: r.persona_id ?? undefined,
@@ -93,14 +101,24 @@ export async function listPendingSubmissions(): Promise<ExchangeSubmission[]> {
     role: r.role ?? undefined,
     note: r.note ?? undefined,
     birthday: r.birthday ?? undefined,
+    status: r.status as SubmissionStatus,
     createdAt: r.created_at,
   }));
 }
 
-export async function markSubmission(
-  id: string,
-  status: 'accepted' | 'dismissed',
-): Promise<void> {
+/** Just the badge number — no rows over the wire. */
+export async function countPendingSubmissions(): Promise<number> {
+  const supabase = getSupabase();
+  if (!supabase) return 0;
+  const { count } = await supabase
+    .from('exchange_submissions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending');
+  return count ?? 0;
+}
+
+/** 'pending' is the un-dismiss path — the status check constraint allows it. */
+export async function markSubmission(id: string, status: SubmissionStatus): Promise<void> {
   const supabase = getSupabase();
   if (!supabase) return;
   await supabase.from('exchange_submissions').update({ status }).eq('id', id);

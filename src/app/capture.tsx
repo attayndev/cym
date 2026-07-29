@@ -13,6 +13,7 @@ import { addDays, isoDate } from '@/lib/dates';
 import { extractMemory } from '@/lib/memory';
 import { runCardScan } from '@/lib/scan';
 import { markSubmission } from '@/lib/share';
+import { adjustPendingCount } from '@/state/exchange-count';
 import type { Category, Importance } from '@/lib/types';
 import { maskBirthday, maskPhone } from '@/lib/format';
 import { useApp } from '@/state/app-context';
@@ -163,7 +164,13 @@ export default function CaptureScreen() {
         .join('\n');
       if (text) extractMemory({ contactId, text, source: 'capture' });
     }
-    if (params.submissionId) void markSubmission(params.submissionId, 'accepted');
+    // Capture is where a pending submission actually becomes a contact — drop
+    // the Inbox badge here too, since saving usually lands on the contact
+    // detail rather than back on the Inbox tab.
+    if (params.submissionId) {
+      void markSubmission(params.submissionId, 'accepted');
+      adjustPendingCount(-1);
+    }
     router.dismiss();
     router.push(`/contact/${contactId}`);
   };

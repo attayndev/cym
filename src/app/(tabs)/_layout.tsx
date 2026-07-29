@@ -1,15 +1,37 @@
 import { Feather } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
+import { useEffect } from 'react';
+import { AppState } from 'react-native';
 
 import { colors, fonts } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
 import { useApp } from '@/state/app-context';
 import { useAuth } from '@/state/auth-context';
+import {
+  clearPendingCount,
+  refreshPendingCount,
+  usePendingCount,
+} from '@/state/exchange-count';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const { db } = useApp();
   const { configured, user } = useAuth();
+  const pending = usePendingCount();
+
+  // The badge is the only signal a submission ever arrived — there's no push
+  // for these — so re-read it whenever the app comes back to the foreground.
+  useEffect(() => {
+    if (!user) {
+      clearPendingCount();
+      return;
+    }
+    void refreshPendingCount();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refreshPendingCount();
+    });
+    return () => sub.remove();
+  }, [user]);
 
   // Accounts are required: new installs onboard (which creates the account),
   // and a signed-out app locks to the sign-in screen until a session returns.
@@ -53,6 +75,20 @@ export default function TabsLayout() {
         options={{
           title: t('tab.scan'),
           tabBarIcon: ({ color, size }) => <Feather name="camera" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="inbox"
+        options={{
+          title: t('tab.inbox'),
+          tabBarIcon: ({ color, size }) => <Feather name="inbox" size={size} color={color} />,
+          tabBarBadge: pending > 0 ? pending : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.cherryDeep,
+            color: colors.cardText,
+            fontFamily: fonts.sansBold,
+            fontSize: 10,
+          },
         }}
       />
       <Tabs.Screen

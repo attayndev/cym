@@ -13,7 +13,6 @@ import {
 
 import { notify } from '@/lib/alert';
 import { CONTACT_ROW_HEIGHT, ContactRow } from '@/components/contact-row';
-import { ExchangeInbox } from '@/components/exchange-inbox';
 import { Body, Card, Display, Eyebrow, Screen, ScreenLoading } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
@@ -144,8 +143,6 @@ export default function PeopleScreen() {
           </Pressable>
         </View>
       </View>
-
-      <ExchangeInbox />
 
       {sweepCount > 0 && (
         <Pressable

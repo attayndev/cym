@@ -1,121 +1,72 @@
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Card, Eyebrow } from '@/components/ui';
+import { Card } from '@/components/ui';
 import { colors, fonts, hardShadow } from '@/constants/theme';
 import { useTranslation } from '@/i18n';
-import { listPendingSubmissions, markSubmission, type ExchangeSubmission } from '@/lib/share';
-import { useAuth } from '@/state/auth-context';
+import type { ExchangeSubmission } from '@/lib/share';
 
-const BIRTHDAY_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-
-/** People whose details arrived through your card's landing page, waiting for
- *  review. Accepting one runs the normal capture ritual, prefilled. */
-export function ExchangeInbox() {
-  const { session } = useAuth();
-  const router = useRouter();
+/** One person whose details arrived through your card's landing page. Purely
+ *  presentational — the Inbox tab owns loading, status and the capture hand-off.
+ *  Which actions appear follows the submission's status: pending rows can be
+ *  added or dismissed, dismissed rows can come back, added rows are a record. */
+export function ExchangeRow({
+  submission,
+  onAccept,
+  onDismiss,
+  onRestore,
+}: {
+  submission: ExchangeSubmission;
+  onAccept?: () => void;
+  onDismiss?: () => void;
+  onRestore?: () => void;
+}) {
   const { t } = useTranslation();
-  const [pending, setPending] = useState<ExchangeSubmission[]>([]);
-
-  const userId = session?.user?.id;
-  useFocusEffect(
-    useCallback(() => {
-      if (!userId) {
-        setPending([]);
-        return;
-      }
-      let cancelled = false;
-      (async () => {
-        try {
-          const rows = await listPendingSubmissions();
-          if (!cancelled) setPending(rows);
-        } catch {
-          // Offline: the inbox just stays hidden.
-        }
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [userId]),
-  );
-
-  if (!userId || pending.length === 0) return null;
-
-  const accept = (s: ExchangeSubmission) => {
-    // The fn already validates on the way in, but a submission can outlive a
-    // schema/regex change — guard again client-side so a malformed value
-    // never reaches capture's prefill.
-    const birthday =
-      s.birthday && BIRTHDAY_RE.test(s.birthday) ? s.birthday : '';
-    router.push({
-      pathname: '/capture',
-      params: {
-        firstName: s.firstName,
-        lastName: s.lastName ?? '',
-        email: s.email ?? '',
-        phone: s.phone ?? '',
-        company: s.company ?? '',
-        role: s.role ?? '',
-        note: s.note ?? '',
-        birthday,
-        source: 'qr',
-        submissionId: s.id,
-      },
-    });
-  };
-
-  const dismiss = async (s: ExchangeSubmission) => {
-    setPending((rows) => rows.filter((r) => r.id !== s.id));
-    try {
-      await markSubmission(s.id, 'dismissed');
-    } catch {
-      // If this failed we'll see it again on next focus — fine.
-    }
-  };
+  const s = submission;
 
   return (
-    <View style={styles.wrap}>
-      <Eyebrow>{t('inbox.title', { n: pending.length })}</Eyebrow>
-      {pending.map((s) => (
-        <Card key={s.id} style={styles.row}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={styles.name}>
-              {[s.firstName, s.lastName].filter(Boolean).join(' ')}
-            </Text>
-            {(s.role || s.company) && (
-              <Text style={styles.meta}>
-                {[s.role, s.company].filter(Boolean).join(' · ')}
-              </Text>
-            )}
-            {s.note ? (
-              <Text style={styles.note} numberOfLines={2}>
-                “{s.note}”
-              </Text>
-            ) : null}
-            <Text style={styles.via}>{t('inbox.viaCard')}</Text>
-          </View>
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => accept(s)}
-              style={({ pressed }) => [styles.acceptBtn, pressed && { opacity: 0.8 }]}>
-              <Text style={styles.acceptText}>{t('inbox.accept')}</Text>
-            </Pressable>
-            <Pressable onPress={() => void dismiss(s)} hitSlop={8} style={styles.dismissBtn}>
-              <Feather name="x" size={16} color={colors.muted} />
-            </Pressable>
-          </View>
-        </Card>
-      ))}
-    </View>
+    <Card style={styles.row}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={styles.name}>{[s.firstName, s.lastName].filter(Boolean).join(' ')}</Text>
+        {(s.role || s.company) && (
+          <Text style={styles.meta}>{[s.role, s.company].filter(Boolean).join(' · ')}</Text>
+        )}
+        {s.note ? (
+          <Text style={styles.note} numberOfLines={2}>
+            “{s.note}”
+          </Text>
+        ) : null}
+        <Text style={styles.via}>{t('inbox.viaCard')}</Text>
+      </View>
+      <View style={styles.actions}>
+        {onAccept && (
+          <Pressable
+            onPress={onAccept}
+            style={({ pressed }) => [styles.acceptBtn, pressed && { opacity: 0.8 }]}>
+            <Text style={styles.acceptText}>{t('inbox.accept')}</Text>
+          </Pressable>
+        )}
+        {onRestore && (
+          <Pressable
+            onPress={onRestore}
+            style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.8 }]}>
+            <Text style={styles.restoreText}>{t('inbox.restore')}</Text>
+          </Pressable>
+        )}
+        {onDismiss && (
+          <Pressable onPress={onDismiss} hitSlop={8} style={styles.dismissBtn}>
+            <Feather name="x" size={16} color={colors.muted} />
+          </Pressable>
+        )}
+        {!onAccept && !onRestore && !onDismiss && (
+          <Feather name="check" size={16} color={colors.muted} />
+        )}
+      </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    gap: 10,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -161,6 +112,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.sansBold,
     fontSize: 12.5,
     color: colors.cardText,
+  },
+  restoreBtn: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: colors.espresso,
+  },
+  restoreText: {
+    fontFamily: fonts.sansBold,
+    fontSize: 12.5,
+    color: colors.espresso,
   },
   dismissBtn: {
     padding: 2,
