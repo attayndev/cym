@@ -210,8 +210,26 @@ if (!builds) {
   if (newest?.gitCommitHash && head) {
     try {
       sh(`git cat-file -e ${newest.gitCommitHash}^{commit}`);
-      const diff = sh(`git diff --name-only ${newest.gitCommitHash}..HEAD`).split('\n').filter(Boolean);
-      const native = diff.filter((f) => NATIVE_PATHS.some((p) => (p.endsWith('/') ? f.startsWith(p) : f === p)));
+      // Note the single-ref form: this diffs the build's commit against the
+      // WORKING TREE, not against HEAD. Comparing commit-to-commit would make
+      // uncommitted native changes invisible to this check.
+      const diff = sh(`git diff --name-only ${newest.gitCommitHash}`).split('\n').filter(Boolean);
+      let native = diff.filter((f) => NATIVE_PATHS.some((p) => (p.endsWith('/') ? f.startsWith(p) : f === p)));
+
+      // package.json carries npm scripts as well as dependencies, and only the
+      // dependency blocks can change what's in the binary. Compare those
+      // directly so a scripts-only edit doesn't demand a pointless rebuild —
+      // a gate that cries wolf stops being read.
+      if (native.includes('package.json') || native.includes('package-lock.json')) {
+        const depsOf = (j) => JSON.stringify({ d: j.dependencies ?? {}, dd: j.devDependencies ?? {} });
+        const atBuild = depsOf(JSON.parse(sh(`git show ${newest.gitCommitHash}:package.json`)));
+        // Read from disk, not `git show HEAD:` — same reason as above.
+        const now = depsOf(JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')));
+        if (atBuild === now) {
+          native = native.filter((f) => f !== 'package.json' && f !== 'package-lock.json');
+          console.log('      note: package.json changed but dependencies are identical — not a rebuild trigger');
+        }
+      }
       const cfg = diff.filter((f) => RELEASE_CONFIG_PATHS.includes(f));
       record(
         native.length === 0,
