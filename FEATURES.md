@@ -135,6 +135,23 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
    Gmail privacy story: timestamps + participants, never bodies), and tier gating
    (this is a professional-audience feature — likely Plus or a higher business tier).
 
+11. **Exchange inbox — open items** (tab + arrival push shipped July 29; see §6).
+   (a) **Verify push delivery on a real device** — the `share-card` → exp.host path
+   has only been smoke-tested at the HTTP level (404/400/200); nobody has watched a
+   phone actually buzz. Note `profiles.notifications_enabled` DEFAULTS TO FALSE, so
+   that is the first thing to check if a test comes up silent.
+   (b) **Deploy the web app** — app.getcym.app still has no Inbox tab. Separate
+   surface from EAS Update, separate command (`npm run app:deploy`), and
+   `npm run preflight` does NOT cover it.
+   (c) **Tap-to-Inbox notification routing** — the push carries
+   `data: { route: '/inbox' }`, but the app has NO notification-response listener
+   anywhere (daily nudges don't route either), so tapping just opens the app.
+   ~15 lines in `src/app/_layout.tsx` plus a `useRootNavigationState` gate for the
+   cold-start case. Ships as an OTA.
+   (d) **Consider a separate notifications toggle** — exchange arrivals currently
+   ride the single app-wide `notifications_enabled` switch, so turning off daily
+   nudges also silences "someone shared their details."
+
 ## 6. Changelog
 
 - **2026-07-02** — App rebrand to the brand system: Fraunces 900 + Karla (replacing
