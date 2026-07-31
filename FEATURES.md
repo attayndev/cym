@@ -136,10 +136,9 @@ Status legend: ✅ shipped · 🟡 partial · ⏳ planned (needs backend/credent
    (this is a professional-audience feature — likely Plus or a higher business tier).
 
 11. **Exchange inbox — open items** (tab + arrival push shipped July 29; see §6).
-   (a) **Verify push delivery on a real device** — the `share-card` → exp.host path
-   has only been smoke-tested at the HTTP level (404/400/200); nobody has watched a
-   phone actually buzz. Note `profiles.notifications_enabled` DEFAULTS TO FALSE, so
-   that is the first thing to check if a test comes up silent.
+   (a) ~~Verify push delivery on a real device~~ — **DONE July 29, 2026 (Yan):**
+   arrives on iPhone and relays to Apple Watch. The watch relay also confirms it
+   is a proper user-facing alert (title + body), not a silent/data-only push.
    (b) **Deploy the web app** — app.getcym.app still has no Inbox tab. Separate
    surface from EAS Update, separate command (`npm run app:deploy`), and
    `npm run preflight` does NOT cover it.
