@@ -64,6 +64,7 @@
     "site:deploy": "npx --yes wrangler@4 deploy",
     "app:deploy": "expo export --platform web && npx --yes wrangler@4 deploy -c wrangler.app.jsonc",
     "lint": "expo lint",
+    "preflight": "node scripts/preflight.mjs",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },
